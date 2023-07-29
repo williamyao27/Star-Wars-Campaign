@@ -1,0 +1,69 @@
+{
+  "name": "Stormtrooper",
+  "description": "",
+  "picture": "",
+  "type": "Infantry",
+  "terrain": "Ground",
+  "role": "Tank",
+  "stats": {
+    "tags": [
+      "Organic",
+      "Empire"
+    ],
+    "maxHealth": 250,
+    "maxArmor": 100,
+    "physicalDefense": 10,
+    "specialDefense": 10,
+    "speed": 90,
+    "evasion": 10,
+    "bravery": 0.5,
+    "resistance": 0,
+    "potency": 0,
+    "cover": "None"
+  },
+
+  "activeAbilities": [
+    {
+      "name": "Imperial Marksmanship",
+      "description": "",
+      "picture": "",
+      "input": "TargetTile",
+      "actions": [
+        {
+          "type": "attack",
+          "attackSelector": {
+            "pattern": [
+              [1]
+            ]
+          },
+          "attackEffects": {
+            "damage": 32,
+            "damageType": "Physical",
+            "accuracy": 85,
+            "armorPen": 0,
+            "critChance": 8,
+            "critDamage": 1.5,
+            "suppression": 2
+          }   
+        }
+      ]
+    },
+    {
+      "name": "Stormtrooper Bravado",
+      "description": "",
+      "picture": "",
+      "maxCooldown": 2,
+      "actions": [
+
+      ]
+    }
+  ],
+
+  "passiveAbilities": [
+    {
+      "name": "Wall of Stormtroopers",
+      "description": "",
+      "picture": ""
+    }
+  ]
+}

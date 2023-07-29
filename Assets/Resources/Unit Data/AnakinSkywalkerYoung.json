@@ -1,0 +1,69 @@
+{
+  "name": "Anakin Skywalker (Young)",
+  "description": "",
+  "picture": "",
+  "type": "Infantry",
+  "terrain": "Ground",
+  "role": "Healer",
+  "stats": {
+    "tags": [
+      "Organic",
+      "ForceSensitive"
+    ],
+    "maxHealth": 150,
+    "maxArmor": 0,
+    "physicalDefense": 8,
+    "specialDefense": 12,
+    "speed": 170,
+    "evasion": 20,
+    "bravery": 1,
+    "resistance": 0,
+    "potency": 0,
+    "cover": "None"
+  },
+
+  "activeAbilities": [
+    {
+      "name": "Zap!",
+      "description": "Deals Physical damage at the target tile.",
+      "picture": "",
+      "input": "TargetTile",
+      "actions": [
+        {
+          "type": "attack",
+          "attackSelector": {
+            "pattern": [
+              [1]
+            ]
+          },
+          "attackEffects": {
+            "damage": 18,
+            "damageType": "Physical",
+            "accuracy": 90,
+            "armorPen": 0,
+            "critChance": 12,
+            "critDamage": 1.5,
+            "suppression": 3
+          }
+        }
+      ]
+    },
+    {
+      "name": "Thank The Maker!",
+      "description": "",
+      "picture": "",
+      "maxCooldown": 2,
+      "actions": [
+
+      ]
+    }
+  ],
+
+  "passiveAbilities": [
+    {
+      "name": "Podracer Reflexes",
+      "description": "",
+      "picture": ""
+    }
+  ]
+}
