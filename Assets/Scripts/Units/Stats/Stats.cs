@@ -20,7 +20,7 @@ public class Stats
     public float bravery;
     public int resistance;
     public int potency;
-    public Cover cover;
+    public bool cover;
 
     // Additional stats
     public float healthSteal;
@@ -101,13 +101,6 @@ public enum Role
     Support,
     Tank,
     Healer,
-}
-
-public enum Cover
-{
-    None,
-    Partial,
-    Full,
 }
 
 // Note that the tag enum is stored in a separate file.

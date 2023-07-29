@@ -13,10 +13,13 @@ public class ActiveAbilityData
     public string description;
     public string picture;
 
-    public InputType? input;
     public Action[] actions;
-    public int maxCooldown = 0;
-    public bool startOnCooldown = false;
+    public int maxCooldown;
+    public bool startOnCooldown;
+    
+    // Input specifications
+    public InputType? requiredInput;
+    public TargetTileSelector targetTileSelector;  // Used for attacks
 }
 
 /// <summary>
@@ -33,4 +36,5 @@ public class PassiveAbilityData
 public enum InputType
 {
     TargetTile,
+    TargetAlly
 }
