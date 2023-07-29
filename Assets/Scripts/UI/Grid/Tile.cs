@@ -7,9 +7,9 @@ using UnityEngine;
 /// </summary>
 public class Tile : MonoBehaviour
 {
+    [SerializeField] private GameObject crosshair;
     [SerializeField] private Color baseColor, darkColor;
     [SerializeField] private SpriteRenderer renderer;
-    [SerializeField] private GameObject highlight;  
     public Unit Unit { get; set; }  // Associated unit instance
     public int TeamNumber { get; set; }
     public int Row { get; set; }
@@ -33,19 +33,28 @@ public class Tile : MonoBehaviour
         renderer.color = isDark ? darkColor : baseColor;
     }
 
+    // Note that Tiles respond to mouse enter/exits when a target tile must be selected, but this does not involve a highlight and so they do not derive from HoverHighlightable.
     private void OnMouseEnter()
     {
-        highlight.SetActive(true);
+        // If a target tile input is currently required, display a crosshair over the tile
+        if (GameManager.instance.CurrentRequiredInput == InputType.TargetTile)
+        {
+            crosshair.SetActive(true);
+        }
     }
 
     private void OnMouseExit()
     {
-        highlight.SetActive(false);
+        crosshair.SetActive(false);
     }
-    
+
     private void OnMouseDown()
     {
-        // Choose this tile as the target tile for the current Ability
-        GameManager.instance.SelectTargetTile(TeamNumber, Row, Col);
+        // If a target tile input is currently required
+        if (GameManager.instance.CurrentRequiredInput == InputType.TargetTile)
+        {
+            // Choose this tile as the target tile for the current Ability
+            GameManager.instance.SelectTargetTile(TeamNumber, Row, Col);
+        }
     }
 }

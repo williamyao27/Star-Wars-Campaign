@@ -25,7 +25,7 @@
   "activeAbilities": [
     {
       "name": "Zap!",
-      "description": "Deals Physical damage at the target tile.",
+      "description": "Attack the target tile.",
       "picture": "",
       "input": "TargetTile",
       "actions": [

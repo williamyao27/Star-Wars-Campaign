@@ -22,6 +22,7 @@ public class GameManager : Singleton<GameManager>
     private List<Unit> turnReadyUnits = new List<Unit>();
     private Unit currentTurnUnit;
     private ActiveAbility currentSelectedAbility;
+    public InputType? CurrentRequiredInput { get; set; }
 
     // Input
     private int targetTileTeam = 0;
@@ -121,12 +122,13 @@ public class GameManager : Singleton<GameManager>
     {
         ability.Execute();
 
-        // If needed, end the current turn
         if (user == currentTurnUnit && endTurn)
         {
+            // End the current turn
             currentTurnUnit.EndTurn();
             currentTurnUnit = null;
             currentSelectedAbility = null;
+            CurrentRequiredInput = null;
         }
     }
 
@@ -136,17 +138,19 @@ public class GameManager : Singleton<GameManager>
     /// <param name="ability"></param>
     public void SelectAbility(ActiveAbility ability)
     {
-        // If further input is needed, simply store a reference to the given Ability as the currently selected one.
+        // If further input is needed, simply store a reference to the given Ability as the currently selected one
         if (ability.BaseData.input != null)
         {
             currentSelectedAbility = ability;  // Store a reference to this Ability so it can be recalled when further input is made
 
-            // Based on the further input type required, request information from the player
+            // Inform input-related UI elements of the input type required
             switch (ability.BaseData.input)
             {
                 case InputType.TargetTile:
+                    CurrentRequiredInput = InputType.TargetTile;
                     break;
                 default:
+                    // Should not reach here
                     break;
             }
         }
@@ -183,7 +187,7 @@ public class GameManager : Singleton<GameManager>
     /// <param name="attack"></param>
     public void Attack(AttackSelector attackSelector, AttackEffects attackEffects)
     {
-        // Determine targets
+        // Determine list of targets
         List<Tuple<Unit, float>> targetWeights = GridManager.instance.EvaluateAttackPattern(attackSelector.pattern, targetTileTeam, targetTileRow, targetTileCol);
 
         // Evaluate attack against each target separately
