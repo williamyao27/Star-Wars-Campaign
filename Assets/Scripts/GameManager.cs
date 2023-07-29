@@ -14,31 +14,26 @@ public class GameManager : Singleton<GameManager>
     {
         get
         {
-            return team0.Concat(team1).ToList();
+            return Team0.Concat(Team1).ToList();
         }
     }
-    private List<Unit> team0 = new List<Unit>();
-    private List<Unit> team1 = new List<Unit>();
+    public List<Unit> Team0 { get; set; } = new List<Unit>();
+    public List<Unit> Team1 { get; set; } = new List<Unit>();
     private List<Unit> turnReadyUnits = new List<Unit>();
     private Unit currentTurnUnit;
     private ActiveAbility currentSelectedAbility;
     public InputType? CurrentRequiredInput { get; set; }
 
     // Input
-    private int targetTileTeam = 0;
-    private int targetTileRow = 0;
-    private int targetTileCol = 0;
+    private int targetTileTeam;
+    private int targetTileRow;
+    private int targetTileCol;
 
     private void Start()
     {
         #region TENTATIVE - should NOT create team here
-
-        for (int i = 0; i < 1; i++)
-        {          
-            AddUnit("Stormtrooper", 0, 0, i);  // Fill team 0 with Stormtrooper
-            AddUnit("AnakinSkywalkerYoung", 1, 0, i);  // Fill team 1 with Anakin Skywalker (Young)
-        }
-
+        AddUnit("Stormtrooper", 0, 0, 0);  // Fill team 0 with Stormtrooper
+        AddUnit("AnakinSkywalkerYoung", 1, 1, 0);  // Fill team 1 with Anakin Skywalker (Young)
         #endregion
         
         Application.targetFrameRate = 60;  // FPS = 60; choose a target that allows Turn Meter generation to be perceivable
@@ -46,6 +41,39 @@ public class GameManager : Singleton<GameManager>
     }
 
     private void Update()
+    {
+        RunTurnRoutine();
+    }
+
+    /// <summary>
+    /// Add a new unit instance to the battle.
+    /// </summary>
+    /// <param name="name">The name of the new unit.</param>
+    /// <param name="teamNumber">The team to which this unit belongs.</param>
+    /// <param name="x">The x-position of the unit.</param>
+    /// <param name="y">The y-position of the unit.</param>
+    private void AddUnit(string name, int teamNumber, int row, int col)
+    {
+        List<Unit> teamToAdd = (teamNumber == 0) ? Team0 : Team1;
+        teamToAdd.Add(UnitFactory.instance.CreateUnit(name, teamNumber, row, col));  // Append to the proper team
+    }
+
+    /// <summary>
+    /// Initializes state for all battle elements.
+    /// </summary>
+    private void StartBattle()
+    {
+        // Initialize all units
+        foreach (Unit unit in AllUnits)
+        {
+            unit.Initialize();
+        }
+    }
+
+    /// <summary>
+    /// Runs the standard turn routine of generating Turn Meters and prompting unit turns when they are ready.
+    /// </summary>
+    private void RunTurnRoutine()
     {
         // If no turns are ongoing...
         if (currentTurnUnit == null)
@@ -67,32 +95,6 @@ public class GameManager : Singleton<GameManager>
     }
 
     /// <summary>
-    /// Add a new unit instance to the battle.
-    /// </summary>
-    /// <param name="name">The name of the new unit.</param>
-    /// <param name="teamNumber">The team to which this unit belongs.</param>
-    /// <param name="x">The x-position of the unit.</param>
-    /// <param name="y">The y-position of the unit.</param>
-    private void AddUnit(string name, int teamNumber, int x, int y)
-    {
-        List<Unit> allies = teamNumber == 0 ? team0 : team1;
-        List<Unit> enemies = teamNumber == 0 ? team1 : team0;
-        allies.Add(UnitFactory.instance.CreateUnit(name, teamNumber, x, y, allies, enemies));  // Append to the proper team
-    }
-
-    /// <summary>
-    /// Initializes state for all battle elements.
-    /// </summary>
-    private void StartBattle()
-    {
-        // Initialize all units
-        foreach (Unit unit in AllUnits)
-        {
-            unit.Initialize();
-        }
-    }
-
-    /// <summary>
     /// Generates natural Turn Meter for all units in battle.
     /// </summary>
     private void GenerateTurnMeterUntilTurnReady()
@@ -109,7 +111,7 @@ public class GameManager : Singleton<GameManager>
     /// <summary>
     /// Adds a new unit to the list of units ready to take their turn.
     /// </summary>
-    /// <param name="unit">Unit to be added.</param>
+    /// <param name="unit">The unit that is ready.</param>
     private void AddTurnReadyUnit(Unit unit)
     {
         turnReadyUnits.Add(unit);
@@ -127,8 +129,12 @@ public class GameManager : Singleton<GameManager>
             // End the current turn
             currentTurnUnit.EndTurn();
             currentTurnUnit = null;
+
+            // Hide Abilities and other input selection from player
             currentSelectedAbility = null;
             CurrentRequiredInput = null;
+            AbilityPaletteManager.instance.HideAbilities();
+            GridManager.instance.HideTargetableTiles();
         }
     }
 
@@ -139,15 +145,16 @@ public class GameManager : Singleton<GameManager>
     public void SelectAbility(ActiveAbility ability)
     {
         // If further input is needed, simply store a reference to the given Ability as the currently selected one
-        if (ability.BaseData.input != null)
+        if (ability.BaseData.requiredInput != null)
         {
             currentSelectedAbility = ability;  // Store a reference to this Ability so it can be recalled when further input is made
 
-            // Inform input-related UI elements of the input type required
-            switch (ability.BaseData.input)
+            // Track the input type required and prepare the necessary input prompts
+            switch (ability.BaseData.requiredInput)
             {
                 case InputType.TargetTile:
                     CurrentRequiredInput = InputType.TargetTile;
+                    GridManager.instance.ShowTargetableTiles(currentTurnUnit, ability.BaseData.targetTileSelector);
                     break;
                 default:
                     // Should not reach here
@@ -185,10 +192,10 @@ public class GameManager : Singleton<GameManager>
     /// 
     /// </summary>
     /// <param name="attack"></param>
-    public void Attack(AttackSelector attackSelector, AttackEffects attackEffects)
+    public void Attack(AttackEffects attackEffects)
     {
         // Determine list of targets
-        List<Tuple<Unit, float>> targetWeights = GridManager.instance.EvaluateAttackPattern(attackSelector.pattern, targetTileTeam, targetTileRow, targetTileCol);
+        List<Tuple<Unit, float>> targetWeights = GridManager.instance.EvaluateAttackPattern(attackEffects.pattern, targetTileTeam, targetTileRow, targetTileCol);
 
         // Evaluate attack against each target separately
         foreach (Tuple<Unit, float> targetWeight in targetWeights)

@@ -38,7 +38,7 @@ public class GridManager : Singleton<GridManager>
                     // Instantiate tile
                     Tile tile = Instantiate(tilePrefab, new Vector2(tileX, tileY), Quaternion.identity);
                     tile.transform.parent = transform;
-                    tile.Initialize(teamNumber, col, row);
+                    tile.Initialize(teamNumber, row, col);
 
                     // Track tile in grid array
                     grid[teamNumber, row, col] = tile;
@@ -81,16 +81,13 @@ public class GridManager : Singleton<GridManager>
     }
 
     /// <summary>
-    /// Attaches the given unit instance to the corresponding tile script and nests its GO accordingly.
+    /// Attaches the given unit instance to the corresponding Tile script and nests its GO accordingly.
     /// </summary>
     /// <param name="unit">The given unit.</param>
-    /// <param name="teamNumber">The team which the unit belongs to.</param>
-    /// <param name="row">The row position of the unit.</param>
-    /// <param name="col">The column position of the unit.</param>
-    public void ConnectUnitToTile(Unit unit, int teamNumber, int row, int col)
+    public void ConnectUnitToTile(Unit unit)
     {
         // Retrieve corresponding tile
-        Tile tile = grid[teamNumber, row, col];
+        Tile tile = grid[unit.TeamNumber, unit.Row, unit.Col];
 
         // Associate unit instance to tile
         tile.Unit = unit;
@@ -100,6 +97,82 @@ public class GridManager : Singleton<GridManager>
         unit.transform.localPosition = new Vector2(0, 0);
     }
     
+    /// <summary>
+    ///
+    /// </summary>
+    /// <param name="teamNumber"></param>
+    /// <param name="rowStart"></param>
+    /// <param name="colStart"></param>
+    /// <param name="rowEnd"></param>
+    /// <param name="colEnd"></param>
+    /// <returns></returns>
+    public List<Unit> GetUnitsInArea(int teamNumber, int rowStart, int rowEnd, int colStart, int colEnd)
+    {
+        List<Unit> unitsInArea = new List<Unit>();
+
+        // Note that row and column boundaries are inclusive
+        for (int row = rowStart; row <= rowEnd; row++)
+        {
+            for (int col = colStart; col <= colEnd; col++)
+            {
+                Unit unit = grid[teamNumber, row, col].Unit;
+                if (unit != null)
+                {
+                    unitsInArea.Add(unit);
+                }
+            }
+        }
+        return unitsInArea;
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="row"></param>
+    /// <param name="col"></param>
+    /// <returns></returns>
+    // public List<Unit> GetAdjacentUnits(int row, int col)
+    // {
+    // }
+
+    /// <summary>
+    /// Display all tiles on the grid that can serve as the target tile for the given target tile selector from the current user.
+    /// </summary>
+    /// <param name="targeter">The unit for which the target tile is being selected.</param>
+    /// <param name="selector">Specifications for how the target tile can be selected.</param>
+    public void ShowTargetableTiles(Unit targeter, TargetTileSelector targetTileSelector)
+    {
+        // Call each tile to set their own targetability based on the provided selector
+        for (int teamNumber = 0; teamNumber < 2; teamNumber++)
+        {
+            for (int row = 0; row < height; row++)
+            {
+                for (int col = 0; col < width; col++)
+                {
+                    grid[teamNumber, row, col].SetTargetability(targeter, targetTileSelector);
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public void HideTargetableTiles()
+    {
+        // Hide each tile
+        for (int teamNumber = 0; teamNumber < 2; teamNumber++)
+        {
+            for (int row = 0; row < height; row++)
+            {
+                for (int col = 0; col < width; col++)
+                {
+                    grid[teamNumber, row, col].HideTargetability();
+                }
+            }
+        }
+    }
+
     /// <summary>
     /// For the given attack pattern, determines the list of target units and the corresponding weight of the attack against them based on the placement of units on the board and the given target tile.
     /// </summary>

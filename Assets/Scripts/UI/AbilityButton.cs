@@ -12,7 +12,7 @@ public class AbilityButton : HoverHighlightable
     /// <summary>
     /// Initializes the Ability button's name and associated Ability.
     /// </summary>
-    /// <param name="ability"></param>
+    /// <param name="ability">The associated Ability.</param>
     public void Initialize(ActiveAbility ability)
     {
         Ability = ability;

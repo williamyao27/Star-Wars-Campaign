@@ -9,8 +9,9 @@ public class Unit : MonoBehaviour
 {
     [SerializeField] private UnitDisplay display;
     public UnitData BaseData { get; set; }
-    public List<Unit> Allies { get; set; }  // List of all unit instances on allied team, including self
-    public List<Unit> Enemies { get; set; }  // List of all unit instances on enemy team
+    public int TeamNumber { get; set; }
+    public int Row { get; set; }
+    public int Col { get; set; }
     public float Health { get; set; }
     public float Armor { get; set; }
     public float TurnMeter { get; set; }  // In percentage points, i.e. unit takes turn at TurnMeter == 100f
@@ -18,7 +19,7 @@ public class Unit : MonoBehaviour
     public List<PassiveAbility> PassiveAbilities { get; set; }
     public List<Modifier> Modifiers { get; set; }
 
-    // Compute current stats from base plus all modifiers
+    // Get current stats from base data plus all modifiers
     public Stats CurrentStats
     {
         get
@@ -33,6 +34,24 @@ public class Unit : MonoBehaviour
         get
         {
             return ActiveAbilities[0];
+        }
+    }
+
+    // Get this unit's list of allied units based on its team number
+    public List<Unit> Allies
+    {
+        get
+        {
+            return (TeamNumber == 0) ? GameManager.instance.Team0 : GameManager.instance.Team1;
+        }
+    }
+
+    // Get this unit's list of enemy units based on its team number
+    public List<Unit> Enemies
+    {
+        get
+        {
+            return (TeamNumber == 0) ? GameManager.instance.Team1 : GameManager.instance.Team0;
         }
     }
 
@@ -59,6 +78,9 @@ public class Unit : MonoBehaviour
         {
             PassiveAbilities.Add(new PassiveAbility(data));
         }
+
+        // Connect unit to its tile
+        GridManager.instance.ConnectUnitToTile(this);
 
         // Visual
         display.UpdateHealthArmorBar(Health, CurrentStats.maxHealth, Armor, CurrentStats.maxArmor);
@@ -129,9 +151,6 @@ public class Unit : MonoBehaviour
     public void EndTurn()
     {
         TurnMeter = 0f;  // Reset Turn Meter
-        
-        // Hide Abilities from player
-        AbilityPaletteManager.instance.HideAbilities();
     }
 
     #endregion

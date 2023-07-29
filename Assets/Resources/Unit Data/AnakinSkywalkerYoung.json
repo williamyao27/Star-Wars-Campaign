@@ -19,7 +19,7 @@
     "bravery": 1,
     "resistance": 0,
     "potency": 0,
-    "cover": "None"
+    "cover": false
   },
 
   "activeAbilities": [
@@ -27,17 +27,14 @@
       "name": "Zap!",
       "description": "Attack the target tile.",
       "picture": "",
-      "input": "TargetTile",
       "actions": [
         {
           "type": "attack",
-          "attackSelector": {
+          "attackEffects": {
             "pattern": [
               [1]
-            ]
-          },
-          "attackEffects": {
-            "damage": 18,
+            ],
+            "damage": 20,
             "damageType": "Physical",
             "accuracy": 90,
             "armorPen": 0,
@@ -46,16 +43,24 @@
             "suppression": 3
           }
         }
-      ]
+      ],
+      "requiredInput": "TargetTile",
+      "targetTileSelector": {
+        "range": 1,
+        "lineOfFire": "Contact",
+        "lineOfFireModifiers": []
+      },
+      "maxCooldown": 0,
+      "startOnCooldown": false
     },
     {
-      "name": "Thank The Maker!",
+      "name": "Thank the Maker!",
       "description": "",
       "picture": "",
-      "maxCooldown": 2,
       "actions": [
-
-      ]
+      ],
+      "maxCooldown": 2,
+      "startOnCooldown": false
     }
   ],
 

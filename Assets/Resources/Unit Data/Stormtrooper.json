@@ -19,7 +19,7 @@
     "bravery": 0.5,
     "resistance": 0,
     "potency": 0,
-    "cover": "None"
+    "cover": false
   },
 
   "activeAbilities": [
@@ -27,17 +27,14 @@
       "name": "Imperial Marksmanship",
       "description": "",
       "picture": "",
-      "input": "TargetTile",
       "actions": [
         {
           "type": "attack",
-          "attackSelector": {
+          "attackEffects": {
             "pattern": [
               [1]
-            ]
-          },
-          "attackEffects": {
-            "damage": 32,
+            ],
+            "damage": 36,
             "damageType": "Physical",
             "accuracy": 85,
             "armorPen": 0,
@@ -46,16 +43,15 @@
             "suppression": 2
           }   
         }
-      ]
-    },
-    {
-      "name": "Stormtrooper Bravado",
-      "description": "",
-      "picture": "",
-      "maxCooldown": 2,
-      "actions": [
-
-      ]
+      ],
+      "requiredInput": "TargetTile",
+      "targetTileSelector": {
+        "range": 2,
+        "lineOfFire": "Contact",
+        "lineOfFireModifiers": []
+      },
+      "maxCooldown": 0,
+      "startOnCooldown": false
     }
   ],
 
