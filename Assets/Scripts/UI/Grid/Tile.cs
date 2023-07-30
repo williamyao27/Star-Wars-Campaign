@@ -95,24 +95,30 @@ public class Tile : MonoBehaviour
 
         // Show targetability
         targetabilityHighlight.SetActive(isTargetable);
+
+        // Additionally, show terrain warning if the unit on this tile cannot be hit by the attack
+        if (Unit != null && !attackData.targetableTerrains.Contains(Unit.BaseData.terrain))
+        {
+            terrainWarning.SetActive(true);
+        }
     }
 
     /// <summary>
-    /// Clear the tile's state of targetability and remove the targetability highlight. 
+    /// Clear the tile's state of targetability and hide any related indicators on the tile.
     /// </summary>
     public void HideTargetability()
     {
         isTargetable = false;
         targetabilityHighlight.SetActive(isTargetable);
-        crosshair.SetActive(false);  // Also hide the crosshair in case the mouse has not yet exited
+        crosshair.SetActive(false);
+        terrainWarning.SetActive(false);
     }
 
     /// <summary>
-    /// Sets the transparency attack weight highlight of the tile as well as the terrain warning if needed. If the given weight is positive, also makes the targetability highlight for this tile completely transparent to prevent color clashing. If not, reverts it to full opacity.
+    /// Sets the transparency attack weight highlight of the tile. If the given weight is positive, also makes the targetability highlight for this tile completely transparent to prevent color clashing. If not, reverts it to full opacity.
     /// </summary>
     /// <param name="weight">The attack weight.</param>
-    /// <param name="showTerrainWarning">Whether to warn that the currently selected attack cannot strike the unit on this tile.</param>
-    public void SetWeightHighlightAndTerrainWarning(float weight, bool showTerrainWarning)
+    public void SetWeightHighlight(float weight)
     {
         // Set red weight highlight
         SpriteRenderer weightHighlightRenderer = weightHighlight.GetComponent<SpriteRenderer>();
@@ -125,9 +131,6 @@ public class Tile : MonoBehaviour
         highlightColor = targetabilityHighlightRenderer.color;
         highlightColor.a = (weight > 0f) ? 0f : 0.2f;  // Prefab opacity value is 51/255 = 0.2
         targetabilityHighlightRenderer.color = highlightColor;
-
-        // Set the terrain warning
-        terrainWarning.SetActive(showTerrainWarning);
     }
 
     private void OnMouseEnter()

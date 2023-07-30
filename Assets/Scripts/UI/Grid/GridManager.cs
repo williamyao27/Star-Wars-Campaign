@@ -139,7 +139,7 @@ public class GridManager : Singleton<GridManager>
     /// </summary>
     /// <param name="attacker">The unit for which the target tile is being selected.</param>
     /// <param name="attackData">Contains detail on how the target tile can be selected.</param>
-    public void ShowTargetableTiles(Unit attacker, AttackData attackData)
+    public void SetTargetableTiles(Unit attacker, AttackData attackData)
     {
         // Call each tile to set their own targetability based on the provided attack
         for (int teamNumber = 0; teamNumber < 2; teamNumber++)
@@ -246,13 +246,7 @@ public class GridManager : Singleton<GridManager>
                 // If the projected tile coordinates are valid for the board, and the attack weight is non-zero...
                 if (0 <= projectedCol && projectedCol < width && 0 <= projectedRow && projectedRow < height && attackWeight > 0)
                 {    
-                    Tile projectedTile = grid[teamNumber, projectedRow, projectedCol];
-                    
-                    // Check if an invalid terrain target marker needs to be displayed 
-                    Unit projectedUnit = projectedTile.Unit;
-                    bool showTerrainWarning = (projectedUnit != null && !attackData.targetableTerrains.Contains(projectedUnit.BaseData.terrain));
-
-                    projectedTile.SetWeightHighlightAndTerrainWarning(attackWeight, showTerrainWarning);
+                    grid[teamNumber, projectedRow, projectedCol].SetWeightHighlight(attackWeight);
                 }
             }
         }
@@ -269,7 +263,7 @@ public class GridManager : Singleton<GridManager>
             {
                 for (int col = 0; col < width; col++)
                 {
-                    grid[teamNumber, row, col].SetWeightHighlightAndTerrainWarning(0f, false);
+                    grid[teamNumber, row, col].SetWeightHighlight(0f);
                 }
             }
         }

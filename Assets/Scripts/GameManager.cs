@@ -134,7 +134,7 @@ public class GameManager : Singleton<GameManager>
             switch (ability.BaseData.requiredInput)
             {
                 case InputType.TargetTile:
-                    GridManager.instance.ShowTargetableTiles(currentTurnUnit, ability.BaseData.attackData);
+                    GridManager.instance.SetTargetableTiles(currentTurnUnit, ability.BaseData.attackData);
                     break;
                 default:
                     // Should not reach here
