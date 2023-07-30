@@ -118,27 +118,6 @@ public class GameManager : Singleton<GameManager>
     }
     
     /// <summary>
-    /// 
-    /// </summary>
-    public void UseAbility(Unit user, ActiveAbility ability, bool endTurn)
-    {
-        ability.Execute();
-
-        if (user == currentTurnUnit && endTurn)
-        {
-            // End the current turn
-            currentTurnUnit.EndTurn();
-            currentTurnUnit = null;
-
-            // Hide Abilities and other input selection from player
-            currentSelectedAbility = null;
-            CurrentRequiredInput = null;
-            AbilityPaletteManager.instance.HideAbilities();
-            GridManager.instance.HideTargetableTiles();
-        }
-    }
-
-    /// <summary>
     /// Calls the unit whose turn it currently is to use the selected Ability and then end their turn. If the given Ability requires further input, do not use it; instead, prepare for further input.
     /// </summary>
     /// <param name="ability"></param>
@@ -147,13 +126,14 @@ public class GameManager : Singleton<GameManager>
         // If further input is needed, simply store a reference to the given Ability as the currently selected one
         if (ability.BaseData.requiredInput != null)
         {
+            CloseSelectedAbility();
             currentSelectedAbility = ability;  // Store a reference to this Ability so it can be recalled when further input is made
+            CurrentRequiredInput = ability.BaseData.requiredInput;  // Track the input type required
 
-            // Track the input type required and prepare the necessary input prompts
+            // Prepare the necessary input prompts
             switch (ability.BaseData.requiredInput)
             {
                 case InputType.TargetTile:
-                    CurrentRequiredInput = InputType.TargetTile;
                     GridManager.instance.ShowTargetableTiles(currentTurnUnit, ability.BaseData.targetTileSelector);
                     break;
                 default:
@@ -186,7 +166,36 @@ public class GameManager : Singleton<GameManager>
         UseAbility(currentTurnUnit, currentSelectedAbility, true);
     }
 
+    /// <summary>
+    /// Clears the currently selected Ability and closes all input prompts that may be associated with it.
+    /// </summary>
+    private void CloseSelectedAbility()
+    {
+        currentSelectedAbility = null;
+
+        // Close input prompts
+        CurrentRequiredInput = null;
+        GridManager.instance.HideTargetableTiles();
+    }
+
     #endregion
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public void UseAbility(Unit user, ActiveAbility ability, bool endTurn)
+    {
+        ability.Execute();
+
+        if (user == currentTurnUnit && endTurn)
+        {
+            // End the current turn
+            currentTurnUnit.EndTurn();
+            currentTurnUnit = null;
+            CloseSelectedAbility();
+            AbilityPaletteManager.instance.HideAbilities();
+        }
+    }
 
     /// <summary>
     /// 

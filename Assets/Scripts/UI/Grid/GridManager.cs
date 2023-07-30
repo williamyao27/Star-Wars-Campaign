@@ -63,7 +63,7 @@ public class GridManager : Singleton<GridManager>
         }
         else
         {
-            // Team 1: grid is formed from the frontier line with the x-level moving right towards the rear
+            // Team 1: grid is formed from the frontier line with the x-level moving right towards the rear. It starts at 1.5 widths past the frontier line, where 1 comes from the width of the last tile on team 1's grid, and 0.5 comes from the gap
             return frontier + 1.5f * tileWidth + col * tileWidth;
         }
     }
