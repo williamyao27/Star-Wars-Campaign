@@ -20,9 +20,8 @@ public class AbilityPaletteManager : Singleton<AbilityPaletteManager>
             ActiveAbility currentAbility = abilities[i];
 
             // Instantiate Ability button
-            AbilityButton abilityButtonGO = Instantiate(abilityButtonPrefab);
+            AbilityButton abilityButtonGO = Instantiate(abilityButtonPrefab, new Vector3(i, -1, 0), Quaternion.identity);
             abilityButtonGO.transform.parent = transform;
-            abilityButtonGO.transform.localPosition = new Vector3(-650f + i * 175f, 0, -1);  // TODO: Decide on position
             abilityButtonGO.Initialize(currentAbility);
         }
     }

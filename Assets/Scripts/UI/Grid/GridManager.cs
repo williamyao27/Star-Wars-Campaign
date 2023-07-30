@@ -36,8 +36,7 @@ public class GridManager : Singleton<GridManager>
                     float tileY = ComputeTileY(row);
                     
                     // Instantiate tile
-                    Tile tile = Instantiate(tilePrefab, new Vector2(tileX, tileY), Quaternion.identity);
-                    tile.transform.parent = transform;
+                    Tile tile = Instantiate(tilePrefab, new Vector3(tileX, tileY, 0), Quaternion.identity, transform);
                     tile.Initialize(teamNumber, row, col);
 
                     // Track tile in grid array
@@ -56,16 +55,16 @@ public class GridManager : Singleton<GridManager>
     private float ComputeTileX(int col, int teamNumber)
     {
         float tileWidth = tilePrefab.transform.localScale.x;
-        float frontier = ((float)width - 1f) * tileWidth;  // Frontier is the x-level where the left column of team 1's grid is anchored; needs to fit width - 1 columns on the left
+        float frontier = (width - 1f) * tileWidth;  // Frontier is the x-level where the left column of team 1's grid is anchored; needs to fit width - 1 columns on the left
         if (teamNumber == 0)
         {
             // Team 0: grid is formed from the frontier line with the x-level moving left towards the rear
-            return frontier - (float)col * tileWidth;
+            return frontier - col * tileWidth;
         }
         else
         {
             // Team 1: grid is formed from the frontier line with the x-level moving right towards the rear
-            return frontier + 1.5f * tileWidth + (float)col * tileWidth;
+            return frontier + 1.5f * tileWidth + col * tileWidth;
         }
     }
 
@@ -77,7 +76,7 @@ public class GridManager : Singleton<GridManager>
     private float ComputeTileY(int row)
     {
         float tileHeight = tilePrefab.transform.localScale.y;
-        return (float)row * tileHeight;
+        return row * tileHeight;
     }
 
     /// <summary>
