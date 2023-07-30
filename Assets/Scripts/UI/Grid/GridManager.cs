@@ -135,31 +135,30 @@ public class GridManager : Singleton<GridManager>
     // }
 
     /// <summary>
-    /// Display all tiles on the grid that can serve as the target tile for the given target tile selector from the current user.
+    /// Highlight all tiles on the grid that can serve as the target tile for the given attack from the current user.
     /// </summary>
-    /// <param name="targeter">The unit for which the target tile is being selected.</param>
-    /// <param name="selector">Specifications for how the target tile can be selected.</param>
-    public void ShowTargetableTiles(Unit targeter, TargetTileSelector targetTileSelector)
+    /// <param name="attacker">The unit for which the target tile is being selected.</param>
+    /// <param name="attackData">Contains detail on how the target tile can be selected.</param>
+    public void ShowTargetableTiles(Unit attacker, AttackData attackData)
     {
-        // Call each tile to set their own targetability based on the provided selector
+        // Call each tile to set their own targetability based on the provided attack
         for (int teamNumber = 0; teamNumber < 2; teamNumber++)
         {
             for (int row = 0; row < height; row++)
             {
                 for (int col = 0; col < width; col++)
                 {
-                    grid[teamNumber, row, col].SetTargetability(targeter, targetTileSelector);
+                    grid[teamNumber, row, col].SetTargetability(attacker, attackData);
                 }
             }
         }
     }
 
     /// <summary>
-    /// 
+    /// Remove all targetability highlights from the grid. 
     /// </summary>
     public void HideTargetableTiles()
     {
-        // Hide each tile
         for (int teamNumber = 0; teamNumber < 2; teamNumber++)
         {
             for (int row = 0; row < height; row++)
@@ -173,9 +172,9 @@ public class GridManager : Singleton<GridManager>
     }
 
     /// <summary>
-    /// For the given attack pattern, determines the list of target units and the corresponding weight of the attack against them based on the placement of units on the board and the given target tile.
+    /// For the given attack pattern, determines the list of target units and the corresponding weight of the attack against them based on the placement of units on the board and the given pattern center.
     /// </summary>
-    /// <param name="attackPattern">Attack pattern as float weights in a 2D array.</param>
+    /// <param name="attackPattern">Attack pattern as a 2D array of weights.</param>
     /// <param name="teamNumber">The team whose half of the grid the target tile belongs to.</param>
     /// <param name="patternCenterRow">The row index of the tile.</param>
     /// <param name="patternCenterCol">The column index of the tile.</param>
@@ -197,7 +196,7 @@ public class GridManager : Singleton<GridManager>
                 int projectedCol = patternCenterCol + col - patternWidth / 2;
                 int projectedRow = patternCenterRow + row - patternHeight / 2;
 
-                // Get attack weight on the current tile as defined in attackPattern
+                // Get attack weight on the current tile
                 float attackWeight = attackPattern[row, col];
 
                 // If the projected tile coordinates are valid for the board, and the attack weight is non-zero...
@@ -217,5 +216,62 @@ public class GridManager : Singleton<GridManager>
         }
 
         return targetWeights;
+    }
+
+    /// <summary>
+    /// For the given attack pattern, highlights all tiles that lie within the pattern based on the given pattern center and sets terrain warning messages if needed.
+    /// </summary>
+    /// <param name="attackPattern">Attack pattern as a 2D array of weights.</param>
+    /// <param name="teamNumber">The team whose half of the grid the target tile belongs to.</param>
+    /// <param name="patternCenterRow">The row index of the tile.</param>
+    /// <param name="patternCenterCol">The column index of the tile.</param>
+    public void ProjectAttackPattern(AttackData attackData, int teamNumber, int patternCenterRow, int patternCenterCol)
+    {
+        // Retrieve pattern dimensions
+        int patternWidth = attackData.pattern.GetLength(0);
+        int patternHeight = attackData.pattern.GetLength(1);
+
+        // Traverse attack pattern
+        for (int row = 0; row < patternHeight; row++)
+        {
+            for (int col = 0; col < patternWidth; col++)
+            {   
+                // Compute which board tile the current attack pattern tile corresponds to
+                int projectedCol = patternCenterCol + col - patternWidth / 2;
+                int projectedRow = patternCenterRow + row - patternHeight / 2;
+
+                // Get attack weight on the current tile
+                float attackWeight = attackData.pattern[row, col];
+
+                // If the projected tile coordinates are valid for the board, and the attack weight is non-zero...
+                if (0 <= projectedCol && projectedCol < width && 0 <= projectedRow && projectedRow < height && attackWeight > 0)
+                {    
+                    Tile projectedTile = grid[teamNumber, projectedRow, projectedCol];
+                    
+                    // Check if an invalid terrain target marker needs to be displayed 
+                    Unit projectedUnit = projectedTile.Unit;
+                    bool showTerrainWarning = (projectedUnit != null && !attackData.targetableTerrains.Contains(projectedUnit.BaseData.terrain));
+
+                    projectedTile.SetWeightHighlightAndTerrainWarning(attackWeight, showTerrainWarning);
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Remove all attack weight highlights and terrain warnings from the grid.
+    /// </summary>
+    public void HideProjectedAttackPattern()
+    {
+        for (int teamNumber = 0; teamNumber < 2; teamNumber++)
+        {
+            for (int row = 0; row < height; row++)
+            {
+                for (int col = 0; col < width; col++)
+                {
+                    grid[teamNumber, row, col].SetWeightHighlightAndTerrainWarning(0f, false);
+                }
+            }
+        }
     }
 }

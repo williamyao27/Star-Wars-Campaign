@@ -25,33 +25,34 @@
   "activeAbilities": [
     {
       "name": "Zap!",
-      "description": "Attack the target tile.",
+      "description": "",
       "picture": "",
-      "actions": [
-        {
-          "type": "attack",
-          "attackEffects": {
-            "pattern": [
-              [1]
-            ],
-            "damage": 20,
-            "damageType": "Physical",
-            "accuracy": 90,
-            "armorPen": 0,
-            "critChance": 12,
-            "critDamage": 1.5,
-            "suppression": 3
-          }
-        }
-      ],
-      "requiredInput": "TargetTile",
-      "targetTileSelector": {
+      "attackData": {
+        "pattern": [
+          [1]
+        ],
+        "damage": 20,
+        "damageType": "Physical",
+        "accuracy": 90,
+        "armorPen": 0,
+        "critChance": 12,
+        "critDamage": 1.5,
         "range": 1,
         "lineOfFire": "Contact",
-        "lineOfFireModifiers": []
+        "lineOfFireModifiers": [],
+        "precision": "Strict",
+        "targetableTerrains": [
+          "Ground"
+        ]
       },
+      "requiredInput": "TargetTile",
       "maxCooldown": 0,
-      "startOnCooldown": false
+      "startOnCooldown": false,
+      "actions": [
+        {
+          "type": "attack"
+        }
+      ]
     },
     {
       "name": "Thank the Maker!",

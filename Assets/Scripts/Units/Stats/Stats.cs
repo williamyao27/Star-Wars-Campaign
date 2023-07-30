@@ -81,26 +81,4 @@ public class Stats
 
 }
 
-public enum Type
-{
-    Infantry,
-    Vehicle,
-    CapitalShip,
-    Equipment,
-}
-
-public enum Terrain
-{
-    Ground,
-    Aerial,
-}
-
-public enum Role
-{
-    Attacker,
-    Support,
-    Tank,
-    Healer,
-}
-
 // Note that the tag enum is stored in a separate file.

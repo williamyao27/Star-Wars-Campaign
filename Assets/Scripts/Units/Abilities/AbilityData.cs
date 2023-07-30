@@ -13,13 +13,11 @@ public class ActiveAbilityData
     public string description;
     public string picture;
 
-    public Action[] actions;
+    public AttackData attackData;
+    public InputType? requiredInput;
     public int maxCooldown;
     public bool startOnCooldown;
-    
-    // Input specifications
-    public InputType? requiredInput;
-    public TargetTileSelector targetTileSelector;  // Used for attacks
+    public Action[] actions;
 }
 
 /// <summary>
@@ -35,6 +33,6 @@ public class PassiveAbilityData
 
 public enum InputType
 {
-    TargetTile,
-    TargetAlly
+    TargetTile,  // Must be an enemy tile
+    Ally
 }

@@ -27,31 +27,33 @@
       "name": "Imperial Marksmanship",
       "description": "",
       "picture": "",
-      "actions": [
-        {
-          "type": "attack",
-          "attackEffects": {
-            "pattern": [
-              [1]
-            ],
-            "damage": 36,
-            "damageType": "Physical",
-            "accuracy": 85,
-            "armorPen": 0,
-            "critChance": 8,
-            "critDamage": 1.5,
-            "suppression": 2
-          }   
-        }
-      ],
-      "requiredInput": "TargetTile",
-      "targetTileSelector": {
+      "attackData": {
+        "pattern": [
+          [1]
+        ],
+        "damage": 36,
+        "damageType": "Physical",
+        "accuracy": 85,
+        "armorPen": 0,
+        "critChance": 8,
+        "critDamage": 1.5,
         "range": 2,
         "lineOfFire": "Contact",
-        "lineOfFireModifiers": []
+        "lineOfFireModifiers": [],
+        "precision": "Strict",
+        "targetableTerrains": [
+          "Ground",
+          "Aerial"
+        ]
       },
+      "requiredInput": "TargetTile",
       "maxCooldown": 0,
-      "startOnCooldown": false
+      "startOnCooldown": false,
+      "actions": [
+        {
+          "type": "attack"
+        }
+      ]
     }
   ],
 
