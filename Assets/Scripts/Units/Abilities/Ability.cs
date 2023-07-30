@@ -23,10 +23,10 @@ public class ActiveAbility
         // Begin cooldown
         Cooldown = BaseData.maxCooldown;
 
-        // Execute actions
+        // Execute actions using this Ability instance as context
         foreach (Action action in BaseData.actions)
         {
-            action.Execute();
+            action.Execute(this);
         }
     }
 }

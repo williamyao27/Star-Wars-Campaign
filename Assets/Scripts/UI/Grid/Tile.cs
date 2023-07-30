@@ -9,8 +9,10 @@ public class Tile : MonoBehaviour
 {
     [SerializeField] private GameObject crosshair;
     [SerializeField] private GameObject targetabilityHighlight;
+    [SerializeField] private GameObject weightHighlight;
+    [SerializeField] private GameObject terrainWarning;
     [SerializeField] private Color baseColor, darkColor;
-    [SerializeField] private SpriteRenderer renderer;
+    [SerializeField] private new SpriteRenderer renderer;
     public Unit Unit { get; set; }  // Associated unit instance
     public int TeamNumber { get; set; }
     public int Row { get; set; }
@@ -21,8 +23,8 @@ public class Tile : MonoBehaviour
     /// Initializes the tile object's name and color based on its position on the board.
     /// </summary>
     /// <param name="teamNumber">On which team's half of the board this tile belongs.</param>
-    /// <param name="row">The row of this tile relative to its half of the board.</param>
-    /// <param name="col">The column of this tile relative to its half of the board.</param>
+    /// <param name="row">The row of this tile on its half of the board.</param>
+    /// <param name="col">The column of this tile on its half of the board.</param>
     public void Initialize(int teamNumber, int row, int col)
     {
         name = $"Team {teamNumber} Tile ({col}, {row})";
@@ -36,54 +38,54 @@ public class Tile : MonoBehaviour
     }
 
     /// <summary>
-    /// 
+    /// Check whether this tile is targetable based on the location of the attacker and the attack specifications and highlight the tile if so.
     /// </summary>
-    /// <param name="targeter"></param>
-    /// <param name="selector"></param>
-    public void SetTargetability(Unit targeter, TargetTileSelector targetTileSelector)
+    /// <param name="attacker">The attacking unit.</param>
+    /// <param name="attackData">Contains detail on how the target tile can be selected</param>
+    public void SetTargetability(Unit attacker, AttackData attackData)
     {
         isTargetable = true;
 
-        // Invalid if tile is on the targeter's side of the grid
-        if (TeamNumber == targeter.TeamNumber) {
+        // Invalid if tile is on the attacker's side of the grid
+        if (TeamNumber == attacker.TeamNumber) {
             isTargetable = false;
         }
 
         // Invalid if column is out of range
         int distance;
-        if (targetTileSelector.lineOfFireModifiers.Contains(LineOfFireModifier.Rear))
+        if (attackData.lineOfFireModifiers.Contains(LineOfFireModifier.Rear))
         {
-            distance = 3 - targeter.Col + 3 - Col + 1;
+            distance = 3 - attacker.Col + 3 - Col + 1;
         }
         else
         {
-            distance = targeter.Col + Col + 1;
+            distance = attacker.Col + Col + 1;
         }
 
-        if (distance > targetTileSelector.range)
+        if (distance > attackData.range)
         {
             isTargetable = false;
         }
 
-        // Invalid if the selector is Fixed and the tile is in a different row
-        if (targetTileSelector.lineOfFireModifiers.Contains(LineOfFireModifier.Fixed) && targeter.Row != Row)
+        // Invalid if the LoF is Fixed and the tile is in a different row
+        if (attackData.lineOfFireModifiers.Contains(LineOfFireModifier.Fixed) && attacker.Row != Row)
         {
             isTargetable = false;
         }
 
         // Invalid if certain units exist in the same row in front
         List<Unit> unitsInFront = new List<Unit>();
-        if (targetTileSelector.lineOfFireModifiers.Contains(LineOfFireModifier.Rear) && Col <= 2)
+        if (attackData.lineOfFireModifiers.Contains(LineOfFireModifier.Rear) && Col <= 2)
         {
             unitsInFront = GridManager.instance.GetUnitsInArea(TeamNumber, Row, Row, Col + 1, 3);   
         }
-        if (!targetTileSelector.lineOfFireModifiers.Contains(LineOfFireModifier.Rear) && Col >= 1)
+        else if (!attackData.lineOfFireModifiers.Contains(LineOfFireModifier.Rear) && Col >= 1)
         {
             unitsInFront = GridManager.instance.GetUnitsInArea(TeamNumber, Row, Row, 0, Col - 1);
         }
         foreach (Unit unit in unitsInFront) {
             // If LoF == Contact, blocked by everything; if LOF == Direct, blocked by covering units
-            if (targetTileSelector.lineOfFire == LineOfFire.Contact || (targetTileSelector.lineOfFire == LineOfFire.Direct && !(unit.CurrentStats.cover)))
+            if (attackData.lineOfFire == LineOfFire.Contact || (attackData.lineOfFire == LineOfFire.Direct && !(unit.CurrentStats.cover)))
             {
                 isTargetable = false;
             }
@@ -96,7 +98,7 @@ public class Tile : MonoBehaviour
     }
 
     /// <summary>
-    /// 
+    /// Clear the tile's state of targetability and remove the targetability highlight. 
     /// </summary>
     public void HideTargetability()
     {
@@ -105,19 +107,44 @@ public class Tile : MonoBehaviour
         crosshair.SetActive(false);  // Also hide the crosshair in case the mouse has not yet exited
     }
 
-    // Note that Tiles respond to mouse enter/exits when a target tile must be selected, but this does not involve a highlight and so they do not derive from HoverHighlightable.
+    /// <summary>
+    /// Sets the transparency attack weight highlight of the tile as well as the terrain warning if needed. If the given weight is positive, also makes the targetability highlight for this tile completely transparent to prevent color clashing. If not, reverts it to full opacity.
+    /// </summary>
+    /// <param name="weight">The attack weight.</param>
+    /// <param name="showTerrainWarning">Whether to warn that the currently selected attack cannot strike the unit on this tile.</param>
+    public void SetWeightHighlightAndTerrainWarning(float weight, bool showTerrainWarning)
+    {
+        // Set red weight highlight
+        SpriteRenderer weightHighlightRenderer = weightHighlight.GetComponent<SpriteRenderer>();
+        Color highlightColor = weightHighlightRenderer.color;
+        highlightColor.a = weight;
+        weightHighlightRenderer.color = highlightColor;
+
+        // Toggle the transparency of the targetability highlight based on the weight
+        SpriteRenderer targetabilityHighlightRenderer = targetabilityHighlight.GetComponent<SpriteRenderer>();
+        highlightColor = targetabilityHighlightRenderer.color;
+        highlightColor.a = (weight > 0f) ? 0f : 0.2f;  // Prefab opacity value is 51/255 = 0.2
+        targetabilityHighlightRenderer.color = highlightColor;
+
+        // Set the terrain warning
+        terrainWarning.SetActive(showTerrainWarning);
+    }
+
     private void OnMouseEnter()
     {
-        // If a target tile input is currently required and this is an eligible target, display a crosshair over the tile
+        // If a target tile input is currently required and this is an eligible target, display a crosshair over the tile as well as a projection of the attack pattern
         if (GameManager.instance.CurrentRequiredInput == InputType.TargetTile && isTargetable)
         {
             crosshair.SetActive(true);
+            GridManager.instance.ProjectAttackPattern(GameManager.instance.CurrentSelectedAbility.BaseData.attackData, TeamNumber, Row, Col);
         }
     }
 
     private void OnMouseExit()
     {
+        // Reset any visualization of the currently selected attack's targets
         crosshair.SetActive(false);
+        GridManager.instance.HideProjectedAttackPattern();
     }
 
     private void OnMouseDown()

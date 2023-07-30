@@ -21,7 +21,7 @@ public class GameManager : Singleton<GameManager>
     public List<Unit> Team1 { get; set; } = new List<Unit>();
     private List<Unit> turnReadyUnits = new List<Unit>();
     private Unit currentTurnUnit;
-    private ActiveAbility currentSelectedAbility;
+    public ActiveAbility CurrentSelectedAbility {get; set; }
     public InputType? CurrentRequiredInput { get; set; }
 
     // Input
@@ -50,8 +50,8 @@ public class GameManager : Singleton<GameManager>
     /// </summary>
     /// <param name="name">The name of the new unit.</param>
     /// <param name="teamNumber">The team to which this unit belongs.</param>
-    /// <param name="x">The x-position of the unit.</param>
-    /// <param name="y">The y-position of the unit.</param>
+    /// <param name="row">The row of the unit.</param>
+    /// <param name="col">The column of the unit.</param>
     private void AddUnit(string name, int teamNumber, int row, int col)
     {
         List<Unit> teamToAdd = (teamNumber == 0) ? Team0 : Team1;
@@ -120,21 +120,21 @@ public class GameManager : Singleton<GameManager>
     /// <summary>
     /// Calls the unit whose turn it currently is to use the selected Ability and then end their turn. If the given Ability requires further input, do not use it; instead, prepare for further input.
     /// </summary>
-    /// <param name="ability"></param>
+    /// <param name="ability">The Ability to use.</param>
     public void SelectAbility(ActiveAbility ability)
     {
         // If further input is needed, simply store a reference to the given Ability as the currently selected one
         if (ability.BaseData.requiredInput != null)
         {
             CloseSelectedAbility();
-            currentSelectedAbility = ability;  // Store a reference to this Ability so it can be recalled when further input is made
+            CurrentSelectedAbility = ability;  // Store a reference to this Ability so it can be recalled when further input is made
             CurrentRequiredInput = ability.BaseData.requiredInput;  // Track the input type required
 
             // Prepare the necessary input prompts
             switch (ability.BaseData.requiredInput)
             {
                 case InputType.TargetTile:
-                    GridManager.instance.ShowTargetableTiles(currentTurnUnit, ability.BaseData.targetTileSelector);
+                    GridManager.instance.ShowTargetableTiles(currentTurnUnit, ability.BaseData.attackData);
                     break;
                 default:
                     // Should not reach here
@@ -153,9 +153,9 @@ public class GameManager : Singleton<GameManager>
     /// <summary>
     /// Sets the target tile for the currently selected Ability, then uses it and ends the current turn.
     /// </summary>
-    /// <param name="teamNumber"></param>
-    /// <param name="row"></param>
-    /// <param name="col"></param>
+    /// <param name="teamNumber">The team to which the tile belongs.</param>
+    /// <param name="row">The row of the tile.</param>
+    /// <param name="col">The column of the tile.</param>
     public void SelectTargetTile(int teamNumber, int row, int col)
     {
         // Set target tile details
@@ -163,7 +163,7 @@ public class GameManager : Singleton<GameManager>
         targetTileRow = row;
         targetTileCol = col;
 
-        UseAbility(currentTurnUnit, currentSelectedAbility, true);
+        UseAbility(currentTurnUnit, CurrentSelectedAbility, true);
     }
 
     /// <summary>
@@ -171,11 +171,12 @@ public class GameManager : Singleton<GameManager>
     /// </summary>
     private void CloseSelectedAbility()
     {
-        currentSelectedAbility = null;
+        CurrentSelectedAbility = null;
 
         // Close input prompts
         CurrentRequiredInput = null;
         GridManager.instance.HideTargetableTiles();
+        GridManager.instance.HideProjectedAttackPattern();
     }
 
     #endregion
@@ -185,11 +186,11 @@ public class GameManager : Singleton<GameManager>
     /// </summary>
     public void UseAbility(Unit user, ActiveAbility ability, bool endTurn)
     {
-        ability.Execute();
+        ability.Execute();  // TODO: Add Ability context
 
+        // If the user is the unit whose turn it currently is, and this is flagged as a turn-ending Ability (i.e. the one move allotted to a unit per turn), end the turn.
         if (user == currentTurnUnit && endTurn)
         {
-            // End the current turn
             currentTurnUnit.EndTurn();
             currentTurnUnit = null;
             CloseSelectedAbility();
@@ -198,20 +199,20 @@ public class GameManager : Singleton<GameManager>
     }
 
     /// <summary>
-    /// 
+    /// Perform the given attack at the current target tile.
     /// </summary>
-    /// <param name="attack"></param>
-    public void Attack(AttackEffects attackEffects)
+    /// <param name="attackData">All data related to the attack.</param>
+    public void Attack(AttackData attackData)
     {
         // Determine list of targets
-        List<Tuple<Unit, float>> targetWeights = GridManager.instance.EvaluateAttackPattern(attackEffects.pattern, targetTileTeam, targetTileRow, targetTileCol);
+        List<Tuple<Unit, float>> targetWeights = GridManager.instance.EvaluateAttackPattern(attackData.pattern, targetTileTeam, targetTileRow, targetTileCol);
 
         // Evaluate attack against each target separately
         foreach (Tuple<Unit, float> targetWeight in targetWeights)
         {
             Unit target = targetWeight.Item1;
             float weight = targetWeight.Item2;
-            target.ReceiveAttack(attackEffects, weight);
+            target.ReceiveAttack(attackData, weight);
         }
     }
 

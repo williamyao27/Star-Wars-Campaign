@@ -162,22 +162,28 @@ public class Unit : MonoBehaviour
     /// </summary>
     /// <param name="attack"></param>
     /// <param name="weight"></param>
-    public void ReceiveAttack(AttackEffects attackEffects, float weight)
+    public void ReceiveAttack(AttackData attackData, float weight)
     {
+        // Terrain check; if the attack cannot strike the unit's terrain, ignore it completely
+        if (!attackData.targetableTerrains.Contains(BaseData.terrain))
+        {
+            return;
+        }
+
         // Evasion check
-        int chanceToHit = attackEffects.accuracy - CurrentStats.evasion;
+        int chanceToHit = attackData.accuracy - CurrentStats.evasion;
         if (Random.Range(0, 100) < chanceToHit)  // Attack hits
         {
-            float rawDamageAmount = attackEffects.damage * weight;
+            float rawDamage = attackData.damage * weight;
 
             // Critical Hit check
-            int chanceToCrit = attackEffects.critChance - CurrentStats.critAvoidance;
+            int chanceToCrit = attackData.critChance - CurrentStats.critAvoidance;
             if (Random.Range(0, 100) < chanceToCrit)  // Attack crits
             {
-                rawDamageAmount *= attackEffects.critDamage;
+                rawDamage *= attackData.critDamage;
             }
 
-            ReceiveDamage(rawDamageAmount, attackEffects.damageType, attackEffects.armorPen);
+            ReceiveDamage(rawDamage, attackData.damageType, attackData.armorPen);
         }
         else  // Attack is Evaded
         {

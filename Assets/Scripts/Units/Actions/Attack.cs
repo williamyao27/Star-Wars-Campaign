@@ -3,10 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 
 /// <summary>
-/// This struct is a data container that stores all of the effects, including damage, associated with an attack. It does not describe any specifications how the target tile for the attack, if needed, may be selected.
+/// This struct is a data container that stores all of the effects and target selection details associated with an attack.
 /// </summary>
 [Serializable]
-public struct AttackEffects
+public struct AttackData
 {
     public float[,] pattern;
     public float damage;
@@ -15,19 +15,11 @@ public struct AttackEffects
     public float armorPen;
     public int critChance;
     public float critDamage;
-    public float suppression;
-    public Precision precision;
-}
-
-/// <summary>
-/// This struct is a data container that stores all information regarding how an attack may select the target tile.
-/// </summary>
-[Serializable]
-public struct TargetTileSelector
-{
     public int range;
     public LineOfFire lineOfFire;
     public List<LineOfFireModifier> lineOfFireModifiers;
+    public Precision precision;
+    public List<Terrain> targetableTerrains;
 }
 
 public enum DamageType

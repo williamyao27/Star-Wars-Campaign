@@ -19,3 +19,25 @@ public struct UnitData
     public List<ActiveAbilityData> activeAbilities;
     public List<PassiveAbilityData> passiveAbilities;
 }
+
+public enum Type
+{
+    Infantry,
+    Vehicle,
+    CapitalShip,
+    Equipment,
+}
+
+public enum Terrain
+{
+    Ground,
+    Aerial,
+}
+
+public enum Role
+{
+    Attacker,
+    Support,
+    Tank,
+    Healer,
+}
