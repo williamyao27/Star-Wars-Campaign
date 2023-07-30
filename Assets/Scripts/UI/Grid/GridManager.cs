@@ -155,7 +155,7 @@ public class GridManager : Singleton<GridManager>
     }
 
     /// <summary>
-    /// Remove all targetability highlights from the grid. 
+    /// Remove all targetability highlights and terrain warnings from the grid. 
     /// </summary>
     public void HideTargetableTiles()
     {
@@ -170,19 +170,17 @@ public class GridManager : Singleton<GridManager>
             }
         }
     }
-
+    
     /// <summary>
-    /// For the given attack pattern, determines the list of target units and the corresponding weight of the attack against them based on the placement of units on the board and the given pattern center.
+    /// Performs the given operation on tiles in the grid based on the given attack pattern.
     /// </summary>
     /// <param name="attackPattern">Attack pattern as a 2D array of weights.</param>
     /// <param name="teamNumber">The team whose half of the grid the target tile belongs to.</param>
-    /// <param name="patternCenterRow">The row index of the tile.</param>
-    /// <param name="patternCenterCol">The column index of the tile.</param>
-    /// <returns>List of tuples where each tuple is a target unit and its corresponding attack weight.</returns>
-    public List<Tuple<Unit, float>> EvaluateAttackPattern(float[,] attackPattern, int teamNumber, int patternCenterRow, int patternCenterCol)
+    /// <param name="patternCenterRow">The row index of the target tile.</param>
+    /// <param name="patternCenterCol">The column index of the target tile.</param>
+    /// <param name="processTileAction">The action to perform with each tile and corresponding weight in the pattern.</param>
+    private void ProcessAttackPattern(float[,] attackPattern, int teamNumber, int patternCenterRow, int patternCenterCol, Action<Tile, float> processTileAction)
     {
-        List<Tuple<Unit, float>> targetWeights = new List<Tuple<Unit, float>>();
-
         // Retrieve pattern dimensions
         int patternWidth = attackPattern.GetLength(0);
         int patternHeight = attackPattern.GetLength(1);
@@ -191,7 +189,7 @@ public class GridManager : Singleton<GridManager>
         for (int row = 0; row < patternHeight; row++)
         {
             for (int col = 0; col < patternWidth; col++)
-            {   
+            {
                 // Compute which board tile the current attack pattern tile corresponds to
                 int projectedCol = patternCenterCol + col - patternWidth / 2;
                 int projectedRow = patternCenterRow + row - patternHeight / 2;
@@ -202,60 +200,59 @@ public class GridManager : Singleton<GridManager>
                 // If the projected tile coordinates are valid for the board, and the attack weight is non-zero...
                 if (0 <= projectedCol && projectedCol < width && 0 <= projectedRow && projectedRow < height && attackWeight > 0)
                 {
-                    Unit projectedUnit = grid[teamNumber, projectedRow, projectedCol].Unit;
-
-                    // And if a unit exists on the projected tile...
-                    if (projectedUnit != null)
-                    {
-                        // Add to the list of targets
-                        Tuple<Unit, float> targetWeight = new Tuple<Unit, float>(projectedUnit, attackWeight);
-                        targetWeights.Add(targetWeight);
-                    }
+                    Tile projectedTile = grid[teamNumber, projectedRow, projectedCol];
+                    processTileAction(projectedTile, attackWeight);
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// For the given attack pattern, determines the list of target units and the corresponding weight of the attack against them based on the placement of units on the board and the given pattern center.
+    /// </summary>
+    /// <param name="attackPattern">Attack pattern as a 2D array of weights.</param>
+    /// <param name="teamNumber">The team whose half of the grid the target tile belongs to.</param>
+    /// <param name="patternCenterRow">The row index of the target tile.</param>
+    /// <param name="patternCenterCol">The column index of the target tile.</param>
+    /// <returns>List of tuples where each tuple is a target unit and its corresponding attack weight.</returns>
+    public List<Tuple<Unit, float>> EvaluateAttackPattern(float[,] attackPattern, int teamNumber, int patternCenterRow, int patternCenterCol)
+    {
+        List<Tuple<Unit, float>> targetWeights = new List<Tuple<Unit, float>>();
+
+        ProcessAttackPattern(attackPattern, teamNumber, patternCenterRow, patternCenterCol, (tile, attackWeight) =>
+            {
+                Unit projectedUnit = tile.Unit;
+
+                // If a unit exists on the projected tile, add it and its corresponding weight to the list
+                if (projectedUnit != null)
+                {
+                    targetWeights.Add(new Tuple<Unit, float>(projectedUnit, attackWeight));
+                }
+            }
+        );
 
         return targetWeights;
     }
 
     /// <summary>
-    /// For the given attack pattern, highlights all tiles that lie within the pattern based on the given pattern center and sets terrain warning messages if needed.
+    /// For the given attack pattern, highlights all tiles that lie within the pattern based on the given pattern center.
     /// </summary>
     /// <param name="attackPattern">Attack pattern as a 2D array of weights.</param>
     /// <param name="teamNumber">The team whose half of the grid the target tile belongs to.</param>
-    /// <param name="patternCenterRow">The row index of the tile.</param>
-    /// <param name="patternCenterCol">The column index of the tile.</param>
-    public void ProjectAttackPattern(AttackData attackData, int teamNumber, int patternCenterRow, int patternCenterCol)
+    /// <param name="patternCenterRow">The row index of the target tile.</param>
+    /// <param name="patternCenterCol">The column index of the target tile.</param>
+    public void VisualizeAttackPattern(AttackData attackData, int teamNumber, int patternCenterRow, int patternCenterCol)
     {
-        // Retrieve pattern dimensions
-        int patternWidth = attackData.pattern.GetLength(0);
-        int patternHeight = attackData.pattern.GetLength(1);
-
-        // Traverse attack pattern
-        for (int row = 0; row < patternHeight; row++)
+        ProcessAttackPattern(attackData.pattern, teamNumber, patternCenterRow, patternCenterCol, (tile, attackWeight) =>
         {
-            for (int col = 0; col < patternWidth; col++)
-            {   
-                // Compute which board tile the current attack pattern tile corresponds to
-                int projectedCol = patternCenterCol + col - patternWidth / 2;
-                int projectedRow = patternCenterRow + row - patternHeight / 2;
-
-                // Get attack weight on the current tile
-                float attackWeight = attackData.pattern[row, col];
-
-                // If the projected tile coordinates are valid for the board, and the attack weight is non-zero...
-                if (0 <= projectedCol && projectedCol < width && 0 <= projectedRow && projectedRow < height && attackWeight > 0)
-                {    
-                    grid[teamNumber, projectedRow, projectedCol].SetWeightHighlight(attackWeight);
-                }
-            }
-        }
+            tile.SetWeightHighlight(attackWeight);
+        });
     }
 
     /// <summary>
     /// Remove all attack weight highlights and terrain warnings from the grid.
     /// </summary>
-    public void HideProjectedAttackPattern()
+    public void HideVisualizedAttackPattern()
     {
         for (int teamNumber = 0; teamNumber < 2; teamNumber++)
         {

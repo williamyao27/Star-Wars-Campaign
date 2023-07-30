@@ -165,7 +165,7 @@ public class Unit : MonoBehaviour
     public void ReceiveAttack(AttackData attackData, float weight)
     {
         // Terrain check; if the attack cannot strike the unit's terrain, ignore it completely
-        if (!attackData.targetableTerrains.Contains(BaseData.terrain))
+        if (!IsTargetableTerrain(this, attackData))
         {
             return;
         }
@@ -210,6 +210,17 @@ public class Unit : MonoBehaviour
         AddArmor(amountToArmor * -1f);
 
         Debug.Log($"{BaseData.name} received {amount} Damage (Health: {amountToHealth}, Armor: {amountToArmor}, raw: {rawAmount}). Remaining HP: {Health + Armor}.");
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="target"></param>
+    /// <param name="attackData"></param>
+    /// <returns></returns>
+    public static bool IsTargetableTerrain(Unit target, AttackData attackData)
+    {
+        return attackData.targetableTerrains.Contains(target.BaseData.terrain);
     }
 
     #endregion

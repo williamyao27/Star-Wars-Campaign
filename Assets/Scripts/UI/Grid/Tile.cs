@@ -97,7 +97,7 @@ public class Tile : MonoBehaviour
         targetabilityHighlight.SetActive(isTargetable);
 
         // Additionally, show terrain warning if the unit on this tile cannot be hit by the attack
-        if (Unit != null && !attackData.targetableTerrains.Contains(Unit.BaseData.terrain))
+        if (Unit != null && !Unit.IsTargetableTerrain(Unit, attackData))
         {
             terrainWarning.SetActive(true);
         }
@@ -139,7 +139,7 @@ public class Tile : MonoBehaviour
         if (GameManager.instance.CurrentRequiredInput == InputType.TargetTile && isTargetable)
         {
             crosshair.SetActive(true);
-            GridManager.instance.ProjectAttackPattern(GameManager.instance.CurrentSelectedAbility.BaseData.attackData, TeamNumber, Row, Col);
+            GridManager.instance.VisualizeAttackPattern(GameManager.instance.CurrentSelectedAbility.BaseData.attackData, TeamNumber, Row, Col);
         }
     }
 
@@ -147,7 +147,7 @@ public class Tile : MonoBehaviour
     {
         // Reset any visualization of the currently selected attack's targets
         crosshair.SetActive(false);
-        GridManager.instance.HideProjectedAttackPattern();
+        GridManager.instance.HideVisualizedAttackPattern();
     }
 
     private void OnMouseDown()

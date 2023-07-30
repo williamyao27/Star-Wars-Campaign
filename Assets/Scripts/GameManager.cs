@@ -176,7 +176,7 @@ public class GameManager : Singleton<GameManager>
         // Close input prompts
         CurrentRequiredInput = null;
         GridManager.instance.HideTargetableTiles();
-        GridManager.instance.HideProjectedAttackPattern();
+        GridManager.instance.HideVisualizedAttackPattern();
     }
 
     #endregion
