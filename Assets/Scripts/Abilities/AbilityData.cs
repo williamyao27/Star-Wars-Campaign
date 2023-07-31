@@ -13,10 +13,10 @@ public class ActiveAbilityData
     public string description;
     public string picture;
 
-    public AttackData attackData;
+    public int maxCooldown = 0;
+    public bool startOnCooldown = false;
     public InputType? requiredInput;
-    public int maxCooldown;
-    public bool startOnCooldown;
+    public AttackData attackData;
     public Action[] actions;
 }
 

@@ -1,22 +1,22 @@
 {
-  "name": "Anakin Skywalker (Young)",
+  "name": "Stormtrooper",
   "description": "",
   "picture": "",
   "type": "Infantry",
   "terrain": "Ground",
-  "role": "Healer",
+  "role": "Tank",
   "stats": {
     "tags": [
       "Organic",
-      "ForceSensitive"
+      "Empire"
     ],
-    "maxHealth": 150,
-    "maxArmor": 0,
-    "physicalDefense": 8,
-    "specialDefense": 12,
-    "speed": 150,
-    "evasion": 20,
-    "bravery": 1,
+    "maxHealth": 250,
+    "maxArmor": 100,
+    "physicalDefense": 15,
+    "specialDefense": 15,
+    "speed": 80,
+    "evasion": 10,
+    "bravery": 0.5,
     "resistance": 0,
     "potency": 0,
     "cover": false
@@ -24,50 +24,53 @@
 
   "activeAbilities": [
     {
-      "name": "Zap!",
+      "name": "Imperial Marksmanship",
       "description": "",
       "picture": "",
       "attackData": {
         "pattern": [
           [1]
         ],
-        "damage": 20,
+        "damage": 36,
         "damageType": "Physical",
-        "accuracy": 90,
+        "accuracy": 85,
         "armorPen": 0,
-        "critChance": 12,
+        "critChance": 8,
         "critDamage": 1.5,
-        "range": 1,
+        "range": 2,
         "lineOfFire": "Contact",
         "lineOfFireModifiers": [],
         "precision": "Strict",
         "targetableTerrains": [
-          "Ground"
+          "Ground",
+          "Aerial"
         ]
       },
       "requiredInput": "TargetTile",
-      "maxCooldown": 0,
-      "startOnCooldown": false,
       "actions": [
         {
-          "type": "attack"
+          "type": "PerformAttack"
         }
       ]
     },
     {
-      "name": "Thank the Maker!",
+      "name": "Imperial Marksmanship",
       "description": "",
       "picture": "",
       "actions": [
-      ],
-      "maxCooldown": 2,
-      "startOnCooldown": false
+        {
+          "type": "GrantBuffs",
+          "buffNames": [
+            "Defense Buff"
+          ]
+        }
+      ]
     }
   ],
 
   "passiveAbilities": [
     {
-      "name": "Podracer Reflexes",
+      "name": "Wall of Stormtroopers",
       "description": "",
       "picture": ""
     }

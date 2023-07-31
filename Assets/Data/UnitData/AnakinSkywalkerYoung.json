@@ -1,22 +1,22 @@
 {
-  "name": "Stormtrooper",
+  "name": "Anakin Skywalker (Young)",
   "description": "",
   "picture": "",
   "type": "Infantry",
   "terrain": "Ground",
-  "role": "Tank",
+  "role": "Healer",
   "stats": {
     "tags": [
       "Organic",
-      "Empire"
+      "ForceSensitive"
     ],
-    "maxHealth": 250,
-    "maxArmor": 100,
-    "physicalDefense": 10,
-    "specialDefense": 10,
-    "speed": 80,
-    "evasion": 10,
-    "bravery": 0.5,
+    "maxHealth": 150,
+    "maxArmor": 0,
+    "physicalDefense": 12,
+    "specialDefense": 18,
+    "speed": 150,
+    "evasion": 20,
+    "bravery": 1,
     "resistance": 0,
     "potency": 0,
     "cover": false
@@ -24,42 +24,48 @@
 
   "activeAbilities": [
     {
-      "name": "Imperial Marksmanship",
+      "name": "Zap!",
       "description": "",
       "picture": "",
       "attackData": {
         "pattern": [
           [1]
         ],
-        "damage": 36,
+        "damage": 20,
         "damageType": "Physical",
-        "accuracy": 85,
+        "accuracy": 90,
         "armorPen": 0,
-        "critChance": 8,
+        "critChance": 12,
         "critDamage": 1.5,
-        "range": 2,
+        "range": 1,
         "lineOfFire": "Contact",
         "lineOfFireModifiers": [],
         "precision": "Strict",
         "targetableTerrains": [
-          "Ground",
-          "Aerial"
+          "Ground"
         ]
       },
       "requiredInput": "TargetTile",
-      "maxCooldown": 0,
-      "startOnCooldown": false,
       "actions": [
         {
-          "type": "attack"
+          "type": "PerformAttack"
         }
       ]
+    },
+    {
+      "name": "Thank the Maker!",
+      "description": "",
+      "picture": "",
+      "actions": [
+      ],
+      "maxCooldown": 2,
+      "startOnCooldown": false
     }
   ],
 
   "passiveAbilities": [
     {
-      "name": "Wall of Stormtroopers",
+      "name": "Podracer Reflexes",
       "description": "",
       "picture": ""
     }

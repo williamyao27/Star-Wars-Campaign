@@ -8,23 +8,23 @@ using UnityEngine;
 public class Unit : MonoBehaviour
 {
     [SerializeField] private UnitDisplay display;
-    public UnitData BaseData { get; set; }
+    public UnitData Data { get; set; }
     public int TeamNumber { get; set; }
     public int Row { get; set; }
     public int Col { get; set; }
-    public float Health { get; set; }
-    public float Armor { get; set; }
-    public float TurnMeter { get; set; }  // In percentage points, i.e. unit takes turn at TurnMeter == 100f
-    public List<ActiveAbility> ActiveAbilities { get; set; }
-    public List<PassiveAbility> PassiveAbilities { get; set; }
-    public List<Modifier> Modifiers { get; set; }
+    private float health;
+    private float armor;
+    private float turnMeter;  // In percentage points, i.e. unit takes turn at turnMeter == 100f
+    private List<ActiveAbility> activeAbilities = new List<ActiveAbility>();
+    private List<PassiveAbility> passiveAbilities = new List<PassiveAbility>();
+    private List<StatusEffect> statusEffects = new List<StatusEffect>();
 
     // Get current stats from base data plus all modifiers
     public Stats CurrentStats
     {
         get
         {
-            return Stats.ApplyModifiers(BaseData.stats, Modifiers);
+            return Stats.ApplyStatusEffects(Data.stats, statusEffects);
         }
     }
     
@@ -33,7 +33,7 @@ public class Unit : MonoBehaviour
     {
         get
         {
-            return ActiveAbilities[0];
+            return activeAbilities[0];
         }
     }
 
@@ -61,30 +61,28 @@ public class Unit : MonoBehaviour
     public void Initialize()
     {
         // Stats
-        Health = CurrentStats.maxHealth;
-        Armor = CurrentStats.maxArmor;
-        TurnMeter = 0f;
+        health = CurrentStats.maxHealth;
+        armor = CurrentStats.maxArmor;
+        turnMeter = 0f;
         
         // Active Abilities
-        ActiveAbilities = new List<ActiveAbility>();
-        foreach (ActiveAbilityData data in BaseData.activeAbilities)
+        foreach (ActiveAbilityData abilityData in Data.activeAbilities)
         {
-            ActiveAbilities.Add(new ActiveAbility(data));
+            activeAbilities.Add(new ActiveAbility(abilityData));
         }
         
         // Passive Abilities
-        PassiveAbilities = new List<PassiveAbility>();
-        foreach (PassiveAbilityData data in BaseData.passiveAbilities)
+        foreach (PassiveAbilityData abilityData in Data.passiveAbilities)
         {
-            PassiveAbilities.Add(new PassiveAbility(data));
+            passiveAbilities.Add(new PassiveAbility(abilityData));
         }
 
         // Connect unit to its tile
         GridManager.instance.ConnectUnitToTile(this);
 
         // Visual
-        display.UpdateHealthArmorBar(Health, CurrentStats.maxHealth, Armor, CurrentStats.maxArmor);
-        display.UpdateTurnMeterBar(TurnMeter);
+        display.UpdateHealthArmorBar(health, CurrentStats.maxHealth, armor, CurrentStats.maxArmor);
+        display.UpdateTurnMeterBar(turnMeter);
     }
 
     #region Turn Meter
@@ -96,10 +94,10 @@ public class Unit : MonoBehaviour
     /// <returns>Whether the unit has reached 100% TM.</returns>
     private bool AddTurnMeter(float amount)
     {
-        TurnMeter += amount;
-        TurnMeter = Mathf.Clamp(TurnMeter, 0f, 100f);
-        display.UpdateTurnMeterBar(TurnMeter); // Visual
-        return TurnMeter == 100f;
+        turnMeter += amount;
+        turnMeter = Mathf.Clamp(turnMeter, 0f, 100f);
+        display.UpdateTurnMeterBar(turnMeter); // Visual
+        return turnMeter == 100f;
     }
     
     /// <summary>
@@ -117,25 +115,53 @@ public class Unit : MonoBehaviour
     #region Health
 
     /// <summary>
-    /// 
+    /// Add to this unit's current Health.
     /// </summary>
-    /// <param name="amount"></param>
+    /// <param name="amount">Amount of Health to add.</param>
     private void AddHealth(float amount)
     {
-        Health += amount;
-        Health = Mathf.Clamp(Health, 0f, CurrentStats.maxHealth);
-        display.UpdateHealthArmorBar(Health, CurrentStats.maxHealth, Armor, CurrentStats.maxArmor);  // Visual
+        health += amount;
+        health = Mathf.Clamp(health, 0f, CurrentStats.maxHealth);
+        display.UpdateHealthArmorBar(health, CurrentStats.maxHealth, armor, CurrentStats.maxArmor);  // Visual
     }
 
     /// <summary>
-    /// 
+    /// Add to this unit's current Armor.
     /// </summary>
-    /// <param name="amount"></param>
+    /// <param name="amount">Amount of Armor to add.</param>
     private void AddArmor(float amount)
     {
-        Armor += amount;
-        Armor = Mathf.Clamp(Armor, 0f, CurrentStats.maxArmor);
-        display.UpdateHealthArmorBar(Health, CurrentStats.maxHealth, Armor, CurrentStats.maxArmor);  // Visual
+        armor += amount;
+        armor = Mathf.Clamp(armor, 0f, CurrentStats.maxArmor);
+        display.UpdateHealthArmorBar(health, CurrentStats.maxHealth, armor, CurrentStats.maxArmor);  // Visual
+    }
+
+    #endregion
+
+    #region Status Effects
+
+    private void ReceiveStatusEffect(StatusEffect effect)
+    {
+        statusEffects.Add(effect);
+    }
+
+    public void ReceiveBuff(StatusEffect buff)
+    {
+        ReceiveStatusEffect(buff);
+    }
+
+    public void ReceiveDebuff(StatusEffect debuff, int potency, bool resistible)
+    {   
+        // Resistance check
+        int chanceToInflict = potency - CurrentStats.resistance;
+        if (Random.Range(0, 100) < chanceToInflict || !resistible)  // Effect applies
+        {
+            ReceiveStatusEffect(debuff);
+        }
+        else  // Effect is resisted
+        {
+
+        }
     }
 
     #endregion
@@ -145,12 +171,12 @@ public class Unit : MonoBehaviour
     public void BeginTurn()
     {
         // Display Abilities to player
-        AbilityPaletteManager.instance.ShowAbilities(ActiveAbilities);
+        AbilityPaletteManager.instance.ShowAbilities(activeAbilities);
     }
 
     public void EndTurn()
     {
-        TurnMeter = 0f;  // Reset Turn Meter
+        turnMeter = 0f;  // Reset Turn Meter
     }
 
     #endregion
@@ -204,12 +230,12 @@ public class Unit : MonoBehaviour
         float amount = rawAmount * (1f - selectedDefense / 100f);
         
         // Determine what proportion of damage should go to Armor and Health
-        float amountToArmor = Mathf.Min(amount * (1f - armorPen), Armor);
+        float amountToArmor = Mathf.Min(amount * (1f - armorPen), armor);
         float amountToHealth = amount - amountToArmor;
         AddHealth(amountToHealth * -1f);
         AddArmor(amountToArmor * -1f);
 
-        Debug.Log($"{BaseData.name} received {amount} Damage (Health: {amountToHealth}, Armor: {amountToArmor}, raw: {rawAmount}). Remaining HP: {Health + Armor}.");
+        Debug.Log($"{Data.name} received {amount} Damage (Health: {amountToHealth}, Armor: {amountToArmor}, raw: {rawAmount}). Remaining HP: {health + armor}.");
     }
 
     /// <summary>
@@ -220,7 +246,7 @@ public class Unit : MonoBehaviour
     /// <returns></returns>
     public static bool IsTargetableTerrain(Unit target, AttackData attackData)
     {
-        return attackData.targetableTerrains.Contains(target.BaseData.terrain);
+        return attackData.targetableTerrains.Contains(target.Data.terrain);
     }
 
     #endregion

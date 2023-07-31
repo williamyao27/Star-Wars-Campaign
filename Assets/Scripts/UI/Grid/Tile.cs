@@ -139,7 +139,7 @@ public class Tile : MonoBehaviour
         if (GameManager.instance.CurrentRequiredInput == InputType.TargetTile && isTargetable)
         {
             crosshair.SetActive(true);
-            GridManager.instance.VisualizeAttackPattern(GameManager.instance.CurrentSelectedAbility.BaseData.attackData, TeamNumber, Row, Col);
+            GridManager.instance.VisualizeAttackPattern(GameManager.instance.CurrentSelectedAbility.Data.attackData, TeamNumber, Row, Col);
         }
     }
 

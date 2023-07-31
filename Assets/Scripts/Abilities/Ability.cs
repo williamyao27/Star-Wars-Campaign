@@ -7,26 +7,26 @@ using UnityEngine;
 /// </summary>
 public class ActiveAbility
 {
-    public ActiveAbilityData BaseData { get; set; }
+    public ActiveAbilityData Data { get; set; }
     public int Cooldown { get; set; } = 0;
 
-    public ActiveAbility(ActiveAbilityData baseData)
+    public ActiveAbility(ActiveAbilityData data)
     {
-        BaseData = baseData;
+        Data = data;
         
         // Begin cooldown on initialization if needed, otherwise set to 0
-        Cooldown = BaseData.startOnCooldown ? BaseData.maxCooldown : 0;
+        Cooldown = Data.startOnCooldown ? Data.maxCooldown : 0;
     }
 
-    public void Execute()
+    public void Execute(Unit user)
     {
         // Begin cooldown
-        Cooldown = BaseData.maxCooldown;
+        Cooldown = Data.maxCooldown;
 
         // Execute actions using this Ability instance as context
-        foreach (Action action in BaseData.actions)
+        foreach (Action action in Data.actions)
         {
-            action.Execute(this);
+            action.Execute(user, this);
         }
     }
 }
@@ -36,9 +36,9 @@ public class ActiveAbility
 /// </summary>
 public class PassiveAbility
 {
-    public PassiveAbilityData BaseData { get; set; }
+    public PassiveAbilityData Data { get; set; }
 
-    public PassiveAbility(PassiveAbilityData baseData)
+    public PassiveAbility(PassiveAbilityData data)
     {
     }
 }
