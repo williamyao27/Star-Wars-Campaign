@@ -12,9 +12,9 @@
     ],
     "maxHealth": 250,
     "maxArmor": 100,
-    "physicalDefense": 10,
-    "specialDefense": 10,
-    "speed": 90,
+    "physicalDefense": 15,
+    "specialDefense": 15,
+    "speed": 74,
     "evasion": 10,
     "bravery": 0.5,
     "resistance": 0,
@@ -27,14 +27,17 @@
       "name": "Imperial Marksmanship",
       "description": "",
       "picture": "",
+      "maxCooldown": 0,
+      "startOnCooldown": false,
+      "requiredInput": "TargetEnemyTile",
       "attackData": {
         "pattern": [
           [1]
         ],
-        "damage": 36,
+        "damage": 38,
         "damageType": "Physical",
         "accuracy": 85,
-        "armorPen": 0,
+        "armorPenetration": 0,
         "critChance": 8,
         "critDamage": 1.5,
         "range": 2,
@@ -46,12 +49,32 @@
           "Aerial"
         ]
       },
-      "requiredInput": "TargetTile",
-      "maxCooldown": 0,
+      "actions": [
+        {
+          "type": "Attack"
+        }
+      ]
+    },
+    {
+      "name": "Stormtrooper Bravado",
+      "description": "",
+      "picture": "",
+      "maxCooldown": 4,
       "startOnCooldown": false,
       "actions": [
         {
-          "type": "attack"
+          "type": "ApplyStatusEffects",
+          "recipientQuery": {
+            "candidates": "Self"
+          },
+          "effects": [
+            {
+              "name": "Defense Buff",
+              "duration": 3,
+              "chance": 100,
+              "resistible": true
+            }
+          ]
         }
       ]
     }

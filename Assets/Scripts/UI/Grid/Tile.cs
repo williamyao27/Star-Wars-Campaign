@@ -95,24 +95,30 @@ public class Tile : MonoBehaviour
 
         // Show targetability
         targetabilityHighlight.SetActive(isTargetable);
+
+        // Additionally, show terrain warning if the unit on this tile cannot be hit by the attack
+        if (Unit != null && !Unit.IsTargetableTerrain(Unit, attackData))
+        {
+            terrainWarning.SetActive(true);
+        }
     }
 
     /// <summary>
-    /// Clear the tile's state of targetability and remove the targetability highlight. 
+    /// Clear the tile's state of targetability and hide any related indicators on the tile.
     /// </summary>
     public void HideTargetability()
     {
         isTargetable = false;
         targetabilityHighlight.SetActive(isTargetable);
-        crosshair.SetActive(false);  // Also hide the crosshair in case the mouse has not yet exited
+        crosshair.SetActive(false);
+        terrainWarning.SetActive(false);
     }
 
     /// <summary>
-    /// Sets the transparency attack weight highlight of the tile as well as the terrain warning if needed. If the given weight is positive, also makes the targetability highlight for this tile completely transparent to prevent color clashing. If not, reverts it to full opacity.
+    /// Sets the transparency damage weight highlight of the tile. If the given weight is positive, also makes the targetability highlight for this tile completely transparent to prevent color clashing. If not, reverts it to full opacity.
     /// </summary>
-    /// <param name="weight">The attack weight.</param>
-    /// <param name="showTerrainWarning">Whether to warn that the currently selected attack cannot strike the unit on this tile.</param>
-    public void SetWeightHighlightAndTerrainWarning(float weight, bool showTerrainWarning)
+    /// <param name="weight">The damage weight.</param>
+    public void SetWeightHighlight(float weight)
     {
         // Set red weight highlight
         SpriteRenderer weightHighlightRenderer = weightHighlight.GetComponent<SpriteRenderer>();
@@ -125,18 +131,15 @@ public class Tile : MonoBehaviour
         highlightColor = targetabilityHighlightRenderer.color;
         highlightColor.a = (weight > 0f) ? 0f : 0.2f;  // Prefab opacity value is 51/255 = 0.2
         targetabilityHighlightRenderer.color = highlightColor;
-
-        // Set the terrain warning
-        terrainWarning.SetActive(showTerrainWarning);
     }
 
     private void OnMouseEnter()
     {
         // If a target tile input is currently required and this is an eligible target, display a crosshair over the tile as well as a projection of the attack pattern
-        if (GameManager.instance.CurrentRequiredInput == InputType.TargetTile && isTargetable)
+        if (GameManager.instance.CurrentRequiredInput == InputType.TargetEnemyTile && isTargetable)
         {
             crosshair.SetActive(true);
-            GridManager.instance.ProjectAttackPattern(GameManager.instance.CurrentSelectedAbility.BaseData.attackData, TeamNumber, Row, Col);
+            GridManager.instance.VisualizeAttackPattern(GameManager.instance.CurrentSelectedAbility.Data.attackData, TeamNumber, Row, Col);
         }
     }
 
@@ -144,13 +147,13 @@ public class Tile : MonoBehaviour
     {
         // Reset any visualization of the currently selected attack's targets
         crosshair.SetActive(false);
-        GridManager.instance.HideProjectedAttackPattern();
+        GridManager.instance.HideVisualizedAttackPattern();
     }
 
     private void OnMouseDown()
     {
         // If a target tile input is currently required and this is an eligible target, choose this target tile
-        if (GameManager.instance.CurrentRequiredInput == InputType.TargetTile && isTargetable)
+        if (GameManager.instance.CurrentRequiredInput == InputType.TargetEnemyTile && isTargetable)
         {
             GameManager.instance.SelectTargetTile(TeamNumber, Row, Col);
         }

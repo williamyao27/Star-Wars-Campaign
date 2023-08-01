@@ -17,7 +17,6 @@ public class Stats
     public float specialDefense;
     public float speed;
     public int evasion;
-    public float bravery;
     public int resistance;
     public int potency;
     public bool cover;
@@ -44,7 +43,6 @@ public class Stats
         copiedStats.specialDefense = stats.specialDefense;
         copiedStats.speed = stats.speed;
         copiedStats.evasion = stats.evasion;
-        copiedStats.bravery = stats.bravery;
         copiedStats.resistance = stats.resistance;
         copiedStats.potency = stats.potency;
         copiedStats.cover = stats.cover;
@@ -67,18 +65,40 @@ public class Stats
     }
 
     /// <summary>
-    /// Apply the list of stat modifiers to a set of base stats via addition.
+    /// Apply the list of Status Effects to a set of base stats via addition.
     /// </summary>
     /// <param name="stats">The base stats.</param>
-    /// <param name="modifiers">The list of modifiers to apply.</param>
-    /// <returns></returns>
-    public static Stats ApplyModifiers(Stats stats, List<Modifier> modifiers)
+    /// <param name="statusEffects">The list of Status Effects to apply.</param>
+    /// <returns>The current stats based on the modifications from Status Effects.</returns>
+    public static Stats ApplyStatusEffects(Stats stats, List<StatusEffect> statusEffects)
     {
         Stats modifiedStats = DeepCopy(stats);
+
+        foreach (StatusEffect effect in statusEffects)
+        {
+            // If the effect includes stats modifiers, apply them to the copied base stats
+            if (effect.Data.statsModifier != null)
+            {
+                // For numerical values, add the modifier. For bool values, replace with the modifier.
+                modifiedStats.maxHealth += effect.Data.statsModifier.maxHealth;
+                modifiedStats.maxArmor += effect.Data.statsModifier.maxArmor;
+                modifiedStats.physicalDefense += effect.Data.statsModifier.physicalDefense;
+                modifiedStats.specialDefense += effect.Data.statsModifier.specialDefense;
+                modifiedStats.speed += effect.Data.statsModifier.speed;
+                modifiedStats.evasion += effect.Data.statsModifier.evasion;
+                modifiedStats.resistance += effect.Data.statsModifier.resistance;
+                modifiedStats.potency += effect.Data.statsModifier.potency;
+                modifiedStats.cover = effect.Data.statsModifier.cover;
+                modifiedStats.healthSteal += effect.Data.statsModifier.healthSteal;
+                modifiedStats.healthRegen += effect.Data.statsModifier.healthRegen;
+                modifiedStats.counterChance += effect.Data.statsModifier.counterChance;
+                modifiedStats.critAvoidance += effect.Data.statsModifier.critAvoidance;
+            }
+        }
 
         return modifiedStats;
     }
 
 }
 
-// Note that the tag enum is stored in a separate file.
+// Note that the Tag enum is stored in a separate file.

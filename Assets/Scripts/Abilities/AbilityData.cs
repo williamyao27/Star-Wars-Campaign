@@ -7,16 +7,16 @@ using UnityEngine;
 /// 
 /// </summary>
 [Serializable]
-public class ActiveAbilityData
+public struct ActiveAbilityData
 {
     public string name;
     public string description;
     public string picture;
 
-    public AttackData attackData;
-    public InputType? requiredInput;
     public int maxCooldown;
     public bool startOnCooldown;
+    public InputType? requiredInput;  // Design principle: each Ability should only require one step of input from the player at most.
+    public AttackData attackData;  // Instead of storing this with the attack-related Actions, we store it at the Ability-level so that it is easier to identify for target tile identification purposes, and because each Ability is associated with at most one attack.
     public Action[] actions;
 }
 
@@ -24,7 +24,7 @@ public class ActiveAbilityData
 /// 
 /// </summary>
 [Serializable]
-public class PassiveAbilityData
+public struct PassiveAbilityData
 {
     public string name;
     public string description;
@@ -33,6 +33,6 @@ public class PassiveAbilityData
 
 public enum InputType
 {
-    TargetTile,  // Must be an enemy tile
+    TargetEnemyTile,
     Ally
 }

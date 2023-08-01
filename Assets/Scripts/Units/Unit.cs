@@ -8,23 +8,24 @@ using UnityEngine;
 public class Unit : MonoBehaviour
 {
     [SerializeField] private UnitDisplay display;
-    public UnitData BaseData { get; set; }
+    public UnitData Data { get; set; }
     public int TeamNumber { get; set; }
     public int Row { get; set; }
     public int Col { get; set; }
-    public float Health { get; set; }
-    public float Armor { get; set; }
-    public float TurnMeter { get; set; }  // In percentage points, i.e. unit takes turn at TurnMeter == 100f
-    public List<ActiveAbility> ActiveAbilities { get; set; }
-    public List<PassiveAbility> PassiveAbilities { get; set; }
-    public List<Modifier> Modifiers { get; set; }
+    private float health;
+    private float armor;
+    private float turnMeter;  // In percentage points, i.e. unit takes turn at turnMeter == 100f
+    private List<ActiveAbility> activeAbilities = new List<ActiveAbility>();
+    private List<PassiveAbility> passiveAbilities = new List<PassiveAbility>();
+    private List<StatusEffect> statusEffects = new List<StatusEffect>();
+    private List<StatusEffect> statusEffectsBeginTurn;
 
     // Get current stats from base data plus all modifiers
     public Stats CurrentStats
     {
         get
         {
-            return Stats.ApplyModifiers(BaseData.stats, Modifiers);
+            return Stats.ApplyStatusEffects(Data.stats, statusEffects);
         }
     }
     
@@ -33,7 +34,7 @@ public class Unit : MonoBehaviour
     {
         get
         {
-            return ActiveAbilities[0];
+            return activeAbilities[0];
         }
     }
 
@@ -61,30 +62,28 @@ public class Unit : MonoBehaviour
     public void Initialize()
     {
         // Stats
-        Health = CurrentStats.maxHealth;
-        Armor = CurrentStats.maxArmor;
-        TurnMeter = 0f;
+        health = CurrentStats.maxHealth;
+        armor = CurrentStats.maxArmor;
+        turnMeter = 0f;
         
         // Active Abilities
-        ActiveAbilities = new List<ActiveAbility>();
-        foreach (ActiveAbilityData data in BaseData.activeAbilities)
+        foreach (ActiveAbilityData abilityData in Data.activeAbilities)
         {
-            ActiveAbilities.Add(new ActiveAbility(data));
+            activeAbilities.Add(new ActiveAbility(abilityData));
         }
         
         // Passive Abilities
-        PassiveAbilities = new List<PassiveAbility>();
-        foreach (PassiveAbilityData data in BaseData.passiveAbilities)
+        foreach (PassiveAbilityData abilityData in Data.passiveAbilities)
         {
-            PassiveAbilities.Add(new PassiveAbility(data));
+            passiveAbilities.Add(new PassiveAbility(abilityData));
         }
 
         // Connect unit to its tile
         GridManager.instance.ConnectUnitToTile(this);
 
         // Visual
-        display.UpdateHealthArmorBar(Health, CurrentStats.maxHealth, Armor, CurrentStats.maxArmor);
-        display.UpdateTurnMeterBar(TurnMeter);
+        display.UpdateHealthArmorBar(health, CurrentStats.maxHealth, armor, CurrentStats.maxArmor);
+        display.UpdateTurnMeterBar(turnMeter);
     }
 
     #region Turn Meter
@@ -96,10 +95,10 @@ public class Unit : MonoBehaviour
     /// <returns>Whether the unit has reached 100% TM.</returns>
     private bool AddTurnMeter(float amount)
     {
-        TurnMeter += amount;
-        TurnMeter = Mathf.Clamp(TurnMeter, 0f, 100f);
-        display.UpdateTurnMeterBar(TurnMeter); // Visual
-        return TurnMeter == 100f;
+        turnMeter += amount;
+        turnMeter = Mathf.Clamp(turnMeter, 0f, 100f);
+        display.UpdateTurnMeterBar(turnMeter); // Visual
+        return turnMeter == 100f;
     }
     
     /// <summary>
@@ -117,25 +116,79 @@ public class Unit : MonoBehaviour
     #region Health
 
     /// <summary>
-    /// 
+    /// Add to this unit's current Health.
     /// </summary>
-    /// <param name="amount"></param>
+    /// <param name="amount">Amount of Health to add.</param>
     private void AddHealth(float amount)
     {
-        Health += amount;
-        Health = Mathf.Clamp(Health, 0f, CurrentStats.maxHealth);
-        display.UpdateHealthArmorBar(Health, CurrentStats.maxHealth, Armor, CurrentStats.maxArmor);  // Visual
+        health += amount;
+        health = Mathf.Clamp(health, 0f, CurrentStats.maxHealth);
+        display.UpdateHealthArmorBar(health, CurrentStats.maxHealth, armor, CurrentStats.maxArmor);  // Visual
     }
 
     /// <summary>
-    /// 
+    /// Add to this unit's current Armor.
     /// </summary>
-    /// <param name="amount"></param>
+    /// <param name="amount">Amount of Armor to add.</param>
     private void AddArmor(float amount)
     {
-        Armor += amount;
-        Armor = Mathf.Clamp(Armor, 0f, CurrentStats.maxArmor);
-        display.UpdateHealthArmorBar(Health, CurrentStats.maxHealth, Armor, CurrentStats.maxArmor);  // Visual
+        armor += amount;
+        armor = Mathf.Clamp(armor, 0f, CurrentStats.maxArmor);
+        display.UpdateHealthArmorBar(health, CurrentStats.maxHealth, armor, CurrentStats.maxArmor);  // Visual
+    }
+
+    #endregion
+
+    #region Status Effects
+
+    /// <summary>
+    /// Checks whether the given unit should receive the given Status Effect, and adds it if so.
+    /// </summary>
+    /// <param name="effect">The given Status Effect.</param>
+    /// <param name="sourceUnit">The unit </param>
+    /// <param name="resistible">Whether the given Status Effect can be Resisted.</param>
+    public void ReceiveStatusEffect(Unit source, StatusEffect effect, bool resistible)
+    {   
+        if (effect.Data.type == StatusEffectType.Buff)
+        {
+
+        }
+        else
+        {
+            // Resistance check
+            int chanceToInflict = source.CurrentStats.potency - CurrentStats.resistance;
+            if (Random.Range(0, 100) < chanceToInflict || !resistible)  // Effect is added
+            {
+            }
+            else  // Effect is Resisted
+            {
+                return;
+            }
+        }
+
+        // If the effect is not stackable, search for it in the unit's existing Status Effects
+        if (!effect.Data.stackable)
+        {
+            foreach (StatusEffect existingEffect in statusEffects)
+            {
+                // The unit already has this Status Effect
+                if (existingEffect.Data.name == effect.Data.name)
+                {
+                    // If the existing Status Effect has a longer duration, do nothing
+                    if (existingEffect.Duration > effect.Duration)
+                    {
+                        return;
+                    }
+                    else  // Otherwise, we remove the Status Effect for replacement and exit (by assumption, there can only be one instance of this type of Status Effect)
+                    {
+                        statusEffects.Remove(existingEffect);
+                        break;
+                    }
+                }
+            }
+        }
+
+        statusEffects.Add(effect);
     }
 
     #endregion
@@ -145,12 +198,25 @@ public class Unit : MonoBehaviour
     public void BeginTurn()
     {
         // Display Abilities to player
-        AbilityPaletteManager.instance.ShowAbilities(ActiveAbilities);
+        AbilityPaletteManager.instance.ShowAbilities(activeAbilities);
+
+        // Track Status Effects which are present at the beginning of the turn
+        statusEffectsBeginTurn = new List<StatusEffect>(statusEffects);
     }
 
     public void EndTurn()
     {
-        TurnMeter = 0f;  // Reset Turn Meter
+        // Reset Turn Meter
+        turnMeter = 0f;
+
+        // Decrement duration of all Status Effects which were already present at the beginning of this turn
+        foreach (StatusEffect effect in statusEffectsBeginTurn)
+        {
+            if (effect.DecrementDuration())
+            {
+                statusEffects.Remove(effect);
+            }
+        }
     }
 
     #endregion
@@ -165,7 +231,7 @@ public class Unit : MonoBehaviour
     public void ReceiveAttack(AttackData attackData, float weight)
     {
         // Terrain check; if the attack cannot strike the unit's terrain, ignore it completely
-        if (!attackData.targetableTerrains.Contains(BaseData.terrain))
+        if (!IsTargetableTerrain(this, attackData))
         {
             return;
         }
@@ -183,7 +249,7 @@ public class Unit : MonoBehaviour
                 rawDamage *= attackData.critDamage;
             }
 
-            ReceiveDamage(rawDamage, attackData.damageType, attackData.armorPen);
+            ReceiveDamage(rawDamage, attackData.damageType, attackData.armorPenetration);
         }
         else  // Attack is Evaded
         {
@@ -192,24 +258,35 @@ public class Unit : MonoBehaviour
     }
 
     /// <summary>
-    /// 
+    /// Deals the given amount of damage to this unit.
     /// </summary>
-    /// <param name="rawAmount"></param>
-    /// <param name="type"></param>
-    /// <param name="armorPen"></param>
-    private void ReceiveDamage(float rawAmount, DamageType type, float armorPen)
+    /// <param name="rawAmount">The raw amount of Damage from the attack (post-Critical Hit and Offense modifiers on the attacker, but pre-Defense reduction from the target).</param>
+    /// <param name="type">The attack's Damage Type.</param>
+    /// <param name="armorPenetration">The attack's Armor Penetration.</param>
+    private void ReceiveDamage(float rawAmount, DamageType type, float armorPenetration)
     {
         // Compute reduction from Defense
         float selectedDefense = (type == DamageType.Physical) ? CurrentStats.physicalDefense : CurrentStats.specialDefense;
         float amount = rawAmount * (1f - selectedDefense / 100f);
         
         // Determine what proportion of damage should go to Armor and Health
-        float amountToArmor = Mathf.Min(amount * (1f - armorPen), Armor);
+        float amountToArmor = Mathf.Min(amount * (1f - armorPenetration), armor);
         float amountToHealth = amount - amountToArmor;
         AddHealth(amountToHealth * -1f);
         AddArmor(amountToArmor * -1f);
 
-        Debug.Log($"{BaseData.name} received {amount} Damage (Health: {amountToHealth}, Armor: {amountToArmor}, raw: {rawAmount}). Remaining HP: {Health + Armor}.");
+        Debug.Log($"{Data.name} received {amount} Damage (Health: {amountToHealth}, Armor: {amountToArmor}, raw: {rawAmount}). Remaining HP: {health + armor}.");
+    }
+
+    /// <summary>
+    /// Determines whether the attack can target a given unit based on its targetable terrain types.
+    /// </summary>
+    /// <param name="target">The target unit.</param>
+    /// <param name="attackData">The given attack.</param>
+    /// <returns>Whether the attack is able to strike the target's terrain.</returns>
+    public static bool IsTargetableTerrain(Unit target, AttackData attackData)
+    {
+        return attackData.targetableTerrains.Contains(target.Data.terrain);
     }
 
     #endregion

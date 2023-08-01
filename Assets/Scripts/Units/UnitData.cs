@@ -24,7 +24,6 @@ public enum Type
 {
     Infantry,
     Vehicle,
-    CapitalShip,
     Equipment,
 }
 

@@ -25,12 +25,11 @@ public class UnitFactory : Singleton<UnitFactory>
         unitGO.name = name;
 
         // Load base data for new unit
-        string json = System.IO.File.ReadAllText($"Assets/Resources/Unit Data/{name}.json");
-        UnitData unitData = JsonConvert.DeserializeObject<UnitData>(json);
+        UnitData unitData = DataManager.instance.GetUnitData(name);
 
         // Set script for new unit
         Unit newUnit = unitGO.GetComponent<Unit>();
-        newUnit.BaseData = unitData;
+        newUnit.Data = unitData;
         newUnit.TeamNumber = teamNumber;
         newUnit.Row = row;
         newUnit.Col = col;

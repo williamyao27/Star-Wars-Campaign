@@ -16,7 +16,7 @@ public class AbilityButton : HoverHighlightable
     public void Initialize(ActiveAbility ability)
     {
         Ability = ability;
-        name = Ability.BaseData.name;
+        name = Ability.Data.name;
     }
     
     private void OnMouseDown()

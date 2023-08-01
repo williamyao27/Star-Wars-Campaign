@@ -33,10 +33,10 @@ public class GameManager : Singleton<GameManager>
     {
         #region TENTATIVE - should NOT create team here
         AddUnit("Stormtrooper", 0, 0, 0);  // Fill team 0 with Stormtrooper
-        AddUnit("AnakinSkywalkerYoung", 1, 1, 0);  // Fill team 1 with Anakin Skywalker (Young)
+        AddUnit("Anakin Skywalker (Young)", 1, 1, 0);  // Fill team 1 with Anakin Skywalker (Young)
         #endregion
         
-        Application.targetFrameRate = 60;  // FPS = 60; choose a target that allows Turn Meter generation to be perceivable
+        Application.targetFrameRate = 144;  // FPS = 144; choose a target that allows Turn Meter generation to be perceivable
         StartBattle();
     }
 
@@ -124,20 +124,20 @@ public class GameManager : Singleton<GameManager>
     public void SelectAbility(ActiveAbility ability)
     {
         // If further input is needed, simply store a reference to the given Ability as the currently selected one
-        if (ability.BaseData.requiredInput != null)
+        if (ability.Data.requiredInput != null)
         {
             CloseSelectedAbility();
             CurrentSelectedAbility = ability;  // Store a reference to this Ability so it can be recalled when further input is made
-            CurrentRequiredInput = ability.BaseData.requiredInput;  // Track the input type required
+            CurrentRequiredInput = ability.Data.requiredInput;  // Track the input type required
 
             // Prepare the necessary input prompts
-            switch (ability.BaseData.requiredInput)
+            switch (ability.Data.requiredInput)
             {
-                case InputType.TargetTile:
-                    GridManager.instance.ShowTargetableTiles(currentTurnUnit, ability.BaseData.attackData);
+                case InputType.TargetEnemyTile:
+                    GridManager.instance.SetTargetableTiles(currentTurnUnit, ability.Data.attackData);
                     break;
+                    
                 default:
-                    // Should not reach here
                     break;
             }
         }
@@ -176,7 +176,7 @@ public class GameManager : Singleton<GameManager>
         // Close input prompts
         CurrentRequiredInput = null;
         GridManager.instance.HideTargetableTiles();
-        GridManager.instance.HideProjectedAttackPattern();
+        GridManager.instance.HideVisualizedAttackPattern();
     }
 
     #endregion
@@ -186,7 +186,7 @@ public class GameManager : Singleton<GameManager>
     /// </summary>
     public void UseAbility(Unit user, ActiveAbility ability, bool endTurn)
     {
-        ability.Execute();  // TODO: Add Ability context
+        ability.Execute(user);  // TODO: Add Ability context
 
         // If the user is the unit whose turn it currently is, and this is flagged as a turn-ending Ability (i.e. the one move allotted to a unit per turn), end the turn.
         if (user == currentTurnUnit && endTurn)
@@ -215,6 +215,42 @@ public class GameManager : Singleton<GameManager>
             target.ReceiveAttack(attackData, weight);
         }
     }
+
+    /// <summary>
+    /// Perform the given attack against all receiving units. Each target receives 100% damage weight. Use this method for attacks that use queries instead of the target tile to determine targets.
+    /// </summary>
+    /// <param name="targets">List of units receiving the attack.</param>
+    /// <param name="attackData">All data related to the attack.</param>
+    public void Attack(List<Unit> targets, AttackData attackData)
+    {
+        // Evaluate attack against each target separately
+        foreach (Unit target in targets)
+        {
+            target.ReceiveAttack(attackData, 1f);
+        }
+    }
+
+    #region Status Effects
+
+    /// <summary>
+    /// Applies the given Status Effects to all recipient units.
+    /// </summary>
+    /// <param name="source">The unit from whose Abilities/Actions are providing the Status Effects.</param>
+    /// <param name="recipients">The list of receiving units.</param>
+    /// <param name="effects">The list of Status Effect appliers to attempt on each recipient.</param>
+    public void ApplyStatusEffects(Unit source, List<Unit> recipients, List<StatusEffectApplier> effects)
+    {
+        foreach (Unit recipient in recipients)
+        {
+            foreach (StatusEffectApplier effectApplier in effects)
+            {
+                StatusEffect effect = new StatusEffect(effectApplier.name, effectApplier.duration);
+                recipient.ReceiveStatusEffect(source, effect, effectApplier.resistible);
+            }
+        }
+    }
+
+    #endregion
 
     #region Queries
 
