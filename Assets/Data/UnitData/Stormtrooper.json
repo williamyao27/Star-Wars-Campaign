@@ -1,47 +1,49 @@
 {
-  "name": "Iron Golem",
+  "name": "Stormtrooper",
   "description": "",
   "picture": "",
+  "type": "Infantry",
   "terrain": "Ground",
   "role": "Tank",
-  "tags": [
-    "Village"
-  ],
   "stats": {
+    "tags": [
+      "Organic",
+      "Empire"
+    ],
     "maxHealth": 250,
-    "maxArmor": 250,
-    "physicalDefense": 20,
-    "explosiveDefense": 15,
-    "magicDefense": 15,
-    "speed": 60,
-    "evasion": 5,
+    "maxArmor": 100,
+    "physicalDefense": 15,
+    "specialDefense": 15,
+    "speed": 80,
+    "evasion": 10,
     "bravery": 0.5,
     "resistance": 0,
     "potency": 0,
-    "cover": true
+    "cover": false
   },
 
   "activeAbilities": [
     {
-      "name": "Bash",
+      "name": "Imperial Marksmanship",
       "description": "",
       "picture": "",
       "attackData": {
         "pattern": [
           [1]
         ],
-        "damage": 48,
+        "damage": 36,
         "damageType": "Physical",
         "accuracy": 85,
-        "armorPen": 0.25,
-        "critChance": 5,
+        "armorPen": 0,
+        "critChance": 8,
         "critDamage": 1.5,
-        "range": 1,
+        "range": 2,
         "lineOfFire": "Contact",
         "lineOfFireModifiers": [],
         "precision": "Strict",
         "targetableTerrains": [
-          "Ground"
+          "Ground",
+          "Aerial"
         ]
       },
       "requiredInput": "TargetTile",
@@ -52,14 +54,14 @@
       ]
     },
     {
-      "name": "Poppy Beacon",
+      "name": "Imperial Marksmanship",
       "description": "",
       "picture": "",
       "actions": [
         {
           "type": "GrantBuffs",
           "buffNames": [
-            "Resistance"
+            "Defense Buff"
           ]
         }
       ]
@@ -67,5 +69,10 @@
   ],
 
   "passiveAbilities": [
+    {
+      "name": "Wall of Stormtroopers",
+      "description": "",
+      "picture": ""
+    }
   ]
 }

@@ -13,7 +13,7 @@ public class StatusEffect
 
     public StatusEffect(string name, int duration)
     {
-        Data = DataManager.instance.GetStatusEffectData(name);  // Retrieve base data using name
+        Data = DataManager.instance.GetStatusEffectData(name);
         Duration = duration;
     }
 }

@@ -19,12 +19,12 @@ public class Unit : MonoBehaviour
     private List<PassiveAbility> passiveAbilities = new List<PassiveAbility>();
     private List<StatusEffect> statusEffects = new List<StatusEffect>();
 
-    // Get current stats from base data plus all modifiers from Status Effects
+    // Get current stats from base data plus all modifiers
     public Stats CurrentStats
     {
         get
         {
-            return StatsModifier.ApplyStatusEffects(Data.stats, statusEffects);
+            return Stats.ApplyStatusEffects(Data.stats, statusEffects);
         }
     }
     
@@ -226,21 +226,7 @@ public class Unit : MonoBehaviour
     private void ReceiveDamage(float rawAmount, DamageType type, float armorPen)
     {
         // Compute reduction from Defense
-        float selectedDefense = 0f;
-        switch (type)
-        {
-            case DamageType.Physical:
-                selectedDefense = CurrentStats.physicalDefense;
-                break;
-            case DamageType.Explosive:
-                selectedDefense = CurrentStats.explosiveDefense;
-                break;
-            case DamageType.Magic:
-                selectedDefense = CurrentStats.magicDefense;
-                break;
-            default:
-                break;
-        }
+        float selectedDefense = (type == DamageType.Physical) ? CurrentStats.physicalDefense : CurrentStats.specialDefense;
         float amount = rawAmount * (1f - selectedDefense / 100f);
         
         // Determine what proportion of damage should go to Armor and Health

@@ -1,12 +1,10 @@
 {
-  "name": "Resistance",
+  "name": "Defense Buff",
   "description": "+10 Physical and Special Defense.",
   "picture": "",
-  "type": "Buff",
-  "modifiers": {
+  "statsModifier": {
     "physicalDefense": 10,
-    "explosiveDefense": 10,
-    "magicDefense": 10
+    "specialDefense": 10
   },
   "clearable": true,
   "copyable": true,

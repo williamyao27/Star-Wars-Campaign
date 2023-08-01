@@ -1,20 +1,22 @@
 {
-  "name": "Chicken",
+  "name": "Anakin Skywalker (Young)",
   "description": "",
   "picture": "",
+  "type": "Infantry",
   "terrain": "Ground",
-  "role": "Attacker",
-  "tags": [
-  ],
+  "role": "Healer",
   "stats": {
+    "tags": [
+      "Organic",
+      "ForceSensitive"
+    ],
     "maxHealth": 150,
     "maxArmor": 0,
-    "physicalDefense": 10,
-    "explosiveDefense": 20,
-    "magicDefense": 15,
-    "speed": 110,
+    "physicalDefense": 12,
+    "specialDefense": 18,
+    "speed": 150,
     "evasion": 20,
-    "bravery": 0.5,
+    "bravery": 1,
     "resistance": 0,
     "potency": 0,
     "cover": false
@@ -22,18 +24,18 @@
 
   "activeAbilities": [
     {
-      "name": "Sharpened Beak",
+      "name": "Zap!",
       "description": "",
       "picture": "",
       "attackData": {
         "pattern": [
           [1]
         ],
-        "damage": 25,
+        "damage": 20,
         "damageType": "Physical",
-        "accuracy": 100,
+        "accuracy": 90,
         "armorPen": 0,
-        "critChance": 10,
+        "critChance": 12,
         "critDamage": 1.5,
         "range": 1,
         "lineOfFire": "Contact",
@@ -49,9 +51,23 @@
           "type": "PerformAttack"
         }
       ]
+    },
+    {
+      "name": "Thank the Maker!",
+      "description": "",
+      "picture": "",
+      "actions": [
+      ],
+      "maxCooldown": 2,
+      "startOnCooldown": false
     }
   ],
 
   "passiveAbilities": [
+    {
+      "name": "Podracer Reflexes",
+      "description": "",
+      "picture": ""
+    }
   ]
 }
