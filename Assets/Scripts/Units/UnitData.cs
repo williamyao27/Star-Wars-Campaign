@@ -12,20 +12,12 @@ public struct UnitData
     public string name;
     public string description;
     public string picture;
-    public Type type;
     public Terrain terrain;
     public Role role;
+    public List<Tag> tags;
     public Stats stats;
     public List<ActiveAbilityData> activeAbilities;
     public List<PassiveAbilityData> passiveAbilities;
-}
-
-public enum Type
-{
-    Infantry,
-    Vehicle,
-    CapitalShip,
-    Equipment,
 }
 
 public enum Terrain
@@ -40,4 +32,10 @@ public enum Role
     Support,
     Tank,
     Healer,
+}
+
+public enum Tag
+{
+    Village,
+    Undead
 }

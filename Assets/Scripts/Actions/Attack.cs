@@ -25,7 +25,8 @@ public struct AttackData
 public enum DamageType
 {
     Physical,
-    Special
+    Explosive,
+    Magic
 }
 
 public enum Precision

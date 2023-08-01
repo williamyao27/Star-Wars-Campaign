@@ -13,7 +13,7 @@ public struct StatusEffectData
     public string description;
     public string picture;
     public StatusEffectType type;
-    public Stats statsModifier;
+    public Stats modifiers;
     // List of on-infliction effects
     // List of passives associated
     public bool clearable;

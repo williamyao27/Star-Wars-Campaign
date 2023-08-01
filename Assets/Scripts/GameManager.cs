@@ -32,8 +32,8 @@ public class GameManager : Singleton<GameManager>
     private void Start()
     {
         #region TENTATIVE - should NOT create team here
-        AddUnit("Stormtrooper", 0, 0, 0);  // Fill team 0 with Stormtrooper
-        AddUnit("Anakin Skywalker (Young)", 1, 1, 0);  // Fill team 1 with Anakin Skywalker (Young)
+        AddUnit("Iron Golem", 0, 0, 0);
+        AddUnit("Chicken", 1, 1, 0);
         #endregion
         
         Application.targetFrameRate = 144;  // FPS = 144; choose a target that allows Turn Meter generation to be perceivable
