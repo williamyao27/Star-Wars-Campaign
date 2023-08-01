@@ -65,19 +65,17 @@ public class Stats
     }
 
     /// <summary>
-    /// Apply the list of stat modifiers to a set of base stats via addition.
+    /// Apply the list of Status Effects to a set of base stats via addition.
     /// </summary>
     /// <param name="stats">The base stats.</param>
-    /// <param name="modifiers">The list of modifiers to apply.</param>
-    /// <returns></returns>
+    /// <param name="statusEffects">The list of Status Effects to apply.</param>
+    /// <returns>The current stats based on the modifications from Status Effects.</returns>
     public static Stats ApplyStatusEffects(Stats stats, List<StatusEffect> statusEffects)
     {
         Stats modifiedStats = DeepCopy(stats);
 
         foreach (StatusEffect effect in statusEffects)
         {
-            Debug.Log(effect.Data.statsModifier);
-
             // If the effect includes stats modifiers, apply them to the copied base stats
             if (effect.Data.statsModifier != null)
             {

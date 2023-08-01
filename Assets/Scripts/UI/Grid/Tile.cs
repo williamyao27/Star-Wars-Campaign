@@ -115,9 +115,9 @@ public class Tile : MonoBehaviour
     }
 
     /// <summary>
-    /// Sets the transparency attack weight highlight of the tile. If the given weight is positive, also makes the targetability highlight for this tile completely transparent to prevent color clashing. If not, reverts it to full opacity.
+    /// Sets the transparency damage weight highlight of the tile. If the given weight is positive, also makes the targetability highlight for this tile completely transparent to prevent color clashing. If not, reverts it to full opacity.
     /// </summary>
-    /// <param name="weight">The attack weight.</param>
+    /// <param name="weight">The damage weight.</param>
     public void SetWeightHighlight(float weight)
     {
         // Set red weight highlight
@@ -136,7 +136,7 @@ public class Tile : MonoBehaviour
     private void OnMouseEnter()
     {
         // If a target tile input is currently required and this is an eligible target, display a crosshair over the tile as well as a projection of the attack pattern
-        if (GameManager.instance.CurrentRequiredInput == InputType.TargetTile && isTargetable)
+        if (GameManager.instance.CurrentRequiredInput == InputType.TargetEnemyTile && isTargetable)
         {
             crosshair.SetActive(true);
             GridManager.instance.VisualizeAttackPattern(GameManager.instance.CurrentSelectedAbility.Data.attackData, TeamNumber, Row, Col);
@@ -153,7 +153,7 @@ public class Tile : MonoBehaviour
     private void OnMouseDown()
     {
         // If a target tile input is currently required and this is an eligible target, choose this target tile
-        if (GameManager.instance.CurrentRequiredInput == InputType.TargetTile && isTargetable)
+        if (GameManager.instance.CurrentRequiredInput == InputType.TargetEnemyTile && isTargetable)
         {
             GameManager.instance.SelectTargetTile(TeamNumber, Row, Col);
         }

@@ -133,11 +133,11 @@ public class GameManager : Singleton<GameManager>
             // Prepare the necessary input prompts
             switch (ability.Data.requiredInput)
             {
-                case InputType.TargetTile:
+                case InputType.TargetEnemyTile:
                     GridManager.instance.SetTargetableTiles(currentTurnUnit, ability.Data.attackData);
                     break;
+                    
                 default:
-                    // Should not reach here
                     break;
             }
         }
@@ -216,16 +216,36 @@ public class GameManager : Singleton<GameManager>
         }
     }
 
+    /// <summary>
+    /// Perform the given attack against all receiving units. Each target receives 100% damage weight. Use this method for attacks that use queries instead of the target tile to determine targets.
+    /// </summary>
+    /// <param name="targets">List of units receiving the attack.</param>
+    /// <param name="attackData">All data related to the attack.</param>
+    public void Attack(List<Unit> targets, AttackData attackData)
+    {
+        // Evaluate attack against each target separately
+        foreach (Unit target in targets)
+        {
+            target.ReceiveAttack(attackData, 1f);
+        }
+    }
+
     #region Status Effects
 
-    public void GrantBuffs(List<Unit> recipients, List<string> buffNames)
+    /// <summary>
+    /// Applies the given Status Effects to all recipient units.
+    /// </summary>
+    /// <param name="source">The unit from whose Abilities/Actions are providing the Status Effects.</param>
+    /// <param name="recipients">The list of receiving units.</param>
+    /// <param name="effects">The list of Status Effect appliers to attempt on each recipient.</param>
+    public void ApplyStatusEffects(Unit source, List<Unit> recipients, List<StatusEffectApplier> effects)
     {
         foreach (Unit recipient in recipients)
         {
-            foreach (string buffName in buffNames)
+            foreach (StatusEffectApplier effectApplier in effects)
             {
-                StatusEffect buff = new StatusEffect(buffName, 3);
-                recipient.ReceiveBuff(buff);
+                StatusEffect effect = new StatusEffect(effectApplier.name, effectApplier.duration);
+                recipient.ReceiveStatusEffect(source, effect, effectApplier.resistible);
             }
         }
     }

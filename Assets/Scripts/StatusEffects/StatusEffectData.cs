@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
   
 /// <summary>
-/// This struct is a data container that stores all properties related to a type of status effect.
+/// This struct is a data container that stores all properties related to a type of Status Effect.
 /// </summary>
 [Serializable]
 public struct StatusEffectData
@@ -16,13 +16,21 @@ public struct StatusEffectData
     public Stats statsModifier;
     // List of on-infliction effects
     // List of passives associated
+    public StatusEffectExpiry expiry;
+    public bool stackable;
     public bool clearable;
     public bool copyable;
-    public bool anonymous;  // Whether the status effect should be hidden, i.e. not a "true" status effect
+    public bool anonymous;  // Whether the Status Effect should be hidden, i.e. not a "true" Status Effect
 }
 
 public enum StatusEffectType
 {
     Buff,
     Debuff
+}
+
+public enum StatusEffectExpiry
+{
+    Duration,
+    Indefinite
 }

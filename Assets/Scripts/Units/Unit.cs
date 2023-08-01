@@ -18,6 +18,7 @@ public class Unit : MonoBehaviour
     private List<ActiveAbility> activeAbilities = new List<ActiveAbility>();
     private List<PassiveAbility> passiveAbilities = new List<PassiveAbility>();
     private List<StatusEffect> statusEffects = new List<StatusEffect>();
+    private List<StatusEffect> statusEffectsBeginTurn;
 
     // Get current stats from base data plus all modifiers
     public Stats CurrentStats
@@ -140,28 +141,54 @@ public class Unit : MonoBehaviour
 
     #region Status Effects
 
-    private void ReceiveStatusEffect(StatusEffect effect)
-    {
-        statusEffects.Add(effect);
-    }
-
-    public void ReceiveBuff(StatusEffect buff)
-    {
-        ReceiveStatusEffect(buff);
-    }
-
-    public void ReceiveDebuff(StatusEffect debuff, int potency, bool resistible)
+    /// <summary>
+    /// Checks whether the given unit should receive the given Status Effect, and adds it if so.
+    /// </summary>
+    /// <param name="effect">The given Status Effect.</param>
+    /// <param name="sourceUnit">The unit </param>
+    /// <param name="resistible">Whether the given Status Effect can be Resisted.</param>
+    public void ReceiveStatusEffect(Unit source, StatusEffect effect, bool resistible)
     {   
-        // Resistance check
-        int chanceToInflict = potency - CurrentStats.resistance;
-        if (Random.Range(0, 100) < chanceToInflict || !resistible)  // Effect applies
-        {
-            ReceiveStatusEffect(debuff);
-        }
-        else  // Effect is resisted
+        if (effect.Data.type == StatusEffectType.Buff)
         {
 
         }
+        else
+        {
+            // Resistance check
+            int chanceToInflict = source.CurrentStats.potency - CurrentStats.resistance;
+            if (Random.Range(0, 100) < chanceToInflict || !resistible)  // Effect is added
+            {
+            }
+            else  // Effect is Resisted
+            {
+                return;
+            }
+        }
+
+        // If the effect is not stackable, search for it in the unit's existing Status Effects
+        if (!effect.Data.stackable)
+        {
+            foreach (StatusEffect existingEffect in statusEffects)
+            {
+                // The unit already has this Status Effect
+                if (existingEffect.Data.name == effect.Data.name)
+                {
+                    // If the existing Status Effect has a longer duration, do nothing
+                    if (existingEffect.Duration > effect.Duration)
+                    {
+                        return;
+                    }
+                    else  // Otherwise, we remove the Status Effect for replacement and exit (by assumption, there can only be one instance of this type of Status Effect)
+                    {
+                        statusEffects.Remove(existingEffect);
+                        break;
+                    }
+                }
+            }
+        }
+
+        statusEffects.Add(effect);
     }
 
     #endregion
@@ -172,11 +199,24 @@ public class Unit : MonoBehaviour
     {
         // Display Abilities to player
         AbilityPaletteManager.instance.ShowAbilities(activeAbilities);
+
+        // Track Status Effects which are present at the beginning of the turn
+        statusEffectsBeginTurn = new List<StatusEffect>(statusEffects);
     }
 
     public void EndTurn()
     {
-        turnMeter = 0f;  // Reset Turn Meter
+        // Reset Turn Meter
+        turnMeter = 0f;
+
+        // Decrement duration of all Status Effects which were already present at the beginning of this turn
+        foreach (StatusEffect effect in statusEffectsBeginTurn)
+        {
+            if (effect.DecrementDuration())
+            {
+                statusEffects.Remove(effect);
+            }
+        }
     }
 
     #endregion
@@ -209,7 +249,7 @@ public class Unit : MonoBehaviour
                 rawDamage *= attackData.critDamage;
             }
 
-            ReceiveDamage(rawDamage, attackData.damageType, attackData.armorPen);
+            ReceiveDamage(rawDamage, attackData.damageType, attackData.armorPenetration);
         }
         else  // Attack is Evaded
         {
@@ -218,19 +258,19 @@ public class Unit : MonoBehaviour
     }
 
     /// <summary>
-    /// 
+    /// Deals the given amount of damage to this unit.
     /// </summary>
-    /// <param name="rawAmount"></param>
-    /// <param name="type"></param>
-    /// <param name="armorPen"></param>
-    private void ReceiveDamage(float rawAmount, DamageType type, float armorPen)
+    /// <param name="rawAmount">The raw amount of Damage from the attack (post-Critical Hit and Offense modifiers on the attacker, but pre-Defense reduction from the target).</param>
+    /// <param name="type">The attack's Damage Type.</param>
+    /// <param name="armorPenetration">The attack's Armor Penetration.</param>
+    private void ReceiveDamage(float rawAmount, DamageType type, float armorPenetration)
     {
         // Compute reduction from Defense
         float selectedDefense = (type == DamageType.Physical) ? CurrentStats.physicalDefense : CurrentStats.specialDefense;
         float amount = rawAmount * (1f - selectedDefense / 100f);
         
         // Determine what proportion of damage should go to Armor and Health
-        float amountToArmor = Mathf.Min(amount * (1f - armorPen), armor);
+        float amountToArmor = Mathf.Min(amount * (1f - armorPenetration), armor);
         float amountToHealth = amount - amountToArmor;
         AddHealth(amountToHealth * -1f);
         AddArmor(amountToArmor * -1f);
@@ -239,11 +279,11 @@ public class Unit : MonoBehaviour
     }
 
     /// <summary>
-    /// 
+    /// Determines whether the attack can target a given unit based on its targetable terrain types.
     /// </summary>
-    /// <param name="target"></param>
-    /// <param name="attackData"></param>
-    /// <returns></returns>
+    /// <param name="target">The target unit.</param>
+    /// <param name="attackData">The given attack.</param>
+    /// <returns>Whether the attack is able to strike the target's terrain.</returns>
     public static bool IsTargetableTerrain(Unit target, AttackData attackData)
     {
         return attackData.targetableTerrains.Contains(target.Data.terrain);

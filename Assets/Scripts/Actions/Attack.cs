@@ -12,7 +12,7 @@ public struct AttackData
     public float damage;
     public DamageType damageType;
     public int accuracy;
-    public float armorPen;
+    public float armorPenetration;
     public int critChance;
     public float critDamage;
     public int range;

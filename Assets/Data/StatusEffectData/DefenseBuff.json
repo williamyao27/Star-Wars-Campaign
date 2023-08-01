@@ -1,11 +1,13 @@
 {
   "name": "Defense Buff",
-  "description": "+10 Physical and Special Defense.",
+  "description": "+15 Physical and Special Defense.",
   "picture": "",
   "statsModifier": {
-    "physicalDefense": 10,
-    "specialDefense": 10
+    "physicalDefense": 15,
+    "specialDefense": 15
   },
+  "expiry": "Duration",
+  "stackable": false,
   "clearable": true,
   "copyable": true,
   "anonymous": false

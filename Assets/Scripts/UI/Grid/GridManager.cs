@@ -194,14 +194,14 @@ public class GridManager : Singleton<GridManager>
                 int projectedCol = patternCenterCol + col - patternWidth / 2;
                 int projectedRow = patternCenterRow + row - patternHeight / 2;
 
-                // Get attack weight on the current tile
-                float attackWeight = attackPattern[row, col];
+                // Get damage weight on the current tile
+                float damageWeight = attackPattern[row, col];
 
-                // If the projected tile coordinates are valid for the board, and the attack weight is non-zero...
-                if (0 <= projectedCol && projectedCol < width && 0 <= projectedRow && projectedRow < height && attackWeight > 0)
+                // If the projected tile coordinates are valid for the board, and the damage weight is non-zero...
+                if (0 <= projectedCol && projectedCol < width && 0 <= projectedRow && projectedRow < height && damageWeight > 0)
                 {
                     Tile projectedTile = grid[teamNumber, projectedRow, projectedCol];
-                    processTileAction(projectedTile, attackWeight);
+                    processTileAction(projectedTile, damageWeight);
                 }
             }
         }
@@ -214,19 +214,19 @@ public class GridManager : Singleton<GridManager>
     /// <param name="teamNumber">The team whose half of the grid the target tile belongs to.</param>
     /// <param name="patternCenterRow">The row index of the target tile.</param>
     /// <param name="patternCenterCol">The column index of the target tile.</param>
-    /// <returns>List of tuples where each tuple is a target unit and its corresponding attack weight.</returns>
+    /// <returns>List of tuples where each tuple is a target unit and its corresponding damage weight.</returns>
     public List<Tuple<Unit, float>> EvaluateAttackPattern(float[,] attackPattern, int teamNumber, int patternCenterRow, int patternCenterCol)
     {
         List<Tuple<Unit, float>> targetWeights = new List<Tuple<Unit, float>>();
 
-        ProcessAttackPattern(attackPattern, teamNumber, patternCenterRow, patternCenterCol, (tile, attackWeight) =>
+        ProcessAttackPattern(attackPattern, teamNumber, patternCenterRow, patternCenterCol, (tile, damageWeight) =>
             {
                 Unit projectedUnit = tile.Unit;
 
                 // If a unit exists on the projected tile, add it and its corresponding weight to the list
                 if (projectedUnit != null)
                 {
-                    targetWeights.Add(new Tuple<Unit, float>(projectedUnit, attackWeight));
+                    targetWeights.Add(new Tuple<Unit, float>(projectedUnit, damageWeight));
                 }
             }
         );
@@ -243,14 +243,14 @@ public class GridManager : Singleton<GridManager>
     /// <param name="patternCenterCol">The column index of the target tile.</param>
     public void VisualizeAttackPattern(AttackData attackData, int teamNumber, int patternCenterRow, int patternCenterCol)
     {
-        ProcessAttackPattern(attackData.pattern, teamNumber, patternCenterRow, patternCenterCol, (tile, attackWeight) =>
+        ProcessAttackPattern(attackData.pattern, teamNumber, patternCenterRow, patternCenterCol, (tile, damageWeight) =>
         {
-            tile.SetWeightHighlight(attackWeight);
+            tile.SetWeightHighlight(damageWeight);
         });
     }
 
     /// <summary>
-    /// Remove all attack weight highlights and terrain warnings from the grid.
+    /// Remove all damage weight highlights and terrain warnings from the grid.
     /// </summary>
     public void HideVisualizedAttackPattern()
     {
