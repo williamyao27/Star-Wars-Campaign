@@ -64,7 +64,7 @@
       "actions": [
         {
           "type": "ApplyStatusEffects",
-          "recipientQuery": {
+          "recipientsFromQuery": {
             "candidates": "Allies",
             "tags": [
               "Empire"

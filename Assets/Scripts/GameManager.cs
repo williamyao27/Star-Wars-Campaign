@@ -116,6 +116,16 @@ public class GameManager : Singleton<GameManager>
         turnReadyUnits.Add(unit);
     }
     
+    private void EndCurrentTurn()
+    {
+        currentTurnUnit.EndTurn();
+        currentTurnUnit = null;
+        CloseSelectedAbility();
+        AbilityPaletteManager.instance.HideAbilities();
+    }
+
+    #region Ability Inputs
+
     /// <summary>
     /// Calls the unit whose turn it currently is to use the selected Ability and then end their turn. If the given Ability requires further input, do not use it; instead, prepare for further input.
     /// </summary>
@@ -146,8 +156,6 @@ public class GameManager : Singleton<GameManager>
             UseAbility(currentTurnUnit, ability, true);
         }
     }
-
-    #region Ability Inputs
 
     /// <summary>
     /// Sets the target tile for the currently selected Ability, then uses it and ends the current turn.
@@ -185,15 +193,12 @@ public class GameManager : Singleton<GameManager>
     /// </summary>
     public void UseAbility(Unit user, ActiveAbility ability, bool endTurn)
     {
-        ability.Execute(user);  // TODO: Add Ability context
+        ability.Execute(user);
 
         // If the user is the unit whose turn it currently is, and this is flagged as a turn-ending Ability (i.e. the one move allotted to a unit per turn), end the turn.
         if (user == currentTurnUnit && endTurn)
         {
-            currentTurnUnit.EndTurn();
-            currentTurnUnit = null;
-            CloseSelectedAbility();
-            AbilityPaletteManager.instance.HideAbilities();
+            EndCurrentTurn();
         }
     }
 
@@ -243,8 +248,7 @@ public class GameManager : Singleton<GameManager>
         {
             foreach (StatusEffectApplier effectApplier in effects)
             {
-                StatusEffect effect = new StatusEffect(effectApplier.name, effectApplier.duration);
-                recipient.ReceiveStatusEffect(source, effect, effectApplier.resistible);
+                recipient.ReceiveStatusEffect(source, effectApplier);
             }
         }
     }

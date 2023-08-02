@@ -169,29 +169,39 @@ public class Unit : MonoBehaviour
     /// <summary>
     /// Checks whether the given unit should receive the given Status Effect, and adds it if so.
     /// </summary>
-    /// <param name="effect">The given Status Effect.</param>
-    /// <param name="sourceUnit">The unit </param>
-    /// <param name="resistible">Whether the given Status Effect can be Resisted.</param>
-    public void ReceiveStatusEffect(Unit source, StatusEffect effect, bool resistible)
+    /// <param name="effectApplier">Details about the given Status Effect to apply.</param>
+    /// <param name="sourceUnit">The unit applying the Status Effect.</param>
+    public void ReceiveStatusEffect(Unit source, StatusEffectApplier effectApplier)
     {   
-        if (effect.Data.type == StatusEffectType.Buff)
+        // Do nothing if the effect fails to apply entirely
+        int chanceToApply = effectApplier.chance;
+        if (!(UnityEngine.Random.Range(0, 100) < chanceToApply))
         {
-
+            return;
         }
-        else
+
+        StatusEffect effect = new StatusEffect(effectApplier.name, effectApplier.duration);  // Instantiate Status Effect
+
+        if (effect.Data.type == StatusEffectType.Buff)  // Buff
+        {
+            // Broadcast
+        }
+        else  // Debuff
         {
             // Resistance check
             int chanceToInflict = source.CurrentStats.potency - CurrentStats.resistance;
-            if (UnityEngine.Random.Range(0, 100) < chanceToInflict || !resistible)  // Effect is added
+            if (UnityEngine.Random.Range(0, 100) < chanceToInflict || !effectApplier.resistible)  // Effect is added
             {
+                // Broadcast
             }
             else  // Effect is Resisted
             {
+                // Broadcast
                 return;
             }
         }
 
-        // If the effect is not stackable, search for it in the unit's existing Status Effects
+        // If the effect is not stackable, search for it in the unit's existing Status Effects before adding it. Notice that even if a non-stackable effect cannot be applied due it already existing, it still triggers Status Effect-related broadcasts.
         if (!effect.Data.stackable)
         {
             foreach (StatusEffect existingEffect in statusEffects)
@@ -204,7 +214,7 @@ public class Unit : MonoBehaviour
                     {
                         return;
                     }
-                    // Otherwise, remove the Status Effect for replacement and exit (by assumption, there can only be one instance of this type of Status Effect)
+                    // Otherwise, remove the Status Effect for overwriting; break early as, by precondition, there can only be one instance
                     else
                     {
                         statusEffects.Remove(existingEffect);
@@ -214,7 +224,6 @@ public class Unit : MonoBehaviour
             }
         }
 
-        // Add Status Effect
         statusEffects.Add(effect);
         Debug.Log($"{Data.name} received {effect.Data.name} for {effect.Duration} turns.");
     }
@@ -262,15 +271,16 @@ public class Unit : MonoBehaviour
             if (UnityEngine.Random.Range(0, 100) < chanceToCrit)  // Attack is a Critical Hit
             {
                 rawDamage *= attackData.critDamage;
-                result.CriticallyHitTargets.Add(this);
+                result.Append("criticallyHitTargets", this);
             }
 
             float damageDealt = ReceiveDamage(rawDamage, attackData.damageType, attackData.armorPenetration);
-            result.DamageByTarget.Add(new Tuple<Unit, float>(this, damageDealt));
+            result.Append("damagedTargets", this);
+            result.Add("totalDamage", damageDealt);
         }
         else  // Attack is Evaded
         {
-            result.EvadedTargets.Add(this);
+            result.Append("evadedTargets", this);
         }
     }
 
@@ -285,7 +295,7 @@ public class Unit : MonoBehaviour
     {
         // Compute reduction from Defense
         float selectedDefense = (type == DamageType.Physical) ? CurrentStats.physicalDefense : CurrentStats.specialDefense;
-        float amount = rawAmount * (1f - selectedDefense / 100f);  // Notice that amount represents total post-Defense damage without considering the remaining values of those stats for this unit
+        float amount = rawAmount * (1f - selectedDefense / 100f);  // Represents total post-Defense damage without considering the remaining values of those stats for this unit
         
         // Determine what proportion of damage should go to Armor and Health
         float amountToArmor = Mathf.Min(amount * (1f - armorPenetration), armor);

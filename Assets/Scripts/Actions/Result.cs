@@ -8,33 +8,73 @@ using UnityEngine;
 /// </summary>
 public class Result
 {
-    public List<Tuple<Unit, float>> DamageByTarget { get; set; } = new List<Tuple<Unit, float>>();
-    public List<Unit> CriticallyHitTargets { get; set; } = new List<Unit>();
-    public List<Unit> EvadedTargets { get; set; } = new List<Unit>();
+    private Dictionary<string, object> dict = new Dictionary<string, object>();
 
-    public List<Unit> DamagedTargets
+    /// <summary>
+    /// Assigns a value to the given key in the result dictionary.
+    /// </summary>
+    /// <param name="key">The name of the key.</param>
+    /// <param name="value">The object to associate with the key.</param>
+    public void Set(string key, object value)
     {
-        get
+        dict[key] = value;
+    }
+
+    /// <summary>
+    /// Retrieves the value for a given key in the result dictionary.
+    /// </summary>
+    /// <param name="key">The name of the key.</param>
+    /// <typeparam name="T">The type of value required.</typeparam>
+    /// <returns></returns>
+    public T Get<T>(string key)
+    {
+        if (dict.ContainsKey(key))
         {
-            List<Unit> targets = new List<Unit>();
-            foreach (Tuple<Unit, float> pair in DamageByTarget)
-            {
-                targets.Add(pair.Item1);
-            }
-            return targets;
+            return (T)dict[key];
+        }
+        return default(T);  // Return default value for the type if key not found
+    }
+
+    /// <summary>
+    /// Adds the given value to the value associated with the given key in the result dictionary.
+    /// </summary>
+    /// <param name="key">The name of the key.</param>
+    /// <param name="value">The value to add.</param>
+    public void Add(string key, float value)
+    {
+        if (!dict.ContainsKey(key))  // No existing value
+        {
+            dict[key] = 0f;
+        }
+        if (dict[key] is float)  // Value exists
+        {
+            dict[key] = (float)(dict[key]) + value;
+        }
+        else  // Value exists for this key, but it is not an addable type
+        {
+            throw new InvalidOperationException($"The value associated with key '{key}' is not a float.");
         }
     }
-    
-    public float TotalDamage
+
+    /// <summary>
+    /// Appends the given value to the list associated with the given key in the result dictionary. If the list does not yet exist, it creates one and adds the value.
+    /// </summary>
+    /// <param name="key">The name of the key.</param>
+    /// <param name="value">The value to append.</param>
+    /// <typeparam name="T">The type of value to append.</typeparam>
+    public void Append<T>(string key, T value)
     {
-        get
+        if (!dict.ContainsKey(key))  // List does not exist yet
         {
-            float totalDamage = 0f;
-            foreach (Tuple<Unit, float> pair in DamageByTarget)
-            {
-                totalDamage += pair.Item2;
-            }
-            return totalDamage;
+            dict[key] = new List<T>();
+        }
+        if (dict[key] is List<T> list)  // List exists
+        {
+            list.Add(value);
+        }
+        else  // Value exists for this key, but it is not a list
+        {
+            throw new InvalidOperationException($"The value associated with key '{key}' is not a list.");
         }
     }
 }

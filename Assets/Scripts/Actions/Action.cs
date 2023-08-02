@@ -14,12 +14,10 @@ public class Action
     public ActionType type;
     public int chance = 100;  // The chance that this Action's effects are performed
 
-    // Recipient-related optional attributes
-    public UnitQuery recipientQuery;
+    // Optional attributes
+    public UnitQuery recipientsFromQuery;
     public string recipientsFromResult;
     public int resultIndex;
-
-    // Other optional attributes
     public List<StatusEffectApplier> effects = new List<StatusEffectApplier>();
 
     /// <summary>
@@ -38,15 +36,15 @@ public class Action
             List<Unit> recipients = new List<Unit>();
 
             // If a unit query is provided, evaluate it first to convert it into recipients; this is required by all Action types except for PerformAttacks that require a target tile.
-            if (recipientQuery != null)
+            if (recipientsFromQuery != null)
             {
-                recipients = recipientQuery.Search(user);
+                recipients = recipientsFromQuery.Search(user);
             }
 
-            // Otherwise, if a field to use from a previous result dictionary is provided, 
+            // Otherwise, if a field to use from a previous result dictionary is provided to find recipients, use that
             else if (recipientsFromResult != null)
             {
-                recipients = previousResults[resultIndex].CriticallyHitTargets;
+                recipients = previousResults[resultIndex].Get<List<Unit>>(recipientsFromResult);
             }
 
             // Perform the action

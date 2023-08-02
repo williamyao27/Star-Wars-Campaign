@@ -36,7 +36,7 @@
         ],
         "damage": 20,
         "damageType": "Physical",
-        "accuracy": 90,
+        "accuracy": 900,
         "armorPenetration": 0,
         "critChance": 12,
         "critDamage": 1.5,
