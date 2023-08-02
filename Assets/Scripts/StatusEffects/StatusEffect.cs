@@ -18,7 +18,7 @@ public class StatusEffect
     }
 
     /// <summary>
-    /// 
+    /// Reduce the duration of this Status Effect by 1 turn and return whether it has expired, if applicable.
     /// </summary>
     /// <returns>Whether the Status Effect has expired and needs to be removed from the unit.</returns>
     public bool DecrementDuration()
@@ -28,7 +28,8 @@ public class StatusEffect
             Duration--;
             return Duration == 0;
         }
-        else  // For indefinite Status Effects, do nothing
+        // For indefinite Status Effects, do nothing
+        else
         {
             return false;
         }

@@ -25,7 +25,7 @@
   "activeAbilities": [
     {
       "name": "Zap!",
-      "description": "",
+      "description": "Attack the target tile.",
       "picture": "",
       "maxCooldown": 0,
       "startOnCooldown": false,

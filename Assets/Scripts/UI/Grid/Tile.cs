@@ -97,7 +97,7 @@ public class Tile : MonoBehaviour
         targetabilityHighlight.SetActive(isTargetable);
 
         // Additionally, show terrain warning if the unit on this tile cannot be hit by the attack
-        if (Unit != null && !Unit.IsTargetableTerrain(Unit, attackData))
+        if (Unit != null && !Unit.IsTargetableTerrain(attackData))
         {
             terrainWarning.SetActive(true);
         }

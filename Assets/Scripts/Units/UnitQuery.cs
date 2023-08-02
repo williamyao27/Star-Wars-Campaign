@@ -8,40 +8,58 @@ using System.Collections.Generic;
 [Serializable]
 public class UnitQuery
 {
+    // Universal attributes
     public Candidates candidates;
+
+    // Optional attributes
+    public List<Tag> tags = new List<Tag>();
 
     public List<Unit> Search(Unit querier)
     {
-        List<Unit> result = new List<Unit>();
+        List<Unit> units = new List<Unit>();
 
+        // Get basic list of candidates
         switch (candidates)
         {
             case Candidates.Self:
-                result = new List<Unit>{ querier };
+                units = new List<Unit>{ querier };
                 break;
 
             case Candidates.Allies:
-                result = new List<Unit>(querier.Allies);
+                units = new List<Unit>(querier.Allies);
                 break;
 
             case Candidates.Enemies:
-                result = new List<Unit>(querier.Enemies);
+                units = new List<Unit>(querier.Enemies);
                 break;
 
             case Candidates.OtherAllies:
-                result = new List<Unit>(querier.Allies);
-                result.Remove(querier);
+                units = new List<Unit>(querier.Allies);
+                units.Remove(querier);
                 break;
 
             case Candidates.AllUnits:
-                result = new List<Unit>(GameManager.instance.AllUnits);
+                units = new List<Unit>(GameManager.instance.AllUnits);
                 break;
 
             default:
                 break;
         }
 
-        return result;
+        // Filter units
+        for (int i = units.Count - 1; i >= 0; i--)
+        {
+            Unit currentUnit = units[i];
+
+            // By tags
+            if (!currentUnit.HasTags(tags))
+            {
+                units.RemoveAt(i);
+                continue;
+            }
+        }
+
+        return units;
     }
 }
 

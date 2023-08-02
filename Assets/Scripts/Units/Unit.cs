@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -86,6 +87,30 @@ public class Unit : MonoBehaviour
         display.UpdateTurnMeterBar(turnMeter);
     }
 
+    #region Turn
+
+    public void BeginTurn()
+    {
+        // Display Abilities to player
+        AbilityPaletteManager.instance.ShowAbilities(activeAbilities);
+
+        // Track Status Effects which are present at the beginning of the turn
+        statusEffectsBeginTurn = new List<StatusEffect>(statusEffects);
+
+        Debug.Log($"New turn: {Data.name}.");
+    }
+
+    public void EndTurn()
+    {
+        // Reset Turn Meter
+        turnMeter = 0f;
+
+        // Update Status Effects
+        DecrementStatusEffects();
+    }
+
+    #endregion
+
     #region Turn Meter
 
     /// <summary>
@@ -157,7 +182,7 @@ public class Unit : MonoBehaviour
         {
             // Resistance check
             int chanceToInflict = source.CurrentStats.potency - CurrentStats.resistance;
-            if (Random.Range(0, 100) < chanceToInflict || !resistible)  // Effect is added
+            if (UnityEngine.Random.Range(0, 100) < chanceToInflict || !resistible)  // Effect is added
             {
             }
             else  // Effect is Resisted
@@ -179,7 +204,8 @@ public class Unit : MonoBehaviour
                     {
                         return;
                     }
-                    else  // Otherwise, we remove the Status Effect for replacement and exit (by assumption, there can only be one instance of this type of Status Effect)
+                    // Otherwise, remove the Status Effect for replacement and exit (by assumption, there can only be one instance of this type of Status Effect)
+                    else
                     {
                         statusEffects.Remove(existingEffect);
                         break;
@@ -188,32 +214,21 @@ public class Unit : MonoBehaviour
             }
         }
 
+        // Add Status Effect
         statusEffects.Add(effect);
+        Debug.Log($"{Data.name} received {effect.Data.name} for {effect.Duration} turns.");
     }
 
-    #endregion
-
-    #region Turn
-
-    public void BeginTurn()
+    /// <summary>
+    /// Decrements all Status Effects which were already present on the unit at the beginning of this turn.
+    /// </summary>
+    public void DecrementStatusEffects()
     {
-        // Display Abilities to player
-        AbilityPaletteManager.instance.ShowAbilities(activeAbilities);
-
-        // Track Status Effects which are present at the beginning of the turn
-        statusEffectsBeginTurn = new List<StatusEffect>(statusEffects);
-    }
-
-    public void EndTurn()
-    {
-        // Reset Turn Meter
-        turnMeter = 0f;
-
-        // Decrement duration of all Status Effects which were already present at the beginning of this turn
         foreach (StatusEffect effect in statusEffectsBeginTurn)
         {
             if (effect.DecrementDuration())
             {
+                // Remove Status Effect if it has expired
                 statusEffects.Remove(effect);
             }
         }
@@ -224,36 +239,38 @@ public class Unit : MonoBehaviour
     #region Attacks & Damage
 
     /// <summary>
-    /// 
+    /// Performs the given attack against this unit and records the result.
     /// </summary>
-    /// <param name="attack"></param>
-    /// <param name="weight"></param>
-    public void ReceiveAttack(AttackData attackData, float weight)
+    /// <param name="attack">The given attack.</param>
+    /// <param name="weight">The weight by which to multiply the attack's damage.</param>
+    public void ReceiveAttack(AttackData attackData, float weight, Result result)
     {
         // Terrain check; if the attack cannot strike the unit's terrain, ignore it completely
-        if (!IsTargetableTerrain(this, attackData))
+        if (!IsTargetableTerrain(attackData))
         {
             return;
         }
 
         // Evasion check
         int chanceToHit = attackData.accuracy - CurrentStats.evasion;
-        if (Random.Range(0, 100) < chanceToHit)  // Attack hits
+        if (UnityEngine.Random.Range(0, 100) < chanceToHit)  // Attack hits
         {
             float rawDamage = attackData.damage * weight;
 
             // Critical Hit check
             int chanceToCrit = attackData.critChance - CurrentStats.critAvoidance;
-            if (Random.Range(0, 100) < chanceToCrit)  // Attack crits
+            if (UnityEngine.Random.Range(0, 100) < chanceToCrit)  // Attack is a Critical Hit
             {
                 rawDamage *= attackData.critDamage;
+                result.CriticallyHitTargets.Add(this);
             }
 
-            ReceiveDamage(rawDamage, attackData.damageType, attackData.armorPenetration);
+            float damageDealt = ReceiveDamage(rawDamage, attackData.damageType, attackData.armorPenetration);
+            result.DamageByTarget.Add(new Tuple<Unit, float>(this, damageDealt));
         }
         else  // Attack is Evaded
         {
-            
+            result.EvadedTargets.Add(this);
         }
     }
 
@@ -263,32 +280,55 @@ public class Unit : MonoBehaviour
     /// <param name="rawAmount">The raw amount of Damage from the attack (post-Critical Hit and Offense modifiers on the attacker, but pre-Defense reduction from the target).</param>
     /// <param name="type">The attack's Damage Type.</param>
     /// <param name="armorPenetration">The attack's Armor Penetration.</param>
-    private void ReceiveDamage(float rawAmount, DamageType type, float armorPenetration)
+    /// <returns>The total amount of Damage dealt (bounded above by how much remaining Health and Armor the unit had.</returns>
+    private float ReceiveDamage(float rawAmount, DamageType type, float armorPenetration)
     {
         // Compute reduction from Defense
         float selectedDefense = (type == DamageType.Physical) ? CurrentStats.physicalDefense : CurrentStats.specialDefense;
-        float amount = rawAmount * (1f - selectedDefense / 100f);
+        float amount = rawAmount * (1f - selectedDefense / 100f);  // Notice that amount represents total post-Defense damage without considering the remaining values of those stats for this unit
         
         // Determine what proportion of damage should go to Armor and Health
         float amountToArmor = Mathf.Min(amount * (1f - armorPenetration), armor);
-        float amountToHealth = amount - amountToArmor;
+        float amountToHealth = Mathf.Min(health, amount - amountToArmor);
         AddHealth(amountToHealth * -1f);
         AddArmor(amountToArmor * -1f);
 
         Debug.Log($"{Data.name} received {amount} Damage (Health: {amountToHealth}, Armor: {amountToArmor}, raw: {rawAmount}). Remaining HP: {health + armor}.");
-    }
 
-    /// <summary>
-    /// Determines whether the attack can target a given unit based on its targetable terrain types.
-    /// </summary>
-    /// <param name="target">The target unit.</param>
-    /// <param name="attackData">The given attack.</param>
-    /// <returns>Whether the attack is able to strike the target's terrain.</returns>
-    public static bool IsTargetableTerrain(Unit target, AttackData attackData)
-    {
-        return attackData.targetableTerrains.Contains(target.Data.terrain);
+        return amountToHealth + amountToArmor;
     }
 
     #endregion
 
+    #region Queries
+
+    /// <summary>
+    /// Queries whether this unit is targetable by the given attack based on its targetable terrain types.
+    /// </summary>
+    /// <param name="attackData">The given attack.</param>
+    /// <returns>Whether the attack is able to strike the target's terrain.</returns>
+    public bool IsTargetableTerrain(AttackData attackData)
+    {
+        return attackData.targetableTerrains.Contains(Data.terrain);
+    }
+
+    /// <summary>
+    /// Queries whether this unit has all of the given tags.
+    /// </summary>
+    /// <param name="tags">A list of the tags the unit must have.</param>
+    /// <returns>Whether the unit has all of the given tags.</returns>
+    public bool HasTags(List<Tag> tags)
+    {
+        foreach (Tag tag in tags)
+        {
+            if (!CurrentStats.tags.Contains(tag))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    #endregion
 }

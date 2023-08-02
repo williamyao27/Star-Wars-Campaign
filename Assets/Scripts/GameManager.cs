@@ -36,7 +36,6 @@ public class GameManager : Singleton<GameManager>
         AddUnit("Anakin Skywalker (Young)", 1, 1, 0);  // Fill team 1 with Anakin Skywalker (Young)
         #endregion
         
-        Application.targetFrameRate = 144;  // FPS = 144; choose a target that allows Turn Meter generation to be perceivable
         StartBattle();
     }
 
@@ -202,7 +201,7 @@ public class GameManager : Singleton<GameManager>
     /// Perform the given attack at the current target tile.
     /// </summary>
     /// <param name="attackData">All data related to the attack.</param>
-    public void Attack(AttackData attackData)
+    public void Attack(AttackData attackData, Result result)
     {
         // Determine list of targets
         List<Tuple<Unit, float>> targetWeights = GridManager.instance.EvaluateAttackPattern(attackData.pattern, targetTileTeam, targetTileRow, targetTileCol);
@@ -212,7 +211,7 @@ public class GameManager : Singleton<GameManager>
         {
             Unit target = targetWeight.Item1;
             float weight = targetWeight.Item2;
-            target.ReceiveAttack(attackData, weight);
+            target.ReceiveAttack(attackData, weight, result);
         }
     }
 
@@ -221,12 +220,12 @@ public class GameManager : Singleton<GameManager>
     /// </summary>
     /// <param name="targets">List of units receiving the attack.</param>
     /// <param name="attackData">All data related to the attack.</param>
-    public void Attack(List<Unit> targets, AttackData attackData)
+    public void Attack(List<Unit> targets, AttackData attackData, Result result)
     {
         // Evaluate attack against each target separately
         foreach (Unit target in targets)
         {
-            target.ReceiveAttack(attackData, 1f);
+            target.ReceiveAttack(attackData, 1f, result);
         }
     }
 

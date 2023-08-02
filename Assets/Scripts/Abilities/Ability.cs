@@ -23,10 +23,13 @@ public class ActiveAbility
         // Begin cooldown
         Cooldown = Data.maxCooldown;
 
-        // Execute actions using this Ability instance and the unit user as context
+        // Track results of each Action
+        List<Result> results = new List<Result>();
+
+        // Execute actions using this Ability instance, the unit user, and the results of previous Actions as context
         foreach (Action action in Data.actions)
         {
-            action.Execute(user, this);
+            results.Add(action.Execute(user, this, results));
         }
     }
 }

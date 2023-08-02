@@ -11,48 +11,76 @@ using UnityEngine;
 public class Action
 {
     // Universal attributes
-    public string type;
-    public int chance = 100;
+    public ActionType type;
+    public int chance = 100;  // The chance that this Action's effects are performed
 
-    // Optional attributes
+    // Recipient-related optional attributes
     public UnitQuery recipientQuery;
+    public string recipientsFromResult;
+    public int resultIndex;
+
+    // Other optional attributes
     public List<StatusEffectApplier> effects = new List<StatusEffectApplier>();
 
     /// <summary>
     /// Execute this Action within the context of the unit who is using it and the associated Ability instance.
     /// </summary>
-    /// <param name="user"></param>
-    /// <param name="ability"></param>
-    public void Execute(Unit user, ActiveAbility ability)  // TODO: Accept passives as well
+    /// <param name="user">The unit who is executing this Action.</param>
+    /// <param name="ability">The Ability instance which this Action is a part of.</param>
+    /// <param name="previousResults">The results of previous Actions executed by this Ability.</param>
+    public Result Execute(Unit user, ActiveAbility ability, List<Result> previousResults)
     {
-        List<Unit> recipients = new List<Unit>();
+        Result result = new Result();
 
-        // If a unit query is provided, execute it first to convert it into recipients; this is required by all Action types except for PerformAttacks that require a target tile.
-        if (recipientQuery != null)
+        // Check if this Action should occur based on its chance
+        if (UnityEngine.Random.Range(0, 100) < chance)
         {
-            recipients = recipientQuery.Search(user);
+            List<Unit> recipients = new List<Unit>();
+
+            // If a unit query is provided, evaluate it first to convert it into recipients; this is required by all Action types except for PerformAttacks that require a target tile.
+            if (recipientQuery != null)
+            {
+                recipients = recipientQuery.Search(user);
+            }
+
+            // Otherwise, if a field to use from a previous result dictionary is provided, 
+            else if (recipientsFromResult != null)
+            {
+                recipients = previousResults[resultIndex].CriticallyHitTargets;
+            }
+
+            // Perform the action
+            switch (type)
+            {
+                case ActionType.Attack:
+                    // Attack requires player-selected target tile
+                    if (ability.Data.requiredInput == InputType.TargetEnemyTile)
+                    {
+                        GameManager.instance.Attack(ability.Data.attackData, result);   
+                    }
+
+                    // Attack has a fixed target selection method. This requires recipients to be found either by a unit query or accessing the results of a previous Action.
+                    else
+                    {
+                        GameManager.instance.Attack(recipients, ability.Data.attackData, result);
+                    }
+                    break;
+
+                case ActionType.ApplyStatusEffects:
+                    GameManager.instance.ApplyStatusEffects(user, recipients, effects);
+                    break;
+
+                default:
+                    break;
+            }
         }
 
-        // Perform the action
-        switch (type)
-        {
-            case "Attack":
-                if (ability.Data.requiredInput == InputType.TargetEnemyTile)  // Attack requires player-selected target tile
-                {
-                    GameManager.instance.Attack(ability.Data.attackData);   
-                }
-                else  // Attack has a fixed target selection method. This requires recipients to be found either by a unit query or accessing the results of a previous Action.
-                {
-                    GameManager.instance.Attack(recipients, ability.Data.attackData);
-                }
-                break;
-
-            case "ApplyStatusEffects":
-                GameManager.instance.ApplyStatusEffects(user, recipients, effects);
-                break;
-
-            default:
-                break;
-        }
+        return result;
     }
+}
+
+public enum ActionType
+{
+    Attack,
+    ApplyStatusEffects
 }

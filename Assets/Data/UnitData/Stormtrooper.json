@@ -65,7 +65,10 @@
         {
           "type": "ApplyStatusEffects",
           "recipientQuery": {
-            "candidates": "Self"
+            "candidates": "Allies",
+            "tags": [
+              "Empire"
+            ]
           },
           "effects": [
             {

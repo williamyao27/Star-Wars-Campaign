@@ -195,13 +195,13 @@ public class GridManager : Singleton<GridManager>
                 int projectedRow = patternCenterRow + row - patternHeight / 2;
 
                 // Get damage weight on the current tile
-                float damageWeight = attackPattern[row, col];
+                float weight = attackPattern[row, col];
 
                 // If the projected tile coordinates are valid for the board, and the damage weight is non-zero...
-                if (0 <= projectedCol && projectedCol < width && 0 <= projectedRow && projectedRow < height && damageWeight > 0)
+                if (0 <= projectedCol && projectedCol < width && 0 <= projectedRow && projectedRow < height && weight > 0)
                 {
                     Tile projectedTile = grid[teamNumber, projectedRow, projectedCol];
-                    processTileAction(projectedTile, damageWeight);
+                    processTileAction(projectedTile, weight);
                 }
             }
         }
@@ -219,14 +219,14 @@ public class GridManager : Singleton<GridManager>
     {
         List<Tuple<Unit, float>> targetWeights = new List<Tuple<Unit, float>>();
 
-        ProcessAttackPattern(attackPattern, teamNumber, patternCenterRow, patternCenterCol, (tile, damageWeight) =>
+        ProcessAttackPattern(attackPattern, teamNumber, patternCenterRow, patternCenterCol, (tile, weight) =>
             {
                 Unit projectedUnit = tile.Unit;
 
                 // If a unit exists on the projected tile, add it and its corresponding weight to the list
                 if (projectedUnit != null)
                 {
-                    targetWeights.Add(new Tuple<Unit, float>(projectedUnit, damageWeight));
+                    targetWeights.Add(new Tuple<Unit, float>(projectedUnit, weight));
                 }
             }
         );
@@ -243,9 +243,9 @@ public class GridManager : Singleton<GridManager>
     /// <param name="patternCenterCol">The column index of the target tile.</param>
     public void VisualizeAttackPattern(AttackData attackData, int teamNumber, int patternCenterRow, int patternCenterCol)
     {
-        ProcessAttackPattern(attackData.pattern, teamNumber, patternCenterRow, patternCenterCol, (tile, damageWeight) =>
+        ProcessAttackPattern(attackData.pattern, teamNumber, patternCenterRow, patternCenterCol, (tile, weight) =>
         {
-            tile.SetWeightHighlight(damageWeight);
+            tile.SetWeightHighlight(weight);
         });
     }
 
