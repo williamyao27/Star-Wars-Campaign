@@ -6,7 +6,7 @@ using Newtonsoft.Json;
 using System.IO;
 
 /// <summary>
-/// This class is a singleton manager that 
+/// This class is a singleton manager that handles loading all the data for units and Status Effects when the game begins.
 /// </summary>
 public class DataManager : Singleton<DataManager>
 {

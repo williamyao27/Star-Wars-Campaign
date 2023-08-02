@@ -6,7 +6,7 @@ using UnityEngine;
 /// <summary>
 /// This class stores a comprehensive set of information related to the result of the execution of an Action.
 /// </summary>
-public class Result
+public class ActionResult
 {
     private Dictionary<string, object> dict = new Dictionary<string, object>();
 

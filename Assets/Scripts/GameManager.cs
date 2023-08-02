@@ -21,10 +21,11 @@ public class GameManager : Singleton<GameManager>
     public List<Unit> Team1 { get; set; } = new List<Unit>();
     private List<Unit> turnReadyUnits = new List<Unit>();
     private Unit currentTurnUnit;
-    public ActiveAbility CurrentSelectedAbility {get; set; }
-    public InputType? CurrentRequiredInput { get; set; }
+    public ActionResult CurrentResult { get; set; }
 
     // Input
+    public ActiveAbility CurrentSelectedAbility {get; set; }
+    public InputType? CurrentRequiredInput { get; set; }
     private int targetTileTeam;
     private int targetTileRow;
     private int targetTileCol;
@@ -68,6 +69,8 @@ public class GameManager : Singleton<GameManager>
             unit.Initialize();
         }
     }
+
+    #region Turn Routine
 
     /// <summary>
     /// Runs the standard turn routine of generating Turn Meters and prompting unit turns when they are ready.
@@ -116,6 +119,9 @@ public class GameManager : Singleton<GameManager>
         turnReadyUnits.Add(unit);
     }
     
+    /// <summary>
+    /// Ends the current turn and resets any game state variables and input prompts that depended on the turn.
+    /// </summary>
     private void EndCurrentTurn()
     {
         currentTurnUnit.EndTurn();
@@ -123,6 +129,8 @@ public class GameManager : Singleton<GameManager>
         CloseSelectedAbility();
         AbilityPaletteManager.instance.HideAbilities();
     }
+
+    #endregion
 
     #region Ability Inputs
 
@@ -206,7 +214,7 @@ public class GameManager : Singleton<GameManager>
     /// Perform the given attack at the current target tile.
     /// </summary>
     /// <param name="attackData">All data related to the attack.</param>
-    public void Attack(AttackData attackData, Result result)
+    public void Attack(AttackData attackData)
     {
         // Determine list of targets
         List<Tuple<Unit, float>> targetWeights = GridManager.instance.EvaluateAttackPattern(attackData.pattern, targetTileTeam, targetTileRow, targetTileCol);
@@ -216,7 +224,7 @@ public class GameManager : Singleton<GameManager>
         {
             Unit target = targetWeight.Item1;
             float weight = targetWeight.Item2;
-            target.ReceiveAttack(attackData, weight, result);
+            target.ReceiveAttack(attackData, weight);
         }
     }
 
@@ -225,12 +233,12 @@ public class GameManager : Singleton<GameManager>
     /// </summary>
     /// <param name="targets">List of units receiving the attack.</param>
     /// <param name="attackData">All data related to the attack.</param>
-    public void Attack(List<Unit> targets, AttackData attackData, Result result)
+    public void Attack(List<Unit> targets, AttackData attackData)
     {
         // Evaluate attack against each target separately
         foreach (Unit target in targets)
         {
-            target.ReceiveAttack(attackData, 1f, result);
+            target.ReceiveAttack(attackData, 1f);
         }
     }
 
@@ -255,7 +263,12 @@ public class GameManager : Singleton<GameManager>
 
     #endregion
 
-    #region Queries
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="results"></param>
+    public void BroadcastResults(List<ActionResult> results)
+    {
 
-    #endregion
+    }
 }

@@ -16,7 +16,7 @@ public class Action
 
     // Optional attributes
     public UnitQuery recipientsFromQuery;
-    public string recipientsFromResult;
+    public string recipientsFromActionResult;
     public int resultIndex;
     public List<StatusEffectApplier> effects = new List<StatusEffectApplier>();
 
@@ -25,10 +25,11 @@ public class Action
     /// </summary>
     /// <param name="user">The unit who is executing this Action.</param>
     /// <param name="ability">The Ability instance which this Action is a part of.</param>
-    /// <param name="previousResults">The results of previous Actions executed by this Ability.</param>
-    public Result Execute(Unit user, ActiveAbility ability, List<Result> previousResults)
+    /// <param name="previousActionResults">The results of previous Actions executed by this Ability.</param>
+    public ActionResult Execute(Unit user, ActiveAbility ability, List<ActionResult> previousActionResults)
     {
-        Result result = new Result();
+        ActionResult result = new ActionResult();
+        GameManager.instance.CurrentResult = result;  // Attach it to the Game manager for easy access
 
         // Check if this Action should occur based on its chance
         if (UnityEngine.Random.Range(0, 100) < chance)
@@ -41,10 +42,10 @@ public class Action
                 recipients = recipientsFromQuery.Search(user);
             }
 
-            // Otherwise, if a field to use from a previous result dictionary is provided to find recipients, use that
-            else if (recipientsFromResult != null)
+            // Otherwise, if a field to use from a previous result is provided to find recipients and it is not null, use that
+            else if (recipientsFromActionResult != null)
             {
-                recipients = previousResults[resultIndex].Get<List<Unit>>(recipientsFromResult);
+                recipients = previousActionResults[resultIndex].Get<List<Unit>>(recipientsFromActionResult) ?? recipients;
             }
 
             // Perform the action
@@ -54,17 +55,17 @@ public class Action
                     // Attack requires player-selected target tile
                     if (ability.Data.requiredInput == InputType.TargetEnemyTile)
                     {
-                        GameManager.instance.Attack(ability.Data.attackData, result);   
+                        GameManager.instance.Attack(ability.Data.attackData);   
                     }
 
                     // Attack has a fixed target selection method. This requires recipients to be found either by a unit query or accessing the results of a previous Action.
                     else
                     {
-                        GameManager.instance.Attack(recipients, ability.Data.attackData, result);
+                        GameManager.instance.Attack(recipients, ability.Data.attackData);
                     }
                     break;
 
-                case ActionType.ApplyStatusEffects:
+                case ActionType.ApplyEffects:
                     GameManager.instance.ApplyStatusEffects(user, recipients, effects);
                     break;
 
@@ -73,6 +74,7 @@ public class Action
             }
         }
 
+        GameManager.instance.CurrentResult = null;  // Detach from the Game manager
         return result;
     }
 }
@@ -80,5 +82,5 @@ public class Action
 public enum ActionType
 {
     Attack,
-    ApplyStatusEffects
+    ApplyEffects
 }

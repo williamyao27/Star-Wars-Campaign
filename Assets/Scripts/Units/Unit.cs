@@ -252,7 +252,7 @@ public class Unit : MonoBehaviour
     /// </summary>
     /// <param name="attack">The given attack.</param>
     /// <param name="weight">The weight by which to multiply the attack's damage.</param>
-    public void ReceiveAttack(AttackData attackData, float weight, Result result)
+    public void ReceiveAttack(AttackData attackData, float weight)
     {
         // Terrain check; if the attack cannot strike the unit's terrain, ignore it completely
         if (!IsTargetableTerrain(attackData))
@@ -268,19 +268,22 @@ public class Unit : MonoBehaviour
 
             // Critical Hit check
             int chanceToCrit = attackData.critChance - CurrentStats.critAvoidance;
-            if (UnityEngine.Random.Range(0, 100) < chanceToCrit)  // Attack is a Critical Hit
+            if (UnityEngine.Random.Range(0, 100) < chanceToCrit)
             {
+                // Attack is a Critical Hit
                 rawDamage *= attackData.critDamage;
-                result.Append("criticallyHitTargets", this);
+                
+                GameManager.instance.CurrentResult.Append("criticallyHit", this);
             }
 
             float damageDealt = ReceiveDamage(rawDamage, attackData.damageType, attackData.armorPenetration);
-            result.Append("damagedTargets", this);
-            result.Add("totalDamage", damageDealt);
+
+            GameManager.instance.CurrentResult.Append("damaged", this);
+            GameManager.instance.CurrentResult.Add("totalDamage", damageDealt);
         }
         else  // Attack is Evaded
         {
-            result.Append("evadedTargets", this);
+            GameManager.instance.CurrentResult.Append("evaded", this);
         }
     }
 

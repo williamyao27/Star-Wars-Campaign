@@ -24,13 +24,16 @@ public class ActiveAbility
         Cooldown = Data.maxCooldown;
 
         // Track results of each Action
-        List<Result> results = new List<Result>();
+        List<ActionResult> results = new List<ActionResult>();
 
         // Execute actions using this Ability instance, the unit user, and the results of previous Actions as context
         foreach (Action action in Data.actions)
         {
             results.Add(action.Execute(user, this, results));
         }
+
+        // Trigger listeners based on results
+        GameManager.instance.BroadcastResults(results);
     }
 }
 

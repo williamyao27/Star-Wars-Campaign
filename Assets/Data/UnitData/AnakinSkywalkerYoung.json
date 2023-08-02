@@ -36,7 +36,7 @@
         ],
         "damage": 20,
         "damageType": "Physical",
-        "accuracy": 900,
+        "accuracy": 90,
         "armorPenetration": 0,
         "critChance": 12,
         "critDamage": 1.5,
@@ -51,6 +51,19 @@
       "actions": [
         {
           "type": "Attack"
+        },
+        {
+          "type": "ApplyEffects",
+          "recipientsFromActionResult": "criticallyHit",
+          "resultIndex": 0,
+          "effects": [
+            {
+              "name": "Defense Debuff",
+              "duration": 3,
+              "chance": 100,
+              "resistible": true
+            }
+          ]
         }
       ]
     },
