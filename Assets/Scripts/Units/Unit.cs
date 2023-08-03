@@ -88,10 +88,10 @@ public class Unit : MonoBehaviour
     }
 
     /// <summary>
-    /// 
+    /// Generates a list of units belonging to the given group from this unit's perspective.
     /// </summary>
-    /// <param name="group"></param>
-    /// <returns></returns>
+    /// <param name="group">The given group.</param>
+    /// <returns>List of units belonging to the given group.</returns>
     public List<Unit> GetGroup(UnitGroup group)
     {
         List<Unit> units = new List<Unit>();
@@ -291,7 +291,7 @@ public class Unit : MonoBehaviour
     /// </summary>
     /// <param name="attackData">The given attack.</param>
     /// <param name="weight">The weight by which to multiply the attack's damage.</param>
-    public void ReceiveAttack(AttackData attackData, float weight, ActionResult result)
+    public void ReceiveAttack(Unit source, AttackData attackData, float weight)
     {
         // Terrain check; if the attack cannot strike the unit's terrain, ignore it completely
         if (!IsTargetableTerrain(attackData))
@@ -312,17 +312,16 @@ public class Unit : MonoBehaviour
                 // Attack is a Critical Hit
                 rawDamage *= attackData.critDamage;
                 
-                result.Append("criticallyHit", this);
+                EventManager.instance.CriticalHit(source, this);
             }
 
             float damageDealt = ReceiveDamage(rawDamage, attackData.damageType, attackData.armorPenetration);
-
-            result.Append("damaged", this);
-            result.Add("totalDamage", damageDealt);
+            
+            EventManager.instance.Damage(source, this, damageDealt);
         }
         else  // Attack is Evaded
         {
-            result.Append("evaded", this);
+            EventManager.instance.Evasion(source, this);
         }
     }
 

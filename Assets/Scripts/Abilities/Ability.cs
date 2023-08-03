@@ -18,6 +18,10 @@ public class ActiveAbility
         Cooldown = Data.startOnCooldown ? Data.maxCooldown : 0;
     }
 
+    /// <summary>
+    /// Executes the Ability's actions from the perspective of the unit user.
+    /// </summary>
+    /// <param name="user">The unit using this Ability.</param>
     public void Execute(Unit user)
     {
         // Begin cooldown
@@ -31,9 +35,6 @@ public class ActiveAbility
         {
             results.Add(action.Execute(user, this, results));
         }
-
-        // Trigger listeners based on results
-        GameManager.instance.BroadcastResults(results);
     }
 }
 

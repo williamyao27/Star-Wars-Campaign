@@ -212,8 +212,9 @@ public class GameManager : Singleton<GameManager>
     /// <summary>
     /// Perform the given attack at the current target tile.
     /// </summary>
+    /// <param name="source">The attacking unit.</param>
     /// <param name="attackData">All data related to the attack.</param>
-    public void Attack(AttackData attackData, ActionResult result)
+    public void Attack(Unit source, AttackData attackData)
     {
         // Determine list of targets
         List<Tuple<Unit, float>> targetWeights = GridManager.instance.EvaluateAttackPattern(attackData.pattern, targetTileTeam, targetTileRow, targetTileCol);
@@ -223,21 +224,22 @@ public class GameManager : Singleton<GameManager>
         {
             Unit target = targetWeight.Item1;
             float weight = targetWeight.Item2;
-            target.ReceiveAttack(attackData, weight, result);
+            target.ReceiveAttack(source, attackData, weight);
         }
     }
 
     /// <summary>
     /// Perform the given attack against all receiving units. Each target receives 100% damage weight. Use this method for attacks that use queries instead of the target tile to determine targets.
     /// </summary>
+    /// <param name="source">The attacking unit.</param>
     /// <param name="targets">List of units receiving the attack.</param>
     /// <param name="attackData">All data related to the attack.</param>
-    public void Attack(List<Unit> targets, AttackData attackData, ActionResult result)
+    public void Attack(Unit source, List<Unit> targets, AttackData attackData)
     {
         // Evaluate attack against each target separately
         foreach (Unit target in targets)
         {
-            target.ReceiveAttack(attackData, 1f, result);
+            target.ReceiveAttack(source, attackData, 1f);
         }
     }
 
@@ -246,10 +248,10 @@ public class GameManager : Singleton<GameManager>
     /// <summary>
     /// Applies the given Status Effects to all recipient units.
     /// </summary>
-    /// <param name="source">The unit from whose Abilities/Actions are providing the Status Effects.</param>
+    /// <param name="source">The unit giving the Status Effect.</param>
     /// <param name="recipients">The list of receiving units.</param>
     /// <param name="effects">The list of Status Effect appliers to attempt on each recipient.</param>
-    public void AddStatusEffects(Unit source, List<Unit> recipients, List<StatusEffectApplier> effects, ActionResult result)
+    public void AddStatusEffects(Unit source, List<Unit> recipients, List<StatusEffectApplier> effects)
     {
         foreach (Unit recipient in recipients)
         {
@@ -261,13 +263,4 @@ public class GameManager : Singleton<GameManager>
     }
 
     #endregion
-
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="results"></param>
-    public void BroadcastResults(List<ActionResult> results)
-    {
-
-    }
 }
