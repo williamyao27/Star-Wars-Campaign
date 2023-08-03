@@ -63,11 +63,11 @@
       "startOnCooldown": false,
       "actions": [
         {
-          "type": "ApplyEffects",
-          "recipientsFromQuery": {
-            "candidates": "Allies",
+          "type": "AddStatusEffects",
+          "candidates": "Allies",
+          "query": {
             "tags": [
-              "Mandalorian"
+              "Empire"
             ]
           },
           "effects": [

@@ -14,6 +14,7 @@ public struct StatusEffectData
     public string picture;
     public StatusEffectType type;
     public Stats statsModifier;
+    public AttackData attackModifier;
     // List of on-infliction effects
     // List of passives associated
     public StatusEffectExpiry expiry;

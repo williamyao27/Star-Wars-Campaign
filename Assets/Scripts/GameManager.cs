@@ -21,7 +21,6 @@ public class GameManager : Singleton<GameManager>
     public List<Unit> Team1 { get; set; } = new List<Unit>();
     private List<Unit> turnReadyUnits = new List<Unit>();
     private Unit currentTurnUnit;
-    public ActionResult CurrentResult { get; set; }
 
     // Input
     public ActiveAbility CurrentSelectedAbility {get; set; }
@@ -214,7 +213,7 @@ public class GameManager : Singleton<GameManager>
     /// Perform the given attack at the current target tile.
     /// </summary>
     /// <param name="attackData">All data related to the attack.</param>
-    public void Attack(AttackData attackData)
+    public void Attack(AttackData attackData, ActionResult result)
     {
         // Determine list of targets
         List<Tuple<Unit, float>> targetWeights = GridManager.instance.EvaluateAttackPattern(attackData.pattern, targetTileTeam, targetTileRow, targetTileCol);
@@ -224,7 +223,7 @@ public class GameManager : Singleton<GameManager>
         {
             Unit target = targetWeight.Item1;
             float weight = targetWeight.Item2;
-            target.ReceiveAttack(attackData, weight);
+            target.ReceiveAttack(attackData, weight, result);
         }
     }
 
@@ -233,12 +232,12 @@ public class GameManager : Singleton<GameManager>
     /// </summary>
     /// <param name="targets">List of units receiving the attack.</param>
     /// <param name="attackData">All data related to the attack.</param>
-    public void Attack(List<Unit> targets, AttackData attackData)
+    public void Attack(List<Unit> targets, AttackData attackData, ActionResult result)
     {
         // Evaluate attack against each target separately
         foreach (Unit target in targets)
         {
-            target.ReceiveAttack(attackData, 1f);
+            target.ReceiveAttack(attackData, 1f, result);
         }
     }
 
@@ -250,7 +249,7 @@ public class GameManager : Singleton<GameManager>
     /// <param name="source">The unit from whose Abilities/Actions are providing the Status Effects.</param>
     /// <param name="recipients">The list of receiving units.</param>
     /// <param name="effects">The list of Status Effect appliers to attempt on each recipient.</param>
-    public void ApplyStatusEffects(Unit source, List<Unit> recipients, List<StatusEffectApplier> effects)
+    public void AddStatusEffects(Unit source, List<Unit> recipients, List<StatusEffectApplier> effects, ActionResult result)
     {
         foreach (Unit recipient in recipients)
         {

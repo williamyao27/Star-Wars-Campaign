@@ -3,56 +3,40 @@ using System.Collections;
 using System.Collections.Generic;
 
 /// <summary>
-/// This class 
+/// This class is a query object used to determine whether a unit or group of units fulfills a set of conditions.
 /// </summary>
 [Serializable]
 public class UnitQuery
 {
-    // Universal attributes
-    public Candidates candidates;
+    private List<Tag> tags = new List<Tag>();
 
-    // Optional attributes
-    public List<Tag> tags = new List<Tag>();
-
-    public List<Unit> Search(Unit querier)
+    /// <summary>
+    /// Evaluates whether the given unit fulfills all the conditions.
+    /// </summary>
+    /// <param name="unit">The unit to evaluate.</param>
+    /// <returns>Whether the unit fulfills all the conditions.</returns>
+    public bool EvaluateQuery(Unit unit)
     {
-        List<Unit> units = new List<Unit>();
-
-        // Get basic list of candidates
-        switch (candidates)
+        // By tags
+        if (!unit.HasTags(tags))
         {
-            case Candidates.Self:
-                units = new List<Unit>{ querier };
-                break;
-
-            case Candidates.Allies:
-                units = new List<Unit>(querier.Allies);
-                break;
-
-            case Candidates.Enemies:
-                units = new List<Unit>(querier.Enemies);
-                break;
-
-            case Candidates.OtherAllies:
-                units = new List<Unit>(querier.Allies);
-                units.Remove(querier);
-                break;
-
-            case Candidates.AllUnits:
-                units = new List<Unit>(GameManager.instance.AllUnits);
-                break;
-
-            default:
-                break;
+            return false;
         }
 
-        // Filter units
+        return true;
+    }
+
+    /// <summary>
+    /// Filters the given list of units by whether they fulfill all the conditions.
+    /// </summary>
+    /// <param name="units">The list of units to filrter.</param>
+    /// <returns>Remaining list of units that fulfill all the conditions.</returns>
+    public List<Unit> FilterList(List<Unit> units)
+    {
         for (int i = units.Count - 1; i >= 0; i--)
         {
             Unit currentUnit = units[i];
-
-            // By tags
-            if (!currentUnit.HasTags(tags))
+            if (!EvaluateQuery(currentUnit))
             {
                 units.RemoveAt(i);
                 continue;
@@ -61,13 +45,4 @@ public class UnitQuery
 
         return units;
     }
-}
-
-public enum Candidates
-{
-    Self,
-    Allies,
-    Enemies,
-    OtherAllies,
-    AllUnits
 }

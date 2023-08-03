@@ -28,34 +28,33 @@ public class Stats
     public int critAvoidance;
 
     /// <summary>
-    /// Produce a deep copy of the given stats instance.
+    /// Produce a deep copy of this stats instance.
     /// </summary>
-    /// <param name="stats">The stats instance to deep copy.</param>
-    /// <returns></returns>
-    private static Stats DeepCopy(Stats stats)
+    /// <returns>A deep copy.</returns>
+    private Stats DeepCopy()
     {
         Stats copiedStats = new Stats();
 
         // Copy value types
-        copiedStats.maxHealth = stats.maxHealth;
-        copiedStats.maxArmor = stats.maxArmor;
-        copiedStats.physicalDefense = stats.physicalDefense;
-        copiedStats.specialDefense = stats.specialDefense;
-        copiedStats.speed = stats.speed;
-        copiedStats.evasion = stats.evasion;
-        copiedStats.resistance = stats.resistance;
-        copiedStats.potency = stats.potency;
-        copiedStats.cover = stats.cover;
-        copiedStats.healthSteal = stats.healthSteal;
-        copiedStats.healthRegen = stats.healthRegen;
-        copiedStats.counterChance = stats.counterChance;
-        copiedStats.critAvoidance = stats.critAvoidance;
+        copiedStats.maxHealth = maxHealth;
+        copiedStats.maxArmor = maxArmor;
+        copiedStats.physicalDefense = physicalDefense;
+        copiedStats.specialDefense = specialDefense;
+        copiedStats.speed = speed;
+        copiedStats.evasion = evasion;
+        copiedStats.resistance = resistance;
+        copiedStats.potency = potency;
+        copiedStats.cover = cover;
+        copiedStats.healthSteal = healthSteal;
+        copiedStats.healthRegen = healthRegen;
+        copiedStats.counterChance = counterChance;
+        copiedStats.critAvoidance = critAvoidance;
 
         // Deep copy list of tags
-        if (stats.tags != null)
+        if (tags != null)
         {
-            copiedStats.tags = new List<Tag>(stats.tags.Count);
-            foreach (Tag tag in stats.tags)
+            copiedStats.tags = new List<Tag>(tags.Count);
+            foreach (Tag tag in tags)
             {
                 copiedStats.tags.Add(tag);
             }
@@ -65,14 +64,13 @@ public class Stats
     }
 
     /// <summary>
-    /// Apply the list of Status Effects to a set of base stats via addition.
+    /// Apply the list of Status Effects to this set of stats via addition.
     /// </summary>
-    /// <param name="stats">The base stats.</param>
     /// <param name="statusEffects">The list of Status Effects to apply.</param>
-    /// <returns>The current stats based on the modifications from Status Effects.</returns>
-    public static Stats ApplyStatusEffects(Stats stats, List<StatusEffect> statusEffects)
+    /// <returns>The current stats based on modifications from the Status Effects.</returns>
+    public Stats ApplyStatusEffects(List<StatusEffect> statusEffects)
     {
-        Stats modifiedStats = DeepCopy(stats);
+        Stats modifiedStats = DeepCopy();
 
         foreach (StatusEffect effect in statusEffects)
         {
@@ -98,7 +96,6 @@ public class Stats
 
         return modifiedStats;
     }
-
 }
 
 // Note that the Tag enum is stored in a separate file.

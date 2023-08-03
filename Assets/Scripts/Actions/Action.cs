@@ -15,9 +15,10 @@ public class Action
     public int chance = 100;  // The chance that this Action's effects are performed
 
     // Optional attributes
-    public UnitQuery recipientsFromQuery;
-    public string recipientsFromActionResult;
+    public UnitGroup candidates;
+    public string recipientsFromResult;
     public int resultIndex;
+    public UnitQuery unitQuery;
     public List<StatusEffectApplier> effects = new List<StatusEffectApplier>();
 
     /// <summary>
@@ -25,48 +26,53 @@ public class Action
     /// </summary>
     /// <param name="user">The unit who is executing this Action.</param>
     /// <param name="ability">The Ability instance which this Action is a part of.</param>
-    /// <param name="previousActionResults">The results of previous Actions executed by this Ability.</param>
-    public ActionResult Execute(Unit user, ActiveAbility ability, List<ActionResult> previousActionResults)
+    /// <param name="previousResults">The results of previous Actions executed by this Ability.</param>
+    public ActionResult Execute(Unit user, ActiveAbility ability, List<ActionResult> previousResults)
     {
         ActionResult result = new ActionResult();
-        GameManager.instance.CurrentResult = result;  // Attach it to the Game manager for easy access
 
         // Check if this Action should occur based on its chance
         if (UnityEngine.Random.Range(0, 100) < chance)
         {
             List<Unit> recipients = new List<Unit>();
 
-            // If a unit query is provided, evaluate it first to convert it into recipients; this is required by all Action types except for PerformAttacks that require a target tile.
-            if (recipientsFromQuery != null)
+            // If a candidate group is provided, use it
+            if (candidates != UnitGroup.None)
             {
-                recipients = recipientsFromQuery.Search(user);
+                recipients = user.GetGroup(candidates);
             }
-
             // Otherwise, if a field to use from a previous result is provided to find recipients and it is not null, use that
-            else if (recipientsFromActionResult != null)
+            else if (recipientsFromResult != null)
             {
-                recipients = previousActionResults[resultIndex].Get<List<Unit>>(recipientsFromActionResult) ?? recipients;
+                recipients = previousResults[resultIndex].Get<List<Unit>>(recipientsFromResult) ?? recipients;
+            }
+            // Filter recipients (in either case) by unit query
+            if (unitQuery != null)
+            {
+                recipients = unitQuery.FilterList(recipients);
             }
 
             // Perform the action
             switch (type)
             {
                 case ActionType.Attack:
+                    AttackData currentAttackData = ability.Data.attackData.ApplyStatusEffects(user.StatusEffects);  // Get current attack data
+
                     // Attack requires player-selected target tile
                     if (ability.Data.requiredInput == InputType.TargetEnemyTile)
                     {
-                        GameManager.instance.Attack(ability.Data.attackData);   
+                        GameManager.instance.Attack(currentAttackData, result);   
                     }
 
                     // Attack has a fixed target selection method. This requires recipients to be found either by a unit query or accessing the results of a previous Action.
                     else
                     {
-                        GameManager.instance.Attack(recipients, ability.Data.attackData);
+                        GameManager.instance.Attack(recipients, currentAttackData, result);
                     }
                     break;
 
-                case ActionType.ApplyEffects:
-                    GameManager.instance.ApplyStatusEffects(user, recipients, effects);
+                case ActionType.AddStatusEffects:
+                    GameManager.instance.AddStatusEffects(user, recipients, effects, result);
                     break;
 
                 default:
@@ -74,7 +80,6 @@ public class Action
             }
         }
 
-        GameManager.instance.CurrentResult = null;  // Detach from the Game manager
         return result;
     }
 }
@@ -82,5 +87,5 @@ public class Action
 public enum ActionType
 {
     Attack,
-    ApplyEffects
+    AddStatusEffects
 }

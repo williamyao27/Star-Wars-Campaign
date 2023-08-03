@@ -18,7 +18,7 @@ public class Unit : MonoBehaviour
     private float turnMeter;  // In percentage points, i.e. unit takes turn at turnMeter == 100f
     private List<ActiveAbility> activeAbilities = new List<ActiveAbility>();
     private List<PassiveAbility> passiveAbilities = new List<PassiveAbility>();
-    private List<StatusEffect> statusEffects = new List<StatusEffect>();
+    public List<StatusEffect> StatusEffects { get; set; } = new List<StatusEffect>();
     private List<StatusEffect> statusEffectsBeginTurn;
 
     // Get current stats from base data plus all modifiers
@@ -26,7 +26,7 @@ public class Unit : MonoBehaviour
     {
         get
         {
-            return Stats.ApplyStatusEffects(Data.stats, statusEffects);
+            return Data.stats.ApplyStatusEffects(StatusEffects);
         }
     }
     
@@ -87,6 +87,45 @@ public class Unit : MonoBehaviour
         display.UpdateTurnMeterBar(turnMeter);
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="group"></param>
+    /// <returns></returns>
+    public List<Unit> GetGroup(UnitGroup group)
+    {
+        List<Unit> units = new List<Unit>();
+
+        switch (group)
+        {
+            case UnitGroup.Self:
+                units = new List<Unit>{ this };
+                break;
+
+            case UnitGroup.Allies:
+                units = new List<Unit>(Allies);
+                break;
+
+            case UnitGroup.Enemies:
+                units = new List<Unit>(Enemies);
+                break;
+
+            case UnitGroup.OtherAllies:
+                units = new List<Unit>(Allies);
+                units.Remove(this);
+                break;
+
+            case UnitGroup.AllUnits:
+                units = new List<Unit>(GameManager.instance.AllUnits);
+                break;
+
+            default:
+                break;
+        }
+
+        return units;
+    }
+
     #region Turn
 
     public void BeginTurn()
@@ -95,7 +134,7 @@ public class Unit : MonoBehaviour
         AbilityPaletteManager.instance.ShowAbilities(activeAbilities);
 
         // Track Status Effects which are present at the beginning of the turn
-        statusEffectsBeginTurn = new List<StatusEffect>(statusEffects);
+        statusEffectsBeginTurn = new List<StatusEffect>(StatusEffects);
 
         Debug.Log($"New turn: {Data.name}.");
     }
@@ -204,7 +243,7 @@ public class Unit : MonoBehaviour
         // If the effect is not stackable, search for it in the unit's existing Status Effects before adding it. Notice that even if a non-stackable effect cannot be applied due it already existing, it still triggers Status Effect-related broadcasts.
         if (!effect.Data.stackable)
         {
-            foreach (StatusEffect existingEffect in statusEffects)
+            foreach (StatusEffect existingEffect in StatusEffects)
             {
                 // The unit already has this Status Effect
                 if (existingEffect.Data.name == effect.Data.name)
@@ -217,14 +256,14 @@ public class Unit : MonoBehaviour
                     // Otherwise, remove the Status Effect for overwriting; break early as, by precondition, there can only be one instance
                     else
                     {
-                        statusEffects.Remove(existingEffect);
+                        StatusEffects.Remove(existingEffect);
                         break;
                     }
                 }
             }
         }
 
-        statusEffects.Add(effect);
+        StatusEffects.Add(effect);
         Debug.Log($"{Data.name} received {effect.Data.name} for {effect.Duration} turns.");
     }
 
@@ -238,7 +277,7 @@ public class Unit : MonoBehaviour
             if (effect.DecrementDuration())
             {
                 // Remove Status Effect if it has expired
-                statusEffects.Remove(effect);
+                StatusEffects.Remove(effect);
             }
         }
     }
@@ -250,9 +289,9 @@ public class Unit : MonoBehaviour
     /// <summary>
     /// Performs the given attack against this unit and records the result.
     /// </summary>
-    /// <param name="attack">The given attack.</param>
+    /// <param name="attackData">The given attack.</param>
     /// <param name="weight">The weight by which to multiply the attack's damage.</param>
-    public void ReceiveAttack(AttackData attackData, float weight)
+    public void ReceiveAttack(AttackData attackData, float weight, ActionResult result)
     {
         // Terrain check; if the attack cannot strike the unit's terrain, ignore it completely
         if (!IsTargetableTerrain(attackData))
@@ -264,7 +303,7 @@ public class Unit : MonoBehaviour
         int chanceToHit = attackData.accuracy - CurrentStats.evasion;
         if (UnityEngine.Random.Range(0, 100) < chanceToHit)  // Attack hits
         {
-            float rawDamage = attackData.damage * weight;
+            float rawDamage = attackData.damage * attackData.offense * weight;
 
             // Critical Hit check
             int chanceToCrit = attackData.critChance - CurrentStats.critAvoidance;
@@ -273,17 +312,17 @@ public class Unit : MonoBehaviour
                 // Attack is a Critical Hit
                 rawDamage *= attackData.critDamage;
                 
-                GameManager.instance.CurrentResult.Append("criticallyHit", this);
+                result.Append("criticallyHit", this);
             }
 
             float damageDealt = ReceiveDamage(rawDamage, attackData.damageType, attackData.armorPenetration);
 
-            GameManager.instance.CurrentResult.Append("damaged", this);
-            GameManager.instance.CurrentResult.Add("totalDamage", damageDealt);
+            result.Append("damaged", this);
+            result.Add("totalDamage", damageDealt);
         }
         else  // Attack is Evaded
         {
-            GameManager.instance.CurrentResult.Append("evaded", this);
+            result.Append("evaded", this);
         }
     }
 
@@ -344,4 +383,14 @@ public class Unit : MonoBehaviour
     }
 
     #endregion
+}
+
+public enum UnitGroup
+{
+    None,
+    Self,
+    Allies,
+    Enemies,
+    OtherAllies,
+    AllUnits
 }
