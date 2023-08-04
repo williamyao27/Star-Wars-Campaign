@@ -24,7 +24,7 @@ public class AttackData
     public List<AttackModifier> modifiers = new List<AttackModifier>();
 
     /// <summary>
-    /// Apply all relevant modifiers to the attack data via addition. Note that in contrast to the equivalent method in Stats, this performs only a shallow copy of the base stats as the only modifiable attack data components are value types.
+    /// Apply all relevant modifiers to the attack data via addition. Note that in contrast to the equivalent method in Stats, this performs only a shallow copy of the base data as the only modifiable attack data components are value types.
     /// </summary>
     /// <param name="attacker">The unit using this attack.</param>
     /// <param name="target">The unit receiving this attack.</param>

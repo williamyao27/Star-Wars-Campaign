@@ -32,8 +32,8 @@ public class GridManager : Singleton<GridManager>
                 for (int col = 0; col < width; col++)
                 {
                     // Compute tile position
-                    float tileX = ComputeTileX(col, teamNumber);
-                    float tileY = ComputeTileY(row);
+                    float tileX = ComputeTileX(col);
+                    float tileY = ComputeTileY(row, teamNumber);
                     
                     // Instantiate tile
                     Tile tile = Instantiate(tilePrefab, new Vector3(tileX, tileY, 0), Quaternion.identity, transform);
@@ -50,33 +50,33 @@ public class GridManager : Singleton<GridManager>
     /// Computes the x-position of a tile in a given column.
     /// </summary>
     /// <param name="col">The column index of the tile.</param>
-    /// <param name="teamNumber">The team whose half of the grid the tile belongs to.</param>
     /// <returns>The x-position of the tile.</returns>
-    private float ComputeTileX(int col, int teamNumber)
+    private float ComputeTileX(int col)
     {
         float tileWidth = tilePrefab.transform.localScale.x;
-        float frontier = (width - 1f) * tileWidth;  // Frontier is the x-level where the left column of team 1's grid is anchored; needs to fit width - 1 columns on the left
-        if (teamNumber == 0)
-        {
-            // Team 0: grid is formed from the frontier line with the x-level moving left towards the rear
-            return frontier - col * tileWidth;
-        }
-        else
-        {
-            // Team 1: grid is formed from the frontier line with the x-level moving right towards the rear. It starts at 1.5 widths past the frontier line, where 1 comes from the width of the last tile on team 1's grid, and 0.5 comes from the gap
-            return frontier + 1.5f * tileWidth + col * tileWidth;
-        }
+        return col * tileWidth;
     }
 
     /// <summary>
     /// Computes the y-position of a tile in a given row.
     /// </summary>
     /// <param name="row">The row index of the tile.</param>
+    /// <param name="teamNumber">The team whose half of the grid the tile belongs to.</param>
     /// <returns>The y-position of the tile.</returns>
-    private float ComputeTileY(int row)
+    private float ComputeTileY(int row, int teamNumber)
     {
         float tileHeight = tilePrefab.transform.localScale.y;
-        return row * tileHeight;
+        float frontier = (width - 1f) * tileHeight;  // Frontier is the y-level where the top row of team 0's grid is anchored; needs to fit height - 1 rows beneath it
+        if (teamNumber == 0)
+        {
+            // Team 0: grid is formed from the frontier line with the y-level moving down towards the rear
+            return frontier - row * tileHeight;
+        }
+        else
+        {
+            // Team 1: grid is formed from the frontier line with the y-level moving up towards the rear. It starts at 1.5 widths past the frontier line, where 1 comes from the width of the last row on team 1's grid, and 0.5 comes from the gap
+            return frontier + 1.5f * tileHeight + row * tileHeight;
+        }
     }
 
     /// <summary>
@@ -97,13 +97,13 @@ public class GridManager : Singleton<GridManager>
     }
     
     /// <summary>
-    ///
+    /// Generates a list of all units in the given area of the grid.
     /// </summary>
-    /// <param name="teamNumber"></param>
-    /// <param name="rowStart"></param>
-    /// <param name="colStart"></param>
-    /// <param name="rowEnd"></param>
-    /// <param name="colEnd"></param>
+    /// <param name="teamNumber">Which team's grid to scan.</param>
+    /// <param name="rowStart">The starting row.</param>
+    /// <param name="colStart">The starting column.</param>
+    /// <param name="rowEnd">The ending row.</param>
+    /// <param name="colEnd">The ending column.</param>
     /// <returns></returns>
     public List<Unit> GetUnitsInArea(int teamNumber, int rowStart, int rowEnd, int colStart, int colEnd)
     {

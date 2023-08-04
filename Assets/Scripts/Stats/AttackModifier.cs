@@ -16,6 +16,5 @@ public struct AttackModifier
     public int critChance;
     public float critDamage;
 
-    // Optional query
-    public UnitQuery targetQuery;
+    public UnitQuery targetQuery;  // Optional
 }

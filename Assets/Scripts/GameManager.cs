@@ -33,7 +33,7 @@ public class GameManager : Singleton<GameManager>
     {
         #region TENTATIVE - should NOT create team here
         AddUnit("Stormtrooper", 0, 0, 0);  // Fill team 0 with Stormtrooper
-        AddUnit("Anakin Skywalker (Young)", 1, 1, 0);  // Fill team 1 with Anakin Skywalker (Young)
+        AddUnit("Anakin Skywalker (Young)", 1, 0, 0);  // Fill team 1 with Anakin Skywalker (Young)
         #endregion
         
         StartBattle();

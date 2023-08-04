@@ -51,28 +51,28 @@ public class Tile : MonoBehaviour
             isTargetable = false;
         }
 
-        // Invalid if column is out of range
-        int distance = (attackData.lineOfFireModifiers.Contains(LineOfFireModifier.Rear)) ? 3 - Col + 1 : attacker.Col + Col + 1;
+        // Invalid if row is out of range
+        int distance = (attackData.lineOfFireModifiers.Contains(LineOfFireModifier.Rear)) ? 3 - Row + 1 : attacker.Row + Row + 1;
         if (distance > attackData.range)
         {
             isTargetable = false;
         }
 
-        // Invalid if the LoF is Fixed and the tile is in a different row
-        if (attackData.lineOfFireModifiers.Contains(LineOfFireModifier.Fixed) && attacker.Row != Row)
+        // Invalid if the LoF is Fixed and the tile is in a different col
+        if (attackData.lineOfFireModifiers.Contains(LineOfFireModifier.Fixed) && attacker.Col != Col)
         {
             isTargetable = false;
         }
 
-        // Invalid if blocking units exist in the same row in front
+        // Invalid if blocking units exist in the same column in front
         List<Unit> unitsInFront = new List<Unit>();
-        if (attackData.lineOfFireModifiers.Contains(LineOfFireModifier.Rear) && Col <= 2)
+        if (attackData.lineOfFireModifiers.Contains(LineOfFireModifier.Rear) && Row <= 1)
         {
-            unitsInFront = GridManager.instance.GetUnitsInArea(TeamNumber, Row, Row, Col + 1, 3);   
+            unitsInFront = GridManager.instance.GetUnitsInArea(TeamNumber, Row + 1, 2, Col, Col);   
         }
-        else if (!attackData.lineOfFireModifiers.Contains(LineOfFireModifier.Rear) && Col >= 1)
+        else if (!attackData.lineOfFireModifiers.Contains(LineOfFireModifier.Rear) && Row >= 1)
         {
-            unitsInFront = GridManager.instance.GetUnitsInArea(TeamNumber, Row, Row, 0, Col - 1);
+            unitsInFront = GridManager.instance.GetUnitsInArea(TeamNumber, 0, Row - 1, Col, Col);
         }
         foreach (Unit unit in unitsInFront) {
             // If LoF == Contact, blocked by everything; if LOF == Direct, blocked by Covering units
@@ -88,17 +88,17 @@ public class Tile : MonoBehaviour
         {
             List<Unit> targetableUnits = new List<Unit>();
 
-            // Check only this row if the attack is fixed, otherwise check all rows 0-4
-            int bottomRow = (attackData.lineOfFireModifiers.Contains(LineOfFireModifier.Fixed)) ? Row : 0;
-            int topRow = (attackData.lineOfFireModifiers.Contains(LineOfFireModifier.Fixed)) ? Row : 4;
+            // Check only this row if the attack is fixed, otherwise check all columns 0-4
+            int colStart = (attackData.lineOfFireModifiers.Contains(LineOfFireModifier.Fixed)) ? Col : 0;
+            int colEnd = (attackData.lineOfFireModifiers.Contains(LineOfFireModifier.Fixed)) ? Col : 4;
 
             if (attackData.lineOfFireModifiers.Contains(LineOfFireModifier.Rear))
             {
-                targetableUnits = GridManager.instance.GetUnitsInArea(TeamNumber, bottomRow, topRow, 3 - attackData.range + 1, 3);   
+                targetableUnits = GridManager.instance.GetUnitsInArea(TeamNumber, 2 - attackData.range + 1, 2, colStart, colEnd);   
             }
             else if (!attackData.lineOfFireModifiers.Contains(LineOfFireModifier.Rear))
             {
-                targetableUnits = GridManager.instance.GetUnitsInArea(TeamNumber, bottomRow, topRow, 0, attackData.range - Col - attacker.Col - 1);
+                targetableUnits = GridManager.instance.GetUnitsInArea(TeamNumber, 0, attackData.range - Row - attacker.Row - 1, colStart, colEnd);
             }
             foreach (Unit unit in targetableUnits) {
                 // If any other unit in targetableUnits is Taunting, this tile cannot be targeted

@@ -325,12 +325,10 @@ public class Unit : MonoBehaviour
             {
                 // Attack is a Critical Hit
                 rawDamage *= currentAttackData.critDamage;
-                
                 EventManager.instance.CriticalHit(source, this);
             }
 
             float damageDealt = ReceiveDamage(rawDamage, currentAttackData.damageType, currentAttackData.armorPenetration);
-            
             EventManager.instance.Damage(source, this, damageDealt);
         }
         else  // Attack is Evaded

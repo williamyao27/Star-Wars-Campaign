@@ -5,14 +5,13 @@ using UnityEngine;
 
 /// <summary>
 /// This class represents a single distinct action that may be performed as part of an Ability. It is highly dependent on contextual data, specifically information on which Ability the Action is part of, and which unit is using that Ability.
-/// TODO: Split this class into child classes and use inheritance.
 /// </summary>
 [Serializable]
 public class Action
 {
     // Universal attributes
     public ActionType type;
-    public int chance = 100;  // The chance that this Action's effects are performed
+    public int chance = 100;
 
     // Optional attributes
     public UnitGroup candidates;
