@@ -60,18 +60,16 @@ public class Action
             switch (type)
             {
                 case ActionType.Attack:
-                    AttackData currentAttackData = ability.Data.attackData.ApplyStatusEffects(user.StatusEffects);  // Get current attack data
-
                     // Attack requires player-selected target tile
                     if (ability.Data.requiredInput == InputType.TargetEnemyTile)
                     {
-                        GameManager.instance.Attack(user, currentAttackData);   
+                        GameManager.instance.Attack(user, ability.Data.attackData);   
                     }
 
                     // Attack has a fixed target selection method. This requires recipients to be found either by a unit query or accessing the results of a previous Action.
                     else
                     {
-                        GameManager.instance.Attack(user, recipients, currentAttackData);
+                        GameManager.instance.Attack(user, recipients, ability.Data.attackData);
                     }
                     break;
 

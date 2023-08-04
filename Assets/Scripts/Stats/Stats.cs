@@ -10,7 +10,7 @@ using UnityEngine;
 public class Stats
 {
     // Core stats
-    public List<Tag> tags;
+    public List<Tag> tags = new List<Tag>();
     public float maxHealth;
     public float maxArmor;
     public float physicalDefense;
@@ -19,7 +19,6 @@ public class Stats
     public int evasion;
     public int resistance;
     public int potency;
-    public bool cover;
 
     // Additional stats
     public float healthSteal;
@@ -44,20 +43,16 @@ public class Stats
         copiedStats.evasion = evasion;
         copiedStats.resistance = resistance;
         copiedStats.potency = potency;
-        copiedStats.cover = cover;
         copiedStats.healthSteal = healthSteal;
         copiedStats.healthRegen = healthRegen;
         copiedStats.counterChance = counterChance;
         copiedStats.critAvoidance = critAvoidance;
 
         // Deep copy list of tags
-        if (tags != null)
+        copiedStats.tags = new List<Tag>(tags.Count);
+        foreach (Tag tag in tags)
         {
-            copiedStats.tags = new List<Tag>(tags.Count);
-            foreach (Tag tag in tags)
-            {
-                copiedStats.tags.Add(tag);
-            }
+            copiedStats.tags.Add(tag);
         }
 
         return copiedStats;
@@ -68,7 +63,7 @@ public class Stats
     /// </summary>
     /// <param name="statusEffects">The list of Status Effects to apply.</param>
     /// <returns>The current stats based on modifications from the Status Effects.</returns>
-    public Stats ApplyStatusEffects(List<StatusEffect> statusEffects)
+    public Stats ApplyModifiers(List<StatusEffect> statusEffects)
     {
         Stats modifiedStats = DeepCopy();
 
@@ -77,7 +72,7 @@ public class Stats
             // If the effect includes stats modifiers, apply them to the copied base stats
             if (effect.Data.statsModifier != null)
             {
-                // For numerical values, add the modifier. For bool values, replace with the modifier.
+                // Add the modifier
                 modifiedStats.maxHealth += effect.Data.statsModifier.maxHealth;
                 modifiedStats.maxArmor += effect.Data.statsModifier.maxArmor;
                 modifiedStats.physicalDefense += effect.Data.statsModifier.physicalDefense;
@@ -86,11 +81,24 @@ public class Stats
                 modifiedStats.evasion += effect.Data.statsModifier.evasion;
                 modifiedStats.resistance += effect.Data.statsModifier.resistance;
                 modifiedStats.potency += effect.Data.statsModifier.potency;
-                modifiedStats.cover = effect.Data.statsModifier.cover;
                 modifiedStats.healthSteal += effect.Data.statsModifier.healthSteal;
                 modifiedStats.healthRegen += effect.Data.statsModifier.healthRegen;
                 modifiedStats.counterChance += effect.Data.statsModifier.counterChance;
                 modifiedStats.critAvoidance += effect.Data.statsModifier.critAvoidance;
+
+                // Floor the values
+                modifiedStats.maxHealth = Mathf.Max(modifiedStats.maxHealth, 1);
+                modifiedStats.maxArmor = Mathf.Max(modifiedStats.maxArmor, 0);
+                modifiedStats.physicalDefense = Mathf.Max(modifiedStats.physicalDefense, 0);
+                modifiedStats.specialDefense = Mathf.Max(modifiedStats.specialDefense, 0);
+                modifiedStats.speed = Mathf.Max(modifiedStats.speed, 0);
+                modifiedStats.evasion = Mathf.Max(modifiedStats.evasion, 0);
+                modifiedStats.resistance = Mathf.Max(modifiedStats.resistance, 0);
+                modifiedStats.potency = Mathf.Max(modifiedStats.potency, 0);
+                modifiedStats.healthSteal = Mathf.Max(modifiedStats.healthSteal, 0);
+                modifiedStats.healthRegen = Mathf.Max(modifiedStats.healthRegen, 0);
+                modifiedStats.counterChance = Mathf.Max(modifiedStats.counterChance, 0);
+                modifiedStats.critAvoidance = Mathf.Max(modifiedStats.critAvoidance, 0);
             }
         }
 

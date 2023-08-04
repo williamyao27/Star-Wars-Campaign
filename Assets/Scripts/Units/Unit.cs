@@ -16,8 +16,8 @@ public class Unit : MonoBehaviour
     private float health;
     private float armor;
     private float turnMeter;  // In percentage points, i.e. unit takes turn at turnMeter == 100f
-    private List<ActiveAbility> activeAbilities = new List<ActiveAbility>();
-    private List<PassiveAbility> passiveAbilities = new List<PassiveAbility>();
+    public List<ActiveAbility> ActiveAbilities { get; set; } = new List<ActiveAbility>();
+    public List<PassiveAbility> PassiveAbilities { get; set; } = new List<PassiveAbility>();
     public List<StatusEffect> StatusEffects { get; set; } = new List<StatusEffect>();
     private List<StatusEffect> statusEffectsBeginTurn;
 
@@ -26,16 +26,25 @@ public class Unit : MonoBehaviour
     {
         get
         {
-            return Data.stats.ApplyStatusEffects(StatusEffects);
+            return Data.stats.ApplyModifiers(StatusEffects);
         }
     }
     
+    // Get current state from all modifiers
+    public State CurrentState
+    {
+        get
+        {
+            return State.ApplyStatusEffects(StatusEffects);
+        }
+    }
+
     // Get this unit's Basic Ability; by definition it is their first active Ability
     public ActiveAbility BasicAbility
     {
         get
         {
-            return activeAbilities[0];
+            return ActiveAbilities[0];
         }
     }
 
@@ -70,13 +79,13 @@ public class Unit : MonoBehaviour
         // Active Abilities
         foreach (ActiveAbilityData abilityData in Data.activeAbilities)
         {
-            activeAbilities.Add(new ActiveAbility(abilityData));
+            ActiveAbilities.Add(new ActiveAbility(abilityData));
         }
         
         // Passive Abilities
         foreach (PassiveAbilityData abilityData in Data.passiveAbilities)
         {
-            passiveAbilities.Add(new PassiveAbility(abilityData));
+            PassiveAbilities.Add(new PassiveAbility(abilityData));
         }
 
         // Connect unit to its tile
@@ -128,15 +137,16 @@ public class Unit : MonoBehaviour
 
     #region Turn
 
-    public void BeginTurn()
+    /// <summary>
+    /// Begins the unit's turn.
+    /// </summary>
+    /// <returns>Whether the unit's turn should be immediately skipped.</returns>
+    public bool BeginTurn()
     {
-        // Display Abilities to player
-        AbilityPaletteManager.instance.ShowAbilities(activeAbilities);
-
-        // Track Status Effects which are present at the beginning of the turn
+        // Track Status Effects which are present at the beginning of the turn to decrement on turn end
         statusEffectsBeginTurn = new List<StatusEffect>(StatusEffects);
 
-        Debug.Log($"New turn: {Data.name}.");
+        return CurrentState.skipTurn;
     }
 
     public void EndTurn()
@@ -144,7 +154,7 @@ public class Unit : MonoBehaviour
         // Reset Turn Meter
         turnMeter = 0f;
 
-        // Update Status Effects
+        // Decrement Status Effect durations
         DecrementStatusEffects();
     }
 
@@ -289,6 +299,7 @@ public class Unit : MonoBehaviour
     /// <summary>
     /// Performs the given attack against this unit and records the result.
     /// </summary>
+    /// <param name="source">The unit performing the attack.</param>
     /// <param name="attackData">The given attack.</param>
     /// <param name="weight">The weight by which to multiply the attack's damage.</param>
     public void ReceiveAttack(Unit source, AttackData attackData, float weight)
@@ -299,23 +310,26 @@ public class Unit : MonoBehaviour
             return;
         }
 
+        // Get current attack data (adding modifiers based on the source and the target)
+        AttackData currentAttackData = attackData.ApplyModifiers(source, this);
+
         // Evasion check
-        int chanceToHit = attackData.accuracy - CurrentStats.evasion;
+        int chanceToHit = currentAttackData.accuracy - CurrentStats.evasion;
         if (UnityEngine.Random.Range(0, 100) < chanceToHit)  // Attack hits
         {
-            float rawDamage = attackData.damage * attackData.offense * weight;
+            float rawDamage = currentAttackData.damage * currentAttackData.offense * weight;
 
             // Critical Hit check
-            int chanceToCrit = attackData.critChance - CurrentStats.critAvoidance;
+            int chanceToCrit = currentAttackData.critChance - CurrentStats.critAvoidance;
             if (UnityEngine.Random.Range(0, 100) < chanceToCrit)
             {
                 // Attack is a Critical Hit
-                rawDamage *= attackData.critDamage;
+                rawDamage *= currentAttackData.critDamage;
                 
                 EventManager.instance.CriticalHit(source, this);
             }
 
-            float damageDealt = ReceiveDamage(rawDamage, attackData.damageType, attackData.armorPenetration);
+            float damageDealt = ReceiveDamage(rawDamage, currentAttackData.damageType, currentAttackData.armorPenetration);
             
             EventManager.instance.Damage(source, this, damageDealt);
         }
@@ -343,9 +357,6 @@ public class Unit : MonoBehaviour
         float amountToHealth = Mathf.Min(health, amount - amountToArmor);
         AddHealth(amountToHealth * -1f);
         AddArmor(amountToArmor * -1f);
-
-        Debug.Log($"{Data.name} received {amount} Damage (Health: {amountToHealth}, Armor: {amountToArmor}, raw: {rawAmount}). Remaining HP: {health + armor}.");
-
         return amountToHealth + amountToArmor;
     }
 

@@ -2,9 +2,11 @@
   "name": "Anakin Skywalker (Young)",
   "description": "",
   "picture": "",
+  "source": "",
   "type": "Infantry",
   "terrain": "Ground",
   "role": "Healer",
+  "cover": false,
   "stats": {
     "tags": [
       "Organic",
@@ -17,15 +19,14 @@
     "speed": 130,
     "evasion": 20,
     "bravery": 1,
-    "resistance": 0,
-    "potency": 0,
-    "cover": false
+    "resistance": 15,
+    "potency": 90
   },
 
   "activeAbilities": [
     {
       "name": "Zap!",
-      "description": "Attack the target tile. On a Critical Hit, inflict Stun for 1 turn. This attack has +20 Crit Chance against Droids.",
+      "description": "Deal Physical damage. On a Critical Hit, inflict Stun for 1 turn. This attack has +20 Crit Chance against Droids.",
       "picture": "",
       "maxCooldown": 0,
       "startOnCooldown": false,
@@ -46,6 +47,15 @@
         "precision": "Strict",
         "targetableTerrains": [
           "Ground"
+        ],
+        "modifiers": [
+          {"critChance": 20,
+            "unitQuery": {
+              "tags": [
+                "Droid"
+              ]
+            }
+          }
         ]
       },
       "actions": [
@@ -54,12 +64,12 @@
         },
         {
           "type": "AddStatusEffects",
-          "resultRecipients": "criticallyHit",
+          "resultRecipients": "criticalHits",
           "resultIndex": 0,
           "effects": [
             {
-              "name": "Defense Debuff",
-              "duration": 3,
+              "name": "Stun",
+              "duration": 1,
               "chance": 100,
               "resistible": true
             }

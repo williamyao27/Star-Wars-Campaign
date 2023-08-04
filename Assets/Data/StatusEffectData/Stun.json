@@ -1,11 +1,13 @@
 {
-  "name": "Defense Debuff",
-  "description": "-15 Physical and Special Defense.",
+  "name": "Stun",
+  "description": ".",
   "picture": "",
   "type": "Debuff",
   "statsModifier": {
-    "physicalDefense": -15,
-    "specialDefense": -15
+    "evasion": -100
+  },
+  "stateModifier": {
+    "skipTurn": true
   },
   "expiry": "Duration",
   "stackable": false,

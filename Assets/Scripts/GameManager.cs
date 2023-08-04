@@ -79,15 +79,25 @@ public class GameManager : Singleton<GameManager>
         // If no turns are ongoing...
         if (currentTurnUnit == null)
         {
-            // ...and if there are units who are ready to take a turn, randomly choose one to begin their turn
+            // And if there are units who are ready to take a turn, randomly choose one to begin their turn
             if (turnReadyUnits.Count > 0)
             {
                 int randomIndex = UnityEngine.Random.Range(0, turnReadyUnits.Count);
                 currentTurnUnit = turnReadyUnits[randomIndex];
                 turnReadyUnits.Remove(currentTurnUnit);
-                currentTurnUnit.BeginTurn();
+                
+                if (currentTurnUnit.BeginTurn())  // Begin the current unit's turn
+                {
+                    // Immediately skip it (e.g. Stun)
+                    EndCurrentTurn();
+                }
+                else
+                {
+                    // Otherwise, display Abilities to player
+                    AbilityPaletteManager.instance.ShowAbilities(currentTurnUnit.ActiveAbilities);
+                }
             }
-            // ...otherwise, wait for units to generate Turn Meter until ready
+            // Otherwise, wait for units to generate Turn Meter until ready
             else
             {
                 GenerateTurnMeterUntilTurnReady();

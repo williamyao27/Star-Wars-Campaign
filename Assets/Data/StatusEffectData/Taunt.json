@@ -1,10 +1,10 @@
 {
-  "name": "Offense Buff",
-  "description": "+50% Offense.",
+  "name": "Taunt",
+  "description": ".",
   "picture": "",
   "type": "Buff",
-  "attackModifier": {
-    "offense": 0.5
+  "stateModifier": {
+    "isTaunting": true
   },
   "expiry": "Duration",
   "stackable": false,

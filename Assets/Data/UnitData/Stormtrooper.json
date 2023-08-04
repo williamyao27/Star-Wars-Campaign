@@ -2,9 +2,11 @@
   "name": "Stormtrooper",
   "description": "",
   "picture": "",
+  "source": "",
   "type": "Infantry",
   "terrain": "Ground",
   "role": "Tank",
+  "cover": false,
   "stats": {
     "tags": [
       "Organic",
@@ -17,9 +19,8 @@
     "speed": 74,
     "evasion": 10,
     "bravery": 0.5,
-    "resistance": 0,
-    "potency": 0,
-    "cover": false
+    "resistance": 10,
+    "potency": 100
   },
 
   "activeAbilities": [
@@ -64,8 +65,20 @@
       "actions": [
         {
           "type": "AddStatusEffects",
+          "candidates": "Self",
+          "effects": [
+            {
+              "name": "Taunt",
+              "duration": 3,
+              "chance": 100,
+              "resistible": true
+            }
+          ]
+        },
+        {
+          "type": "AddStatusEffects",
           "candidates": "Allies",
-          "query": {
+          "unitQuery": {
             "tags": [
               "Empire"
             ]

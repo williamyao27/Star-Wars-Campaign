@@ -52,16 +52,7 @@ public class Tile : MonoBehaviour
         }
 
         // Invalid if column is out of range
-        int distance;
-        if (attackData.lineOfFireModifiers.Contains(LineOfFireModifier.Rear))
-        {
-            distance = 3 - attacker.Col + 3 - Col + 1;
-        }
-        else
-        {
-            distance = attacker.Col + Col + 1;
-        }
-
+        int distance = (attackData.lineOfFireModifiers.Contains(LineOfFireModifier.Rear)) ? 3 - Col + 1 : attacker.Col + Col + 1;
         if (distance > attackData.range)
         {
             isTargetable = false;
@@ -73,7 +64,7 @@ public class Tile : MonoBehaviour
             isTargetable = false;
         }
 
-        // Invalid if certain units exist in the same row in front
+        // Invalid if blocking units exist in the same row in front
         List<Unit> unitsInFront = new List<Unit>();
         if (attackData.lineOfFireModifiers.Contains(LineOfFireModifier.Rear) && Col <= 2)
         {
@@ -84,14 +75,40 @@ public class Tile : MonoBehaviour
             unitsInFront = GridManager.instance.GetUnitsInArea(TeamNumber, Row, Row, 0, Col - 1);
         }
         foreach (Unit unit in unitsInFront) {
-            // If LoF == Contact, blocked by everything; if LOF == Direct, blocked by covering units
-            if (attackData.lineOfFire == LineOfFire.Contact || (attackData.lineOfFire == LineOfFire.Direct && !(unit.CurrentStats.cover)))
+            // If LoF == Contact, blocked by everything; if LOF == Direct, blocked by Covering units
+            if (attackData.lineOfFire == LineOfFire.Contact || (attackData.lineOfFire == LineOfFire.Direct && !(unit.Data.cover)))
             {
                 isTargetable = false;
+                break;
             }
         }
 
-        // Invalid if a unit has Taunt in the same column
+        // Invalid if the unit on this tile is not Taunting and another unit in targetable range is
+        if (Unit == null || !Unit.CurrentState.isTaunting)
+        {
+            List<Unit> targetableUnits = new List<Unit>();
+
+            // Check only this row if the attack is fixed, otherwise check all rows 0-4
+            int bottomRow = (attackData.lineOfFireModifiers.Contains(LineOfFireModifier.Fixed)) ? Row : 0;
+            int topRow = (attackData.lineOfFireModifiers.Contains(LineOfFireModifier.Fixed)) ? Row : 4;
+
+            if (attackData.lineOfFireModifiers.Contains(LineOfFireModifier.Rear))
+            {
+                targetableUnits = GridManager.instance.GetUnitsInArea(TeamNumber, bottomRow, topRow, 3 - attackData.range + 1, 3);   
+            }
+            else if (!attackData.lineOfFireModifiers.Contains(LineOfFireModifier.Rear))
+            {
+                targetableUnits = GridManager.instance.GetUnitsInArea(TeamNumber, bottomRow, topRow, 0, attackData.range - Col - attacker.Col - 1);
+            }
+            foreach (Unit unit in targetableUnits) {
+                // If any other unit in targetableUnits is Taunting, this tile cannot be targeted
+                if (Unit != unit && unit.CurrentState.isTaunting)
+                {
+                    isTargetable = false;
+                    break;
+                }
+            }
+        }
 
         // Show targetability
         targetabilityHighlight.SetActive(isTargetable);
