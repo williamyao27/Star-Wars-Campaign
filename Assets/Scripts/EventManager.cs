@@ -20,16 +20,36 @@ public class EventManager : Singleton<EventManager>
 
     public void CriticalHit(Unit source, Unit recipient)
     {
-        CurrentResult.Append("criticalHits", recipient);
+        CurrentResult.Append("criticallyHit", recipient);
 
         Debug.Log($"{recipient.Data.name} received a Critical Hit from {source.Data.name}.");
     }
 
     public void Evasion(Unit source, Unit recipient)
     {
-        CurrentResult.Append("evasions", recipient);
+        CurrentResult.Append("evaded", recipient);
 
         Debug.Log($"{recipient.Data.name} Evaded an attack from {source.Data.name}.");
     }
 
+    public void Buff(Unit source, Unit recipient, StatusEffectApplier effectApplier)
+    {
+        CurrentResult.Append("buffed", recipient);
+
+        Debug.Log($"{recipient.Data.name} was granted {effectApplier.name} for {effectApplier.duration} turns by {source.Data.name}.");
+    }
+
+    public void Debuff(Unit source, Unit recipient, StatusEffectApplier effectApplier)
+    {
+        CurrentResult.Append("debuffed", recipient);
+
+        Debug.Log($"{recipient.Data.name} was inflicted with {effectApplier.name} for {effectApplier.duration} turns by {source.Data.name}.");
+    }
+
+    public void Resist(Unit source, Unit recipient, StatusEffectApplier effectApplier)
+    {
+        CurrentResult.Append("resisted", recipient);
+
+        Debug.Log($"{recipient.Data.name} Resisted {effectApplier.name} from {source.Data.name}.");
+    }
 }

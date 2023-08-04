@@ -36,6 +36,16 @@ public class ActiveAbility
             results.Add(action.Execute(user, this, results));
         }
     }
+    
+    /// <summary>
+    /// Changes the cooldown of this Ability by the given amount.
+    /// </summary>
+    /// <param name="amount">The number of turns to change the cooldown by.</param>
+    public void ChangeCooldown(int amount)
+    {
+        Cooldown += amount;
+        Cooldown = Mathf.Clamp(Cooldown, 0, Data.maxCooldown);
+    }
 }
 
 /// <summary>

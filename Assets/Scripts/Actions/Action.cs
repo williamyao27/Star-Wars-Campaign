@@ -15,10 +15,12 @@ public class Action
 
     // Optional attributes
     public UnitGroup candidates;
-    public string resultRecipients;
+    public string candidatesFromResult;
     public int resultIndex;
     public UnitQuery unitQuery;
+    public string list;
     public List<StatusEffectApplier> effects = new List<StatusEffectApplier>();
+    public float amount;
 
     /// <summary>
     /// Execute this Action within the context of the unit who is using it and the associated Ability instance.
@@ -44,9 +46,9 @@ public class Action
             }
             
             // Otherwise, if a field to use from a previous result is provided to find recipients and it is not null, use that
-            else if (resultRecipients != null)
+            else if (candidatesFromResult != null)
             {
-                recipients = previousResults[resultIndex].Get<List<Unit>>(resultRecipients) ?? recipients;
+                recipients = previousResults[resultIndex].Get<List<Unit>>(candidatesFromResult) ?? recipients;
             }
 
             // Filter recipients (in either case) by query; if a candidate group is not provided and the recipients from the previous result is null, the list is empty by this point
@@ -76,6 +78,14 @@ public class Action
                     GameManager.instance.AddStatusEffects(user, recipients, effects);
                     break;
 
+                case ActionType.RegenerateHealth:
+                    GameManager.instance.RegenerateHealth(user, recipients, amount);
+                    break;
+
+                case ActionType.RegenerateTurnMeter:
+                    GameManager.instance.RegenerateTurnMeter(user, recipients, amount);
+                    break;
+
                 default:
                     break;
             }
@@ -89,5 +99,9 @@ public class Action
 public enum ActionType
 {
     Attack,
-    AddStatusEffects
+    AddStatusEffects,
+    RegenerateHealth,
+    RemoveHealth,
+    RegenerateTurnMeter,
+    RemoveTurnMeter
 }

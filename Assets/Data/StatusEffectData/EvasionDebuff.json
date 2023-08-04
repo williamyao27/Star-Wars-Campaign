@@ -1,0 +1,14 @@
+{
+  "name": "Evasion Debuff",
+  "description": "-15 Evasion.",
+  "picture": "",
+  "type": "Debuff",
+  "statsModifier": {
+    "evasion": -15
+  },
+  "expiry": "Duration",
+  "stackable": false,
+  "clearable": true,
+  "copyable": true,
+  "anonymous": false
+}

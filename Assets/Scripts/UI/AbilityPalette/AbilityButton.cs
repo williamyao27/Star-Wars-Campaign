@@ -7,6 +7,7 @@ using UnityEngine;
 /// </summary>
 public class AbilityButton : HoverHighlightable
 {
+    [SerializeField] private GameObject cooldownShadow;
     public ActiveAbility Ability {get; set; }
 
     /// <summary>
@@ -17,11 +18,26 @@ public class AbilityButton : HoverHighlightable
     {
         Ability = ability;
         name = Ability.Data.name;
+
+        // If the Ability is on cooldown, darken the button and show the cooldown
+        if (Ability.Cooldown > 0)
+        {
+            cooldownShadow.SetActive(true);
+            hoverEnabled = false;
+        }
+        // Otherwise, standard appearance
+        else
+        {
+            hoverEnabled = true;
+        }
     }
     
     private void OnMouseDown()
     {
-        // Choose for the unit whose turn it currently is to use the Ability associated with this button. By assumption, the button is only displayed if the unit is taking a turn, so no explicit game state check is required.
-        GameManager.instance.SelectAbility(Ability);
+        // If the cooldown is done, choose for the unit whose turn it currently is to use the Ability associated with this button. By assumption, the button is only displayed if the unit is taking a turn, so no explicit game state check is required.
+        if (Ability.Cooldown == 0)
+        {
+            GameManager.instance.SelectAbility(Ability);
+        }
     }
 }

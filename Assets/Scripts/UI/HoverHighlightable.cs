@@ -7,11 +7,12 @@ using UnityEngine;
 /// </summary>
 public class HoverHighlightable : MonoBehaviour
 {
-    [SerializeField] private GameObject hoverHighlight;  
+    [SerializeField] private GameObject hoverHighlight;
+    protected bool hoverEnabled = true;
 
     public virtual void OnMouseEnter()
     {
-        hoverHighlight.SetActive(true);
+        hoverHighlight.SetActive(hoverEnabled);
     }
 
     public virtual void OnMouseExit()

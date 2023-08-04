@@ -19,7 +19,7 @@ public class GameManager : Singleton<GameManager>
     }
     public List<Unit> Team0 { get; set; } = new List<Unit>();
     public List<Unit> Team1 { get; set; } = new List<Unit>();
-    private List<Unit> turnReadyUnits = new List<Unit>();
+    private List<Unit> turnQueue = new List<Unit>();
     private Unit currentTurnUnit;
 
     // Input
@@ -32,8 +32,10 @@ public class GameManager : Singleton<GameManager>
     private void Start()
     {
         #region TENTATIVE - should NOT create team here
-        AddUnit("Stormtrooper", 0, 0, 0);  // Fill team 0 with Stormtrooper
-        AddUnit("Anakin Skywalker (Young)", 1, 0, 0);  // Fill team 1 with Anakin Skywalker (Young)
+        AddUnit("Stormtrooper", 0, 0, 0);
+        AddUnit("Stormtrooper", 0, 0, 1);
+        AddUnit("Anakin Skywalker (Young)", 1, 0, 0);
+        AddUnit("B2 Super Battle Droid", 1, 0, 1);
         #endregion
         
         StartBattle();
@@ -79,12 +81,13 @@ public class GameManager : Singleton<GameManager>
         // If no turns are ongoing...
         if (currentTurnUnit == null)
         {
-            // And if there are units who are ready to take a turn, randomly choose one to begin their turn
-            if (turnReadyUnits.Count > 0)
+            // And if there are units who are enqueued to take a turn, randomly choose one to begin their turn
+            if (turnQueue.Count > 0)
             {
-                int randomIndex = UnityEngine.Random.Range(0, turnReadyUnits.Count);
-                currentTurnUnit = turnReadyUnits[randomIndex];
-                turnReadyUnits.Remove(currentTurnUnit);
+                int randomIndex = UnityEngine.Random.Range(0, turnQueue.Count);
+                
+                currentTurnUnit = turnQueue[randomIndex];
+                RemoveTurnReadyUnit(currentTurnUnit);
                 
                 if (currentTurnUnit.BeginTurn())  // Begin the current unit's turn
                 {
@@ -97,10 +100,27 @@ public class GameManager : Singleton<GameManager>
                     AbilityPaletteManager.instance.ShowAbilities(currentTurnUnit.ActiveAbilities);
                 }
             }
-            // Otherwise, wait for units to generate Turn Meter until ready
             else
             {
-                GenerateTurnMeterUntilTurnReady();
+                List<Unit> unitsToEnqueue = new List<Unit>();
+                foreach (Unit unit in AllUnits)
+                {
+                    if (unit.ReadyForTurn)
+                    {
+                        AddTurnReadyUnit(unit);
+                    }
+                }
+
+                // If there are units who are ready to take a turn, enqueue them
+                if (unitsToEnqueue.Count > 0)
+                {
+                    turnQueue = unitsToEnqueue;
+                }
+                else
+                {
+                    // Otherwise, wait for units to generate Turn Meter until ready
+                    GenerateTurnMeterUntilTurnReady();
+                }
             }
         }
     }
@@ -112,10 +132,7 @@ public class GameManager : Singleton<GameManager>
     {
         foreach (Unit unit in AllUnits)
         {
-            if (unit.GenerateTurnMeterFromSpeed())
-            {
-                AddTurnReadyUnit(unit);
-            }
+            unit.GenerateTurnMeterFromSpeed();
         }
     }
 
@@ -125,7 +142,22 @@ public class GameManager : Singleton<GameManager>
     /// <param name="unit">The unit that is ready.</param>
     private void AddTurnReadyUnit(Unit unit)
     {
-        turnReadyUnits.Add(unit);
+        if (!turnQueue.Contains(unit))
+        {
+            turnQueue.Add(unit);
+        }
+    }
+    
+    /// <summary>
+    /// Removes the given unit from the list of units ready to take their turn.
+    /// </summary>
+    /// <param name="unit">The unit to remove.</param>
+    private void RemoveTurnReadyUnit(Unit unit)
+    {
+        if (turnQueue.Contains(unit))
+        {
+            turnQueue.Remove(unit);
+        }
     }
     
     /// <summary>
@@ -203,8 +235,6 @@ public class GameManager : Singleton<GameManager>
         GridManager.instance.HideVisualizedAttackPattern();
     }
 
-    #endregion
-
     /// <summary>
     /// 
     /// </summary>
@@ -218,6 +248,78 @@ public class GameManager : Singleton<GameManager>
             EndCurrentTurn();
         }
     }
+
+    #endregion
+
+    #region Health
+
+    /// <summary>
+    /// Regenerates Health to the given units.
+    /// </summary>
+    /// <param name="source">The unit giving the Health.</param>
+    /// <param name="recipients">The list of receiving units.</param>
+    /// <param name="amount">The amount of Health for each unit to regenerate.</param>
+    public void RegenerateHealth(Unit source, List<Unit> recipients, float amount)
+    {
+        foreach (Unit recipient in recipients)
+        {
+            recipient.AddHealth(amount);
+        }
+    }
+
+    /// <summary>
+    /// Removes Health from the given units.
+    /// </summary>
+    /// <param name="source">The unit removing the Health.</param>
+    /// <param name="recipients">The list of receiving units.</param>
+    /// <param name="amount">The amount of Health for each unit to lose.</param>
+    public void RemoveHealth(Unit source, List<Unit> recipients, float amount)
+    {
+        foreach (Unit recipient in recipients)
+        {
+            recipient.AddHealth(amount * -1f);
+        }
+    }
+
+    #endregion
+
+    #region Turn Meter
+
+    /// <summary>
+    /// Regenerates Turn Meter to the given units.
+    /// </summary>
+    /// <param name="source">The unit giving the Turn Meter.</param>
+    /// <param name="recipients">The list of receiving units.</param>
+    /// <param name="amount">The amount of Turn Meter for each unit to regenerate.</param>
+    public void RegenerateTurnMeter(Unit source, List<Unit> recipients, float amount)
+    {
+        foreach (Unit recipient in recipients)
+        {
+            recipient.AddTurnMeter(amount, false);
+        }
+    }
+
+    /// <summary>
+    /// Remmoves Turn Meter from the given units.
+    /// </summary>
+    /// <param name="source">The unit removing the Turn Meter.</param>
+    /// <param name="recipients">The list of receiving units.</param>
+    /// <param name="amount">The amount of Turn Meter for each unit to lose.</param>
+    public void RemoveTurnMeter(Unit source, List<Unit> recipients, float amount)
+    {
+        foreach (Unit recipient in recipients)
+        {
+            recipient.AddTurnMeter(amount * -1f, false);
+            if (!recipient.ReadyForTurn)
+            {
+                RemoveTurnReadyUnit(recipient);
+            }
+        }
+    }
+
+    #endregion
+
+    #region Attack
 
     /// <summary>
     /// Perform the given attack at the current target tile.
@@ -252,6 +354,8 @@ public class GameManager : Singleton<GameManager>
             target.ReceiveAttack(source, attackData, 1f);
         }
     }
+
+    #endregion
 
     #region Status Effects
 

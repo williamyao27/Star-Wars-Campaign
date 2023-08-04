@@ -20,6 +20,7 @@ public class Unit : MonoBehaviour
     public List<PassiveAbility> PassiveAbilities { get; set; } = new List<PassiveAbility>();
     public List<StatusEffect> StatusEffects { get; set; } = new List<StatusEffect>();
     private List<StatusEffect> statusEffectsBeginTurn;
+    private List<ActiveAbility> cooldownAbilitiesBeginTurn;
 
     // Get current stats from base data plus all modifiers
     public Stats CurrentStats
@@ -137,6 +138,14 @@ public class Unit : MonoBehaviour
 
     #region Turn
 
+    public bool ReadyForTurn
+    {
+        get
+        {
+            return turnMeter >= 100f;
+        }
+    }
+
     /// <summary>
     /// Begins the unit's turn.
     /// </summary>
@@ -145,17 +154,28 @@ public class Unit : MonoBehaviour
     {
         // Track Status Effects which are present at the beginning of the turn to decrement on turn end
         statusEffectsBeginTurn = new List<StatusEffect>(StatusEffects);
+        
+        // Track cooldowns which are active at the beginning of the turn to decrement on turn end
+        cooldownAbilitiesBeginTurn = new List<ActiveAbility>();
+        foreach (ActiveAbility ability in ActiveAbilities)
+        {
+            if (ability.Cooldown > 0)
+            {
+                cooldownAbilitiesBeginTurn.Add(ability);
+            }
+        }
 
         return CurrentState.skipTurn;
     }
 
+    /// <summary>
+    /// Ends the unit's turn
+    /// </summary>
     public void EndTurn()
     {
-        // Reset Turn Meter
-        turnMeter = 0f;
-
-        // Decrement Status Effect durations
+        ResetTurnMeter();
         DecrementStatusEffects();
+        DecrementCooldowns();
     }
 
     #endregion
@@ -166,23 +186,30 @@ public class Unit : MonoBehaviour
     /// Updates the unit's Turn Meter by the given amount and clamps between 0 and 1.
     /// </summary>
     /// <param name="amount">The amount by which to increase the unit's TM. Can be negative (i.e. TM loss).</param>
-    /// <returns>Whether the unit has reached 100% TM.</returns>
-    private bool AddTurnMeter(float amount)
+    /// <param name="natural">Whether this is natural Turn Meter from the turn routine.</param>
+    public void AddTurnMeter(float amount, bool natural)
     {
         turnMeter += amount;
         turnMeter = Mathf.Clamp(turnMeter, 0f, 100f);
-        display.UpdateTurnMeterBar(turnMeter); // Visual
-        return turnMeter == 100f;
+        display.UpdateTurnMeterBar(turnMeter);  // Visual
+    }
+    
+    /// <summary>
+    /// Removes 100% Turn Meter from this unit to soft-reset it after taking a turn. Overflow TM may remain as residual.
+    /// </summary>
+    private void ResetTurnMeter()
+    {
+        AddTurnMeter(-1000f, true);
+        display.UpdateTurnMeterBar(turnMeter);  // Visual
     }
     
     /// <summary>
     /// Updates the unit's Turn Meter based on their Speed (natural TM generation). TM is generated in "frames", i.e. 1% of Speed in percentage points at a time.
     /// </summary>
-    /// <returns>Whether the unit has reached 100% TM.</returns>
-    public bool GenerateTurnMeterFromSpeed()
+    public void GenerateTurnMeterFromSpeed()
     {
         float amount = CurrentStats.speed * 0.01f;
-        return AddTurnMeter(amount);
+        AddTurnMeter(amount, true);
     }
     
     #endregion
@@ -193,7 +220,7 @@ public class Unit : MonoBehaviour
     /// Add to this unit's current Health.
     /// </summary>
     /// <param name="amount">Amount of Health to add.</param>
-    private void AddHealth(float amount)
+    public void AddHealth(float amount)
     {
         health += amount;
         health = Mathf.Clamp(health, 0f, CurrentStats.maxHealth);
@@ -233,7 +260,7 @@ public class Unit : MonoBehaviour
 
         if (effect.Data.type == StatusEffectType.Buff)  // Buff
         {
-            // Broadcast
+            EventManager.instance.Buff(source, this, effectApplier);
         }
         else  // Debuff
         {
@@ -241,11 +268,11 @@ public class Unit : MonoBehaviour
             int chanceToInflict = source.CurrentStats.potency - CurrentStats.resistance;
             if (UnityEngine.Random.Range(0, 100) < chanceToInflict || !effectApplier.resistible)  // Effect is added
             {
-                // Broadcast
+                EventManager.instance.Debuff(source, this, effectApplier);
             }
             else  // Effect is Resisted
             {
-                // Broadcast
+                EventManager.instance.Resist(source, this, effectApplier);
                 return;
             }
         }
@@ -274,7 +301,6 @@ public class Unit : MonoBehaviour
         }
 
         StatusEffects.Add(effect);
-        Debug.Log($"{Data.name} received {effect.Data.name} for {effect.Duration} turns.");
     }
 
     /// <summary>
@@ -289,6 +315,21 @@ public class Unit : MonoBehaviour
                 // Remove Status Effect if it has expired
                 StatusEffects.Remove(effect);
             }
+        }
+    }
+
+    #endregion
+
+    #region Cooldowns
+
+    /// <summary>
+    /// Decrements all cooldowns which were already active on the unit at the beginning of this turn.
+    /// </summary>
+    public void DecrementCooldowns()
+    {
+        foreach (ActiveAbility ability in cooldownAbilitiesBeginTurn)
+        {
+            ability.ChangeCooldown(-1);
         }
     }
 
