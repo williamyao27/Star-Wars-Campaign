@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
   
 /// <summary>
-/// This struct is a data container that describes a distinct attempt to apply Status Effect to a unit.
+/// This struct is a data container that describes a distinct attempt to apply a Status Effect to a unit.
 /// </summary>
 [Serializable]
 public struct StatusEffectApplier

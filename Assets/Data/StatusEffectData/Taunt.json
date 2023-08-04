@@ -1,0 +1,14 @@
+{
+  "name": "Taunt",
+  "description": ".",
+  "picture": "",
+  "type": "Buff",
+  "stateModifier": {
+    "isTaunting": true
+  },
+  "expiry": "Duration",
+  "stackable": false,
+  "clearable": true,
+  "copyable": true,
+  "anonymous": false
+}

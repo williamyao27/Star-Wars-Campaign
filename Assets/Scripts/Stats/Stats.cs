@@ -10,7 +10,7 @@ using UnityEngine;
 public class Stats
 {
     // Core stats
-    public List<Tag> tags;
+    public List<Tag> tags = new List<Tag>();
     public float maxHealth;
     public float maxArmor;
     public float physicalDefense;
@@ -19,7 +19,6 @@ public class Stats
     public int evasion;
     public int resistance;
     public int potency;
-    public bool cover;
 
     // Additional stats
     public float healthSteal;
@@ -28,58 +27,52 @@ public class Stats
     public int critAvoidance;
 
     /// <summary>
-    /// Produce a deep copy of the given stats instance.
+    /// Produce a deep copy of this stats instance.
     /// </summary>
-    /// <param name="stats">The stats instance to deep copy.</param>
-    /// <returns></returns>
-    private static Stats DeepCopy(Stats stats)
+    /// <returns>A deep copy.</returns>
+    private Stats DeepCopy()
     {
         Stats copiedStats = new Stats();
 
         // Copy value types
-        copiedStats.maxHealth = stats.maxHealth;
-        copiedStats.maxArmor = stats.maxArmor;
-        copiedStats.physicalDefense = stats.physicalDefense;
-        copiedStats.specialDefense = stats.specialDefense;
-        copiedStats.speed = stats.speed;
-        copiedStats.evasion = stats.evasion;
-        copiedStats.resistance = stats.resistance;
-        copiedStats.potency = stats.potency;
-        copiedStats.cover = stats.cover;
-        copiedStats.healthSteal = stats.healthSteal;
-        copiedStats.healthRegen = stats.healthRegen;
-        copiedStats.counterChance = stats.counterChance;
-        copiedStats.critAvoidance = stats.critAvoidance;
+        copiedStats.maxHealth = maxHealth;
+        copiedStats.maxArmor = maxArmor;
+        copiedStats.physicalDefense = physicalDefense;
+        copiedStats.specialDefense = specialDefense;
+        copiedStats.speed = speed;
+        copiedStats.evasion = evasion;
+        copiedStats.resistance = resistance;
+        copiedStats.potency = potency;
+        copiedStats.healthSteal = healthSteal;
+        copiedStats.healthRegen = healthRegen;
+        copiedStats.counterChance = counterChance;
+        copiedStats.critAvoidance = critAvoidance;
 
         // Deep copy list of tags
-        if (stats.tags != null)
+        copiedStats.tags = new List<Tag>(tags.Count);
+        foreach (Tag tag in tags)
         {
-            copiedStats.tags = new List<Tag>(stats.tags.Count);
-            foreach (Tag tag in stats.tags)
-            {
-                copiedStats.tags.Add(tag);
-            }
+            copiedStats.tags.Add(tag);
         }
 
         return copiedStats;
     }
 
     /// <summary>
-    /// Apply the list of Status Effects to a set of base stats via addition.
+    /// Apply the list of Status Effects to this set of stats via addition.
     /// </summary>
-    /// <param name="stats">The base stats.</param>
     /// <param name="statusEffects">The list of Status Effects to apply.</param>
-    /// <returns>The current stats based on the modifications from Status Effects.</returns>
-    public static Stats ApplyStatusEffects(Stats stats, List<StatusEffect> statusEffects)
+    /// <returns>The current stats based on modifications from the Status Effects.</returns>
+    public Stats ApplyModifiers(List<StatusEffect> statusEffects)
     {
-        Stats modifiedStats = DeepCopy(stats);
+        Stats modifiedStats = DeepCopy();
 
         foreach (StatusEffect effect in statusEffects)
         {
             // If the effect includes stats modifiers, apply them to the copied base stats
             if (effect.Data.statsModifier != null)
             {
-                // For numerical values, add the modifier. For bool values, replace with the modifier.
+                // Add the modifier
                 modifiedStats.maxHealth += effect.Data.statsModifier.maxHealth;
                 modifiedStats.maxArmor += effect.Data.statsModifier.maxArmor;
                 modifiedStats.physicalDefense += effect.Data.statsModifier.physicalDefense;
@@ -88,17 +81,29 @@ public class Stats
                 modifiedStats.evasion += effect.Data.statsModifier.evasion;
                 modifiedStats.resistance += effect.Data.statsModifier.resistance;
                 modifiedStats.potency += effect.Data.statsModifier.potency;
-                modifiedStats.cover = effect.Data.statsModifier.cover;
                 modifiedStats.healthSteal += effect.Data.statsModifier.healthSteal;
                 modifiedStats.healthRegen += effect.Data.statsModifier.healthRegen;
                 modifiedStats.counterChance += effect.Data.statsModifier.counterChance;
                 modifiedStats.critAvoidance += effect.Data.statsModifier.critAvoidance;
+
+                // Floor the values
+                modifiedStats.maxHealth = Mathf.Max(modifiedStats.maxHealth, 1);
+                modifiedStats.maxArmor = Mathf.Max(modifiedStats.maxArmor, 0);
+                modifiedStats.physicalDefense = Mathf.Max(modifiedStats.physicalDefense, 0);
+                modifiedStats.specialDefense = Mathf.Max(modifiedStats.specialDefense, 0);
+                modifiedStats.speed = Mathf.Max(modifiedStats.speed, 0);
+                modifiedStats.evasion = Mathf.Max(modifiedStats.evasion, 0);
+                modifiedStats.resistance = Mathf.Max(modifiedStats.resistance, 0);
+                modifiedStats.potency = Mathf.Max(modifiedStats.potency, 0);
+                modifiedStats.healthSteal = Mathf.Max(modifiedStats.healthSteal, 0);
+                modifiedStats.healthRegen = Mathf.Max(modifiedStats.healthRegen, 0);
+                modifiedStats.counterChance = Mathf.Max(modifiedStats.counterChance, 0);
+                modifiedStats.critAvoidance = Mathf.Max(modifiedStats.critAvoidance, 0);
             }
         }
 
         return modifiedStats;
     }
-
 }
 
 // Note that the Tag enum is stored in a separate file.

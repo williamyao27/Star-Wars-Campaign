@@ -1,0 +1,17 @@
+{
+  "name": "Stun",
+  "description": ".",
+  "picture": "",
+  "type": "Debuff",
+  "statsModifier": {
+    "evasion": -100
+  },
+  "stateModifier": {
+    "skipTurn": true
+  },
+  "expiry": "Duration",
+  "stackable": false,
+  "clearable": true,
+  "copyable": true,
+  "anonymous": false
+}

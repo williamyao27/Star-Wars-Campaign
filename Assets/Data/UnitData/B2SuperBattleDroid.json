@@ -1,0 +1,89 @@
+{
+  "name": "B2 Super Battle Droid",
+  "description": "",
+  "picture": "",
+  "source": "",
+  "type": "Infantry",
+  "terrain": "Ground",
+  "role": "Tank",
+  "cover": false,
+  "stats": {
+    "tags": [
+      "Droid",
+      "Separatist"
+    ],
+    "maxHealth": 200,
+    "maxArmor": 200,
+    "physicalDefense": 10,
+    "specialDefense": 10,
+    "speed": 53,
+    "evasion": 5,
+    "resistance": 10,
+    "potency": 105
+  },
+
+  "activeAbilities": [
+    {
+      "name": "Heavy Arms",
+      "description": "Deals Physical damage to target enemy and inflicts Evasion Debuff for 2 turns.",
+      "picture": "",
+      "maxCooldown": 0,
+      "startOnCooldown": false,
+      "requiredInput": "TargetEnemyTile",
+      "attackData": {
+        "pattern": [
+          [1]
+        ],
+        "damage": 40,
+        "damageType": "Physical",
+        "accuracy": 100,
+        "armorPenetration": 0,
+        "critChance": 8,
+        "critDamage": 1.5,
+        "range": 2,
+        "lineOfFire": "Contact",
+        "lineOfFireModifiers": [],
+        "precision": "Strict",
+        "targetableTerrains": [
+          "Ground",
+          "Aerial"
+        ]
+      },
+      "actions": [
+        {
+          "type": "Attack"
+        },
+        {
+          "type": "AddStatusEffects",
+          "candidatesFromResult": "damaged",
+          "resultIndex": 0,
+          "effects": [
+            {
+              "name": "Evasion Debuff",
+              "duration": 2,
+              "chance": 100,
+              "resistible": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Mow Down!",
+      "description": "",
+      "picture": "",
+      "maxCooldown": 3,
+      "startOnCooldown": false,
+      "actions": [
+      ]
+    }
+  ],
+
+  "passiveAbilities": [
+    {
+      "name": "Reactive Protocol",
+      "description": "",
+      "picture": ""
+    }
+  ]
+}

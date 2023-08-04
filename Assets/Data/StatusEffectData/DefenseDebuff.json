@@ -1,0 +1,15 @@
+{
+  "name": "Defense Debuff",
+  "description": "-15 Physical and Special Defense.",
+  "picture": "",
+  "type": "Debuff",
+  "statsModifier": {
+    "physicalDefense": -15,
+    "specialDefense": -15
+  },
+  "expiry": "Duration",
+  "stackable": false,
+  "clearable": true,
+  "copyable": true,
+  "anonymous": false
+}

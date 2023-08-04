@@ -18,16 +18,33 @@ public class ActiveAbility
         Cooldown = Data.startOnCooldown ? Data.maxCooldown : 0;
     }
 
+    /// <summary>
+    /// Executes the Ability's actions from the perspective of the unit user.
+    /// </summary>
+    /// <param name="user">The unit using this Ability.</param>
     public void Execute(Unit user)
     {
         // Begin cooldown
         Cooldown = Data.maxCooldown;
 
-        // Execute actions using this Ability instance and the unit user as context
+        // Track results of each Action
+        List<ActionResult> results = new List<ActionResult>();
+
+        // Execute actions using this Ability instance, the unit user, and the results of previous Actions as context
         foreach (Action action in Data.actions)
         {
-            action.Execute(user, this);
+            results.Add(action.Execute(user, this, results));
         }
+    }
+    
+    /// <summary>
+    /// Changes the cooldown of this Ability by the given amount.
+    /// </summary>
+    /// <param name="amount">The number of turns to change the cooldown by.</param>
+    public void ChangeCooldown(int amount)
+    {
+        Cooldown += amount;
+        Cooldown = Mathf.Clamp(Cooldown, 0, Data.maxCooldown);
     }
 }
 

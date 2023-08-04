@@ -2,9 +2,11 @@
   "name": "Stormtrooper",
   "description": "",
   "picture": "",
+  "source": "",
   "type": "Infantry",
   "terrain": "Ground",
   "role": "Tank",
+  "cover": false,
   "stats": {
     "tags": [
       "Organic",
@@ -16,16 +18,14 @@
     "specialDefense": 15,
     "speed": 74,
     "evasion": 10,
-    "bravery": 0.5,
-    "resistance": 0,
-    "potency": 0,
-    "cover": false
+    "resistance": 10,
+    "potency": 100
   },
 
   "activeAbilities": [
     {
       "name": "Imperial Marksmanship",
-      "description": "",
+      "description": "Attack the target tile.",
       "picture": "",
       "maxCooldown": 0,
       "startOnCooldown": false,
@@ -63,9 +63,24 @@
       "startOnCooldown": false,
       "actions": [
         {
-          "type": "ApplyStatusEffects",
-          "recipientQuery": {
-            "candidates": "Self"
+          "type": "AddStatusEffects",
+          "candidates": "Self",
+          "effects": [
+            {
+              "name": "Taunt",
+              "duration": 3,
+              "chance": 100,
+              "resistible": true
+            }
+          ]
+        },
+        {
+          "type": "AddStatusEffects",
+          "candidates": "Allies",
+          "unitQuery": {
+            "tags": [
+              "Empire"
+            ]
           },
           "effects": [
             {

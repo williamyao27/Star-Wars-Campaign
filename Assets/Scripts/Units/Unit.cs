@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -15,26 +16,36 @@ public class Unit : MonoBehaviour
     private float health;
     private float armor;
     private float turnMeter;  // In percentage points, i.e. unit takes turn at turnMeter == 100f
-    private List<ActiveAbility> activeAbilities = new List<ActiveAbility>();
-    private List<PassiveAbility> passiveAbilities = new List<PassiveAbility>();
-    private List<StatusEffect> statusEffects = new List<StatusEffect>();
+    public List<ActiveAbility> ActiveAbilities { get; set; } = new List<ActiveAbility>();
+    public List<PassiveAbility> PassiveAbilities { get; set; } = new List<PassiveAbility>();
+    public List<StatusEffect> StatusEffects { get; set; } = new List<StatusEffect>();
     private List<StatusEffect> statusEffectsBeginTurn;
+    private List<ActiveAbility> cooldownAbilitiesBeginTurn;
 
     // Get current stats from base data plus all modifiers
     public Stats CurrentStats
     {
         get
         {
-            return Stats.ApplyStatusEffects(Data.stats, statusEffects);
+            return Data.stats.ApplyModifiers(StatusEffects);
         }
     }
     
+    // Get current state from all modifiers
+    public State CurrentState
+    {
+        get
+        {
+            return State.ApplyStatusEffects(StatusEffects);
+        }
+    }
+
     // Get this unit's Basic Ability; by definition it is their first active Ability
     public ActiveAbility BasicAbility
     {
         get
         {
-            return activeAbilities[0];
+            return ActiveAbilities[0];
         }
     }
 
@@ -69,13 +80,13 @@ public class Unit : MonoBehaviour
         // Active Abilities
         foreach (ActiveAbilityData abilityData in Data.activeAbilities)
         {
-            activeAbilities.Add(new ActiveAbility(abilityData));
+            ActiveAbilities.Add(new ActiveAbility(abilityData));
         }
         
         // Passive Abilities
         foreach (PassiveAbilityData abilityData in Data.passiveAbilities)
         {
-            passiveAbilities.Add(new PassiveAbility(abilityData));
+            PassiveAbilities.Add(new PassiveAbility(abilityData));
         }
 
         // Connect unit to its tile
@@ -86,29 +97,119 @@ public class Unit : MonoBehaviour
         display.UpdateTurnMeterBar(turnMeter);
     }
 
+    /// <summary>
+    /// Generates a list of units belonging to the given group from this unit's perspective.
+    /// </summary>
+    /// <param name="group">The given group.</param>
+    /// <returns>List of units belonging to the given group.</returns>
+    public List<Unit> GetGroup(UnitGroup group)
+    {
+        List<Unit> units = new List<Unit>();
+
+        switch (group)
+        {
+            case UnitGroup.Self:
+                units = new List<Unit>{ this };
+                break;
+
+            case UnitGroup.Allies:
+                units = new List<Unit>(Allies);
+                break;
+
+            case UnitGroup.Enemies:
+                units = new List<Unit>(Enemies);
+                break;
+
+            case UnitGroup.OtherAllies:
+                units = new List<Unit>(Allies);
+                units.Remove(this);
+                break;
+
+            case UnitGroup.AllUnits:
+                units = new List<Unit>(GameManager.instance.AllUnits);
+                break;
+
+            default:
+                break;
+        }
+
+        return units;
+    }
+
+    #region Turn
+
+    public bool ReadyForTurn
+    {
+        get
+        {
+            return turnMeter >= 100f;
+        }
+    }
+
+    /// <summary>
+    /// Begins the unit's turn.
+    /// </summary>
+    /// <returns>Whether the unit's turn should be immediately skipped.</returns>
+    public bool BeginTurn()
+    {
+        // Track Status Effects which are present at the beginning of the turn to decrement on turn end
+        statusEffectsBeginTurn = new List<StatusEffect>(StatusEffects);
+        
+        // Track cooldowns which are active at the beginning of the turn to decrement on turn end
+        cooldownAbilitiesBeginTurn = new List<ActiveAbility>();
+        foreach (ActiveAbility ability in ActiveAbilities)
+        {
+            if (ability.Cooldown > 0)
+            {
+                cooldownAbilitiesBeginTurn.Add(ability);
+            }
+        }
+
+        return CurrentState.skipTurn;
+    }
+
+    /// <summary>
+    /// Ends the unit's turn
+    /// </summary>
+    public void EndTurn()
+    {
+        ResetTurnMeter();
+        DecrementStatusEffects();
+        DecrementCooldowns();
+    }
+
+    #endregion
+
     #region Turn Meter
 
     /// <summary>
     /// Updates the unit's Turn Meter by the given amount and clamps between 0 and 1.
     /// </summary>
     /// <param name="amount">The amount by which to increase the unit's TM. Can be negative (i.e. TM loss).</param>
-    /// <returns>Whether the unit has reached 100% TM.</returns>
-    private bool AddTurnMeter(float amount)
+    /// <param name="natural">Whether this is natural Turn Meter from the turn routine.</param>
+    public void AddTurnMeter(float amount, bool natural)
     {
         turnMeter += amount;
         turnMeter = Mathf.Clamp(turnMeter, 0f, 100f);
-        display.UpdateTurnMeterBar(turnMeter); // Visual
-        return turnMeter == 100f;
+        display.UpdateTurnMeterBar(turnMeter);  // Visual
+    }
+    
+    /// <summary>
+    /// Removes 100% Turn Meter from this unit to soft-reset it after taking a turn. Overflow TM may remain as residual.
+    /// </summary>
+    private void ResetTurnMeter()
+    {
+        AddTurnMeter(-1000f, true);
+        display.UpdateTurnMeterBar(turnMeter);  // Visual
     }
     
     /// <summary>
     /// Updates the unit's Turn Meter based on their Speed (natural TM generation). TM is generated in "frames", i.e. 1% of Speed in percentage points at a time.
     /// </summary>
-    /// <returns>Whether the unit has reached 100% TM.</returns>
-    public bool GenerateTurnMeterFromSpeed()
+    public void GenerateTurnMeterFromSpeed()
     {
         float amount = CurrentStats.speed * 0.01f;
-        return AddTurnMeter(amount);
+        AddTurnMeter(amount, true);
     }
     
     #endregion
@@ -119,7 +220,7 @@ public class Unit : MonoBehaviour
     /// Add to this unit's current Health.
     /// </summary>
     /// <param name="amount">Amount of Health to add.</param>
-    private void AddHealth(float amount)
+    public void AddHealth(float amount)
     {
         health += amount;
         health = Mathf.Clamp(health, 0f, CurrentStats.maxHealth);
@@ -144,32 +245,42 @@ public class Unit : MonoBehaviour
     /// <summary>
     /// Checks whether the given unit should receive the given Status Effect, and adds it if so.
     /// </summary>
-    /// <param name="effect">The given Status Effect.</param>
-    /// <param name="sourceUnit">The unit </param>
-    /// <param name="resistible">Whether the given Status Effect can be Resisted.</param>
-    public void ReceiveStatusEffect(Unit source, StatusEffect effect, bool resistible)
+    /// <param name="effectApplier">Details about the given Status Effect to apply.</param>
+    /// <param name="sourceUnit">The unit applying the Status Effect.</param>
+    public void ReceiveStatusEffect(Unit source, StatusEffectApplier effectApplier)
     {   
-        if (effect.Data.type == StatusEffectType.Buff)
+        // Do nothing if the effect fails to apply entirely
+        int chanceToApply = effectApplier.chance;
+        if (!(UnityEngine.Random.Range(0, 100) < chanceToApply))
         {
-
+            return;
         }
-        else
+
+        StatusEffect effect = new StatusEffect(effectApplier.name, effectApplier.duration);  // Instantiate Status Effect
+
+        if (effect.Data.type == StatusEffectType.Buff)  // Buff
+        {
+            EventManager.instance.Buff(source, this, effectApplier);
+        }
+        else  // Debuff
         {
             // Resistance check
             int chanceToInflict = source.CurrentStats.potency - CurrentStats.resistance;
-            if (Random.Range(0, 100) < chanceToInflict || !resistible)  // Effect is added
+            if (UnityEngine.Random.Range(0, 100) < chanceToInflict || !effectApplier.resistible)  // Effect is added
             {
+                EventManager.instance.Debuff(source, this, effectApplier);
             }
             else  // Effect is Resisted
             {
+                EventManager.instance.Resist(source, this, effectApplier);
                 return;
             }
         }
 
-        // If the effect is not stackable, search for it in the unit's existing Status Effects
+        // If the effect is not stackable, search for it in the unit's existing Status Effects before adding it. Notice that even if a non-stackable effect cannot be applied due it already existing, it still triggers Status Effect-related broadcasts.
         if (!effect.Data.stackable)
         {
-            foreach (StatusEffect existingEffect in statusEffects)
+            foreach (StatusEffect existingEffect in StatusEffects)
             {
                 // The unit already has this Status Effect
                 if (existingEffect.Data.name == effect.Data.name)
@@ -179,43 +290,46 @@ public class Unit : MonoBehaviour
                     {
                         return;
                     }
-                    else  // Otherwise, we remove the Status Effect for replacement and exit (by assumption, there can only be one instance of this type of Status Effect)
+                    // Otherwise, remove the Status Effect for overwriting; break early as, by precondition, there can only be one instance
+                    else
                     {
-                        statusEffects.Remove(existingEffect);
+                        StatusEffects.Remove(existingEffect);
                         break;
                     }
                 }
             }
         }
 
-        statusEffects.Add(effect);
+        StatusEffects.Add(effect);
     }
 
-    #endregion
-
-    #region Turn
-
-    public void BeginTurn()
+    /// <summary>
+    /// Decrements all Status Effects which were already present on the unit at the beginning of this turn.
+    /// </summary>
+    public void DecrementStatusEffects()
     {
-        // Display Abilities to player
-        AbilityPaletteManager.instance.ShowAbilities(activeAbilities);
-
-        // Track Status Effects which are present at the beginning of the turn
-        statusEffectsBeginTurn = new List<StatusEffect>(statusEffects);
-    }
-
-    public void EndTurn()
-    {
-        // Reset Turn Meter
-        turnMeter = 0f;
-
-        // Decrement duration of all Status Effects which were already present at the beginning of this turn
         foreach (StatusEffect effect in statusEffectsBeginTurn)
         {
             if (effect.DecrementDuration())
             {
-                statusEffects.Remove(effect);
+                // Remove Status Effect if it has expired
+                StatusEffects.Remove(effect);
             }
+        }
+    }
+
+    #endregion
+
+    #region Cooldowns
+
+    /// <summary>
+    /// Decrements all cooldowns which were already active on the unit at the beginning of this turn.
+    /// </summary>
+    public void DecrementCooldowns()
+    {
+        foreach (ActiveAbility ability in cooldownAbilitiesBeginTurn)
+        {
+            ability.ChangeCooldown(-1);
         }
     }
 
@@ -224,36 +338,43 @@ public class Unit : MonoBehaviour
     #region Attacks & Damage
 
     /// <summary>
-    /// 
+    /// Performs the given attack against this unit and records the result.
     /// </summary>
-    /// <param name="attack"></param>
-    /// <param name="weight"></param>
-    public void ReceiveAttack(AttackData attackData, float weight)
+    /// <param name="source">The unit performing the attack.</param>
+    /// <param name="attackData">The given attack.</param>
+    /// <param name="weight">The weight by which to multiply the attack's damage.</param>
+    public void ReceiveAttack(Unit source, AttackData attackData, float weight)
     {
         // Terrain check; if the attack cannot strike the unit's terrain, ignore it completely
-        if (!IsTargetableTerrain(this, attackData))
+        if (!IsTargetableTerrain(attackData))
         {
             return;
         }
 
+        // Get current attack data (adding modifiers based on the source and the target)
+        AttackData currentAttackData = attackData.ApplyModifiers(source, this);
+
         // Evasion check
-        int chanceToHit = attackData.accuracy - CurrentStats.evasion;
-        if (Random.Range(0, 100) < chanceToHit)  // Attack hits
+        int chanceToHit = currentAttackData.accuracy - CurrentStats.evasion;
+        if (UnityEngine.Random.Range(0, 100) < chanceToHit)  // Attack hits
         {
-            float rawDamage = attackData.damage * weight;
+            float rawDamage = currentAttackData.damage * currentAttackData.offense * weight;
 
             // Critical Hit check
-            int chanceToCrit = attackData.critChance - CurrentStats.critAvoidance;
-            if (Random.Range(0, 100) < chanceToCrit)  // Attack crits
+            int chanceToCrit = currentAttackData.critChance - CurrentStats.critAvoidance;
+            if (UnityEngine.Random.Range(0, 100) < chanceToCrit)
             {
-                rawDamage *= attackData.critDamage;
+                // Attack is a Critical Hit
+                rawDamage *= currentAttackData.critDamage;
+                EventManager.instance.CriticalHit(source, this);
             }
 
-            ReceiveDamage(rawDamage, attackData.damageType, attackData.armorPenetration);
+            float damageDealt = ReceiveDamage(rawDamage, currentAttackData.damageType, currentAttackData.armorPenetration);
+            EventManager.instance.Damage(source, this, damageDealt);
         }
         else  // Attack is Evaded
         {
-            
+            EventManager.instance.Evasion(source, this);
         }
     }
 
@@ -263,32 +384,62 @@ public class Unit : MonoBehaviour
     /// <param name="rawAmount">The raw amount of Damage from the attack (post-Critical Hit and Offense modifiers on the attacker, but pre-Defense reduction from the target).</param>
     /// <param name="type">The attack's Damage Type.</param>
     /// <param name="armorPenetration">The attack's Armor Penetration.</param>
-    private void ReceiveDamage(float rawAmount, DamageType type, float armorPenetration)
+    /// <returns>The total amount of Damage dealt (bounded above by how much remaining Health and Armor the unit had.</returns>
+    private float ReceiveDamage(float rawAmount, DamageType type, float armorPenetration)
     {
         // Compute reduction from Defense
         float selectedDefense = (type == DamageType.Physical) ? CurrentStats.physicalDefense : CurrentStats.specialDefense;
-        float amount = rawAmount * (1f - selectedDefense / 100f);
+        float amount = rawAmount * (1f - selectedDefense / 100f);  // Represents total post-Defense damage without considering the remaining values of those stats for this unit
         
         // Determine what proportion of damage should go to Armor and Health
         float amountToArmor = Mathf.Min(amount * (1f - armorPenetration), armor);
-        float amountToHealth = amount - amountToArmor;
+        float amountToHealth = Mathf.Min(health, amount - amountToArmor);
         AddHealth(amountToHealth * -1f);
         AddArmor(amountToArmor * -1f);
-
-        Debug.Log($"{Data.name} received {amount} Damage (Health: {amountToHealth}, Armor: {amountToArmor}, raw: {rawAmount}). Remaining HP: {health + armor}.");
-    }
-
-    /// <summary>
-    /// Determines whether the attack can target a given unit based on its targetable terrain types.
-    /// </summary>
-    /// <param name="target">The target unit.</param>
-    /// <param name="attackData">The given attack.</param>
-    /// <returns>Whether the attack is able to strike the target's terrain.</returns>
-    public static bool IsTargetableTerrain(Unit target, AttackData attackData)
-    {
-        return attackData.targetableTerrains.Contains(target.Data.terrain);
+        return amountToHealth + amountToArmor;
     }
 
     #endregion
 
+    #region Queries
+
+    /// <summary>
+    /// Queries whether this unit is targetable by the given attack based on its targetable terrain types.
+    /// </summary>
+    /// <param name="attackData">The given attack.</param>
+    /// <returns>Whether the attack is able to strike the target's terrain.</returns>
+    public bool IsTargetableTerrain(AttackData attackData)
+    {
+        return attackData.targetableTerrains.Contains(Data.terrain);
+    }
+
+    /// <summary>
+    /// Queries whether this unit has all of the given tags.
+    /// </summary>
+    /// <param name="tags">A list of the tags the unit must have.</param>
+    /// <returns>Whether the unit has all of the given tags.</returns>
+    public bool HasTags(List<Tag> tags)
+    {
+        foreach (Tag tag in tags)
+        {
+            if (!CurrentStats.tags.Contains(tag))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    #endregion
+}
+
+public enum UnitGroup
+{
+    None,
+    Self,
+    Allies,
+    Enemies,
+    OtherAllies,
+    AllUnits
 }

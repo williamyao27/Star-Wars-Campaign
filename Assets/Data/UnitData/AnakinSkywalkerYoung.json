@@ -2,9 +2,11 @@
   "name": "Anakin Skywalker (Young)",
   "description": "",
   "picture": "",
+  "source": "",
   "type": "Infantry",
   "terrain": "Ground",
   "role": "Healer",
+  "cover": false,
   "stats": {
     "tags": [
       "Organic",
@@ -16,16 +18,14 @@
     "specialDefense": 15,
     "speed": 130,
     "evasion": 20,
-    "bravery": 1,
-    "resistance": 0,
-    "potency": 0,
-    "cover": false
+    "resistance": 15,
+    "potency": 90
   },
 
   "activeAbilities": [
     {
       "name": "Zap!",
-      "description": "",
+      "description": "Deals Physical damage to target enemy and inflicts Stun for 1 turn on a Critical Hit. This attack has +20 Crit Chance against Droids.",
       "picture": "",
       "maxCooldown": 0,
       "startOnCooldown": false,
@@ -46,21 +46,63 @@
         "precision": "Strict",
         "targetableTerrains": [
           "Ground"
+        ],
+        "modifiers": [
+          {"critChance": 20,
+            "unitQuery": {
+              "tags": [
+                "Droid"
+              ]
+            }
+          }
         ]
       },
       "actions": [
         {
           "type": "Attack"
+        },
+        {
+          "type": "AddStatusEffects",
+          "candidatesFromResult": "criticallyHit",
+          "resultIndex": 0,
+          "effects": [
+            {
+              "name": "Stun",
+              "duration": 1,
+              "chance": 100,
+              "resistible": true
+            }
+          ]
         }
       ]
     },
     {
       "name": "Thank the Maker!",
-      "description": "",
+      "description": "All Droid allies regenerate 50 Health and 20% Turn Meter",
       "picture": "",
-      "maxCooldown": 2,
+      "maxCooldown": 3,
       "startOnCooldown": false,
       "actions": [
+        {
+          "type": "RegenerateHealth",
+          "candidates": "Allies",
+          "unitQuery": {
+            "tags": [
+              "Droid"
+            ]
+          },
+          "amount": 50
+        },
+        {
+          "type": "RegenerateTurnMeter",
+          "candidates": "Allies",
+          "unitQuery": {
+            "tags": [
+              "Droid"
+            ]
+          },
+          "amount": 20
+        }
       ]
     }
   ],
