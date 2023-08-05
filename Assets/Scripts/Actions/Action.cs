@@ -17,7 +17,7 @@ public class Action
     public UnitGroup candidates;
     public string candidatesFromResult;
     public int resultIndex;
-    public UnitQuery unitQuery;
+    public UnitQuery candidateQuery;
     public string list;
     public List<StatusEffectApplier> effects = new List<StatusEffectApplier>();
     public float amount;
@@ -52,9 +52,9 @@ public class Action
             }
 
             // Filter recipients (in either case) by query; if a candidate group is not provided and the recipients from the previous result is null, the list is empty by this point
-            if (unitQuery != null)
+            if (candidateQuery != null)
             {
-                recipients = unitQuery.FilterList(recipients);
+                recipients = candidateQuery.FilterList(recipients);
             }
 
             // Perform the action

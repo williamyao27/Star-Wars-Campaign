@@ -6,26 +6,26 @@
   "type": "Infantry",
   "terrain": "Ground",
   "role": "Healer",
+  "tags": [
+    "Organic",
+    "ForceSensitive"
+  ],
   "cover": false,
   "stats": {
-    "tags": [
-      "Organic",
-      "ForceSensitive"
-    ],
     "maxHealth": 150,
     "maxArmor": 0,
     "physicalDefense": 10,
     "specialDefense": 15,
     "speed": 130,
     "evasion": 20,
-    "resistance": 15,
+    "resistance": 5,
     "potency": 90
   },
 
   "activeAbilities": [
     {
       "name": "Zap!",
-      "description": "Deals Physical damage to target enemy and inflicts Stun for 1 turn on a Critical Hit. This attack has +20 Crit Chance against Droids.",
+      "description": "Deals Physical Damage to target enemy and inflicts Stun for 1 turn on a Critical Hit. This attack has +20 Crit Chance against Droids.",
       "picture": "",
       "maxCooldown": 0,
       "startOnCooldown": false,
@@ -34,25 +34,26 @@
         "pattern": [
           [1]
         ],
-        "damage": 20,
-        "damageType": "Physical",
-        "accuracy": 90,
-        "armorPenetration": 0,
-        "critChance": 12,
-        "critDamage": 1.5,
+        "stats": {
+          "damage": 20,
+          "damageType": "Physical",
+          "accuracy": 90,
+          "armorPenetration": 0,
+          "critChance": 12,
+          "critDamage": 1.5
+        },
         "range": 1,
         "lineOfFire": "Contact",
         "lineOfFireModifiers": [],
         "precision": "Strict",
-        "targetableTerrains": [
-          "Ground"
-        ],
+        "targetableTerrains": ["Ground"],
         "modifiers": [
-          {"critChance": 20,
-            "unitQuery": {
-              "tags": [
-                "Droid"
-              ]
+          {
+            "attackBonus": {
+              "critChance": 100
+            },
+            "targetQuery": {
+              "tags": ["Droid"]
             }
           }
         ]
@@ -78,7 +79,7 @@
     },
     {
       "name": "Thank the Maker!",
-      "description": "All Droid allies regenerate 50 Health and 20% Turn Meter",
+      "description": "All Droid allies regenerate 50 Health and 20% TM.",
       "picture": "",
       "maxCooldown": 3,
       "startOnCooldown": false,
@@ -86,20 +87,16 @@
         {
           "type": "RegenerateHealth",
           "candidates": "Allies",
-          "unitQuery": {
-            "tags": [
-              "Droid"
-            ]
+          "candidateQuery": {
+            "tags": ["Droid"]
           },
           "amount": 50
         },
         {
           "type": "RegenerateTurnMeter",
           "candidates": "Allies",
-          "unitQuery": {
-            "tags": [
-              "Droid"
-            ]
+          "candidateQuery": {
+            "tags": ["Droid"]
           },
           "amount": 20
         }
@@ -110,7 +107,7 @@
   "passiveAbilities": [
     {
       "name": "Podracer Reflexes",
-      "description": "",
+      "description": "At the end of each of his turns, Anakin has a 50% chance to be granted Foresight for 1 turn.",
       "picture": ""
     }
   ]

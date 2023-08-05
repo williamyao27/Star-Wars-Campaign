@@ -6,12 +6,13 @@
   "type": "Infantry",
   "terrain": "Ground",
   "role": "Tank",
+  "tags": [
+    "Organic",
+    "Empire",
+    "Trooper"
+  ],
   "cover": false,
   "stats": {
-    "tags": [
-      "Organic",
-      "Empire"
-    ],
     "maxHealth": 250,
     "maxArmor": 100,
     "physicalDefense": 15,
@@ -25,7 +26,7 @@
   "activeAbilities": [
     {
       "name": "Imperial Marksmanship",
-      "description": "Attack the target tile.",
+      "description": "Deals Physical Damage to target enemy.",
       "picture": "",
       "maxCooldown": 0,
       "startOnCooldown": false,
@@ -34,20 +35,19 @@
         "pattern": [
           [1]
         ],
-        "damage": 38,
-        "damageType": "Physical",
-        "accuracy": 85,
-        "armorPenetration": 0,
-        "critChance": 8,
-        "critDamage": 1.5,
+        "stats": {
+          "damage": 34,
+          "damageType": "Physical",
+          "accuracy": 85,
+          "armorPenetration": 0,
+          "critChance": 8,
+          "critDamage": 1.5
+        },
         "range": 2,
         "lineOfFire": "Contact",
         "lineOfFireModifiers": [],
         "precision": "Strict",
-        "targetableTerrains": [
-          "Ground",
-          "Aerial"
-        ]
+        "targetableTerrains": ["Ground", "Aerial"]
       },
       "actions": [
         {
@@ -57,7 +57,7 @@
     },
     {
       "name": "Stormtrooper Bravado",
-      "description": "",
+      "description": "Stormtrooper gains Taunt for 3 turns and all Empire allies gain Defense Buff for 3 turns.",
       "picture": "",
       "maxCooldown": 4,
       "startOnCooldown": false,
@@ -77,10 +77,8 @@
         {
           "type": "AddStatusEffects",
           "candidates": "Allies",
-          "unitQuery": {
-            "tags": [
-              "Empire"
-            ]
+          "candidateQuery": {
+            "tags": ["Empire"]
           },
           "effects": [
             {
@@ -98,8 +96,19 @@
   "passiveAbilities": [
     {
       "name": "Wall of Stormtroopers",
-      "description": "",
-      "picture": ""
+      "description": "Stormtrooper has +3 Physical Defense for every other Empire ally. Whenever Stormtrooper is attacked, all other Empire allies regenerate 5% TM.",
+      "picture": "",
+      "modifiers": [
+        {
+          "statsBonus": {
+            "physicalDefense": 3
+          },
+          "forEvery": "OtherAllies",
+          "forEveryQuery": {
+            "tags": ["Empire"]
+          }
+        }
+      ]
     }
   ]
 }

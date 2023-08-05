@@ -8,7 +8,7 @@ using System.Collections.Generic;
 [Serializable]
 public class UnitQuery
 {
-    private List<Tag> tags = new List<Tag>();
+    public List<Tag> tags = new List<Tag>();
 
     /// <summary>
     /// Evaluates whether the given unit fulfills all the conditions.

@@ -19,6 +19,7 @@ public enum Tag
     FirstOrder,
     Jedi,
     Sith,
+    Trooper,
     Mandalorian,
     Scoundrel,
     BountyHunter,

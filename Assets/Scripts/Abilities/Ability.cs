@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// 
+/// This class represents an instance of a unit's Active Ability.
 /// </summary>
 public class ActiveAbility
 {
@@ -14,8 +14,14 @@ public class ActiveAbility
     {
         Data = data;
         
-        // Begin cooldown on initialization if needed, otherwise set to 0
+        // Start cooldown if needed, otherwise set to 0
         Cooldown = Data.startOnCooldown ? Data.maxCooldown : 0;
+
+        // If this Ability is an Attack, initialize Offense to 1 (as the default is 0 if not specified)
+        if (Data.attackData.stats != null)
+        {
+            Data.attackData.stats.offense = 1f;
+        }
     }
 
     /// <summary>
@@ -38,10 +44,10 @@ public class ActiveAbility
     }
     
     /// <summary>
-    /// Changes the cooldown of this Ability by the given amount.
+    /// Adds the given amount of turns to the cooldown of this Ability.
     /// </summary>
     /// <param name="amount">The number of turns to change the cooldown by.</param>
-    public void ChangeCooldown(int amount)
+    public void AddCooldown(int amount)
     {
         Cooldown += amount;
         Cooldown = Mathf.Clamp(Cooldown, 0, Data.maxCooldown);
@@ -49,7 +55,7 @@ public class ActiveAbility
 }
 
 /// <summary>
-/// 
+/// This class represents an instance of a unit's Passive Ability.
 /// </summary>
 public class PassiveAbility
 {
@@ -57,5 +63,6 @@ public class PassiveAbility
 
     public PassiveAbility(PassiveAbilityData data)
     {
+        Data = data;
     }
 }

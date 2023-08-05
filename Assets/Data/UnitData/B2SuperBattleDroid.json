@@ -1,31 +1,31 @@
 {
   "name": "B2 Super Battle Droid",
-  "description": "",
+  "description": "Reactive Separatist tank that dispels enemy buffs and cripples their evasiveness.",
   "picture": "",
   "source": "",
   "type": "Infantry",
   "terrain": "Ground",
   "role": "Tank",
+  "tags": [
+    "Droid",
+    "Separatist"
+  ],
   "cover": false,
   "stats": {
-    "tags": [
-      "Droid",
-      "Separatist"
-    ],
     "maxHealth": 200,
     "maxArmor": 200,
     "physicalDefense": 10,
     "specialDefense": 10,
     "speed": 53,
     "evasion": 5,
-    "resistance": 10,
+    "resistance": 15,
     "potency": 105
   },
 
   "activeAbilities": [
     {
       "name": "Heavy Arms",
-      "description": "Deals Physical damage to target enemy and inflicts Evasion Debuff for 2 turns.",
+      "description": "Deals Physical Damage to target enemy and inflicts Evasion Debuff for 2 turns.",
       "picture": "",
       "maxCooldown": 0,
       "startOnCooldown": false,
@@ -34,20 +34,19 @@
         "pattern": [
           [1]
         ],
-        "damage": 40,
-        "damageType": "Physical",
-        "accuracy": 100,
-        "armorPenetration": 0,
-        "critChance": 8,
-        "critDamage": 1.5,
+        "stats": {
+          "damage": 38,
+          "damageType": "Physical",
+          "accuracy": 100,
+          "armorPenetration": 0,
+          "critChance": 8,
+          "critDamage": 1.5
+        },
         "range": 2,
         "lineOfFire": "Contact",
         "lineOfFireModifiers": [],
         "precision": "Strict",
-        "targetableTerrains": [
-          "Ground",
-          "Aerial"
-        ]
+        "targetableTerrains": ["Ground", "Aerial"]
       },
       "actions": [
         {
@@ -69,11 +68,30 @@
       ]
     },
     {
-      "name": "Mow Down!",
-      "description": "",
+      "name": "Mow Down",
+      "description": "Deals Physical Damage to target enemies. Each target is cleared of all Buffs and has a 50% chance to be inflicted with Buff Block for 2 turns.",
       "picture": "",
       "maxCooldown": 3,
       "startOnCooldown": false,
+      "requiredInput": "TargetEnemyTile",
+      "attackData": {
+        "pattern": [
+          [1]
+        ],
+        "stats": {
+          "damage": 28,
+          "damageType": "Physical",
+          "accuracy": 90,
+          "armorPenetration": 0,
+          "critChance": 8,
+          "critDamage": 1.5
+        },
+        "range": 1,
+        "lineOfFire": "Contact",
+        "lineOfFireModifiers": ["Fixed"],
+        "precision": "Strict",
+        "targetableTerrains": ["Ground", "Aerial"]
+      },
       "actions": [
       ]
     }
@@ -82,7 +100,7 @@
   "passiveAbilities": [
     {
       "name": "Reactive Protocol",
-      "description": "",
+      "description": "Whenever an opponent gains a Buff, Evades an attack, or attacks another ally, Super Battle Droid has a 10% chance to regenerate 100% TM.",
       "picture": ""
     }
   ]

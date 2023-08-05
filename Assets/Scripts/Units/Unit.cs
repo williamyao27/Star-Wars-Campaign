@@ -22,12 +22,12 @@ public class Unit : MonoBehaviour
     private List<StatusEffect> statusEffectsBeginTurn;
     private List<ActiveAbility> cooldownAbilitiesBeginTurn;
 
-    // Get current stats from base data plus all modifiers
+    // Get current stats from base data plus all Status Effects and modifiers on this unit
     public Stats CurrentStats
     {
         get
         {
-            return Data.stats.ApplyModifiers(StatusEffects);
+            return Data.stats.ApplyModifiers(this);
         }
     }
     
@@ -183,14 +183,13 @@ public class Unit : MonoBehaviour
     #region Turn Meter
 
     /// <summary>
-    /// Updates the unit's Turn Meter by the given amount and clamps between 0 and 1.
+    /// Updates the unit's Turn Meter by the given amount. TM may exceed 100%.
     /// </summary>
     /// <param name="amount">The amount by which to increase the unit's TM. Can be negative (i.e. TM loss).</param>
     /// <param name="natural">Whether this is natural Turn Meter from the turn routine.</param>
     public void AddTurnMeter(float amount, bool natural)
     {
         turnMeter += amount;
-        turnMeter = Mathf.Clamp(turnMeter, 0f, 100f);
         display.UpdateTurnMeterBar(turnMeter);  // Visual
     }
     
@@ -199,7 +198,7 @@ public class Unit : MonoBehaviour
     /// </summary>
     private void ResetTurnMeter()
     {
-        AddTurnMeter(-1000f, true);
+        AddTurnMeter(-100f, true);
         display.UpdateTurnMeterBar(turnMeter);  // Visual
     }
     
@@ -208,7 +207,7 @@ public class Unit : MonoBehaviour
     /// </summary>
     public void GenerateTurnMeterFromSpeed()
     {
-        float amount = CurrentStats.speed * 0.01f;
+        float amount = Mathf.Min(CurrentStats.speed * 0.01f, 100f - turnMeter);  // If TM is less than 1 "frame" away from 100%, give partial frame
         AddTurnMeter(amount, true);
     }
     
@@ -329,7 +328,7 @@ public class Unit : MonoBehaviour
     {
         foreach (ActiveAbility ability in cooldownAbilitiesBeginTurn)
         {
-            ability.ChangeCooldown(-1);
+            ability.AddCooldown(-1);
         }
     }
 
@@ -351,25 +350,25 @@ public class Unit : MonoBehaviour
             return;
         }
 
-        // Get current attack data (adding modifiers based on the source and the target)
-        AttackData currentAttackData = attackData.ApplyModifiers(source, this);
+        // Get current attack stats (adding modifiers based on the attacker and the target)
+        AttackStats currentAttackStats = attackData.stats.ApplyModifiers(source, this, attackData.modifiers);
 
         // Evasion check
-        int chanceToHit = currentAttackData.accuracy - CurrentStats.evasion;
+        int chanceToHit = currentAttackStats.accuracy - CurrentStats.evasion;
         if (UnityEngine.Random.Range(0, 100) < chanceToHit)  // Attack hits
         {
-            float rawDamage = currentAttackData.damage * currentAttackData.offense * weight;
+            float rawDamage = currentAttackStats.damage * currentAttackStats.offense * weight;
 
             // Critical Hit check
-            int chanceToCrit = currentAttackData.critChance - CurrentStats.critAvoidance;
+            int chanceToCrit = currentAttackStats.critChance - CurrentStats.critAvoidance;
             if (UnityEngine.Random.Range(0, 100) < chanceToCrit)
             {
                 // Attack is a Critical Hit
-                rawDamage *= currentAttackData.critDamage;
+                rawDamage *= currentAttackStats.critDamage;
                 EventManager.instance.CriticalHit(source, this);
             }
 
-            float damageDealt = ReceiveDamage(rawDamage, currentAttackData.damageType, currentAttackData.armorPenetration);
+            float damageDealt = ReceiveDamage(rawDamage, attackData.damageType, currentAttackStats.armorPenetration);
             EventManager.instance.Damage(source, this, damageDealt);
         }
         else  // Attack is Evaded
@@ -422,7 +421,7 @@ public class Unit : MonoBehaviour
     {
         foreach (Tag tag in tags)
         {
-            if (!CurrentStats.tags.Contains(tag))
+            if (!Data.tags.Contains(tag))
             {
                 return false;
             }

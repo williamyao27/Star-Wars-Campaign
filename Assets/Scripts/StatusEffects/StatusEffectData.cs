@@ -13,9 +13,8 @@ public struct StatusEffectData
     public string description;
     public string picture;
     public StatusEffectType type;
-    public Stats statsModifier;
+    public List<UnitModifier> modifiers;
     public State stateModifier;
-    public AttackModifier attackModifier;
     // List of on-infliction effects
     // List of passives associated
     public StatusEffectExpiry expiry;
