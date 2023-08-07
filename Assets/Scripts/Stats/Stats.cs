@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// This class stores all stats for the unit that may be altered during a battle.
+/// This class stores all mutable stats for a unit.
 /// </summary>
 [Serializable]
 public class Stats
@@ -26,10 +26,10 @@ public class Stats
     public int critAvoidance;
 
     /// <summary>
-    /// 
+    /// Add the given Stats to self.
     /// </summary>
-    /// <param name="stats"></param>
-    /// <param name="multiplier"></param>
+    /// <param name="stats">The Stats object to add.</param>
+    /// <param name="multiplier">The amount by which to multiply the incoming Stats.</param>
     public void AddStats(Stats stats, int multiplier)
     {
         // Add the modifier

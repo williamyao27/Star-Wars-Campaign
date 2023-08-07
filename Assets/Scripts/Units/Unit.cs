@@ -86,7 +86,7 @@ public class Unit : MonoBehaviour
         // Passive Abilities
         foreach (PassiveAbilityData abilityData in Data.passiveAbilities)
         {
-            PassiveAbilities.Add(new PassiveAbility(abilityData));
+            PassiveAbilities.Add(new PassiveAbility(abilityData, this));
         }
 
         // Connect unit to its tile
@@ -138,6 +138,7 @@ public class Unit : MonoBehaviour
 
     #region Turn
 
+    // Evaluate whether this unit has at least 100% Turn Meter and is therefore ready to take a turn.
     public bool ReadyForTurn
     {
         get
@@ -194,7 +195,7 @@ public class Unit : MonoBehaviour
     }
     
     /// <summary>
-    /// Removes 100% Turn Meter from this unit to soft-reset it after taking a turn. Overflow TM may remain as residual.
+    /// Removes 100% Turn Meter from this unit to soft-reset it after taking a turn. Overflow TM may remain as a residual.
     /// </summary>
     private void ResetTurnMeter()
     {
@@ -244,8 +245,8 @@ public class Unit : MonoBehaviour
     /// <summary>
     /// Checks whether the given unit should receive the given Status Effect, and adds it if so.
     /// </summary>
-    /// <param name="effectApplier">Details about the given Status Effect to apply.</param>
     /// <param name="sourceUnit">The unit applying the Status Effect.</param>
+    /// <param name="effectApplier">Details about the given Status Effect to apply.</param>
     public void ReceiveStatusEffect(Unit source, StatusEffectApplier effectApplier)
     {   
         // Do nothing if the effect fails to apply entirely
@@ -257,23 +258,12 @@ public class Unit : MonoBehaviour
 
         StatusEffect effect = new StatusEffect(effectApplier.name, effectApplier.duration);  // Instantiate Status Effect
 
-        // Buff
-        if (effect.Data.type == StatusEffectType.Buff)
-        {
-            EventManager.instance.Buff(source, this, effectApplier);
-        }
-        // Debuff
-        else
+        if (effect.Data.type == StatusEffectType.Debuff)
         {
             // Resistance check
             int chanceToInflict = source.CurrentStats.potency - CurrentStats.resistance;
-            if (UnityEngine.Random.Range(0, 100) < chanceToInflict || !effectApplier.resistible)  // Effect is added
+            if (effectApplier.resistible && !(UnityEngine.Random.Range(0, 100) < chanceToInflict))  // Effect is Resisted
             {
-                EventManager.instance.Debuff(source, this, effectApplier);
-            }
-            else  // Effect is Resisted
-            {
-                EventManager.instance.Resist(source, this, effectApplier);
                 return;
             }
         }
@@ -299,6 +289,16 @@ public class Unit : MonoBehaviour
                     }
                 }
             }
+        }
+
+        // Broadcast
+        if (effect.Data.type == StatusEffectType.Buff)
+        {
+            EventManager.instance.Buff(source, this, effectApplier);
+        }
+        else
+        {
+            EventManager.instance.Debuff(source, this, effectApplier);
         }
 
         StatusEffects.Add(effect);
@@ -359,7 +359,7 @@ public class Unit : MonoBehaviour
         int chanceToHit = currentAttackStats.accuracy - CurrentStats.evasion;
         if (UnityEngine.Random.Range(0, 100) < chanceToHit)  // Attack hits
         {
-            float rawDamage = currentAttackStats.damage * currentAttackStats.offense * weight;
+            float rawDamage = currentAttackStats.damage * (currentAttackStats.offense + 1f) * weight;  // Notice Offense is zero-anchored; i.e. no modifiers means coefficient of 1
 
             // Critical Hit check
             int chanceToCrit = currentAttackStats.critChance - CurrentStats.critAvoidance;

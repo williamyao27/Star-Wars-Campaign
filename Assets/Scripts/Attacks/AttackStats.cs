@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// . It is a class so that it can have a default value for Offense.
+/// This class stores all mutable attack stats for an attack Action.
 /// </summary>
 public class AttackStats
 {
@@ -16,10 +16,10 @@ public class AttackStats
     public float critDamage;
 
     /// <summary>
-    /// 
+    /// Add the given Attack Stats to self.
     /// </summary>
-    /// <param name="stats"></param>
-    /// <param name="multiplier"></param>
+    /// <param name="stats">The Attack Stats object to add.</param>
+    /// <param name="multiplier">The amount by which to multiply the incoming Stats.</param>
     public void AddStats(AttackStats stats, int multiplier)
     {
         // Add the modifier
@@ -40,12 +40,12 @@ public class AttackStats
     }
     
     /// <summary>
-    /// 
+    /// Apply all relevant Attack Modifiers to these Attack Stats via addition.
     /// </summary>
-    /// <param name="source"></param>
-    /// <param name="recipient"></param>
-    /// <param name="attackModifiers"></param>
-    /// <returns></returns>
+    /// <param name="source">The unit using this attack.</param>
+    /// <param name="recipient">The unit receiving this attack.</param>
+    /// <param name="attackModifiers">The source- and target-based modifiers associated with this attack.</param>
+    /// <returns>The new Attack Stats based on modifications from the source and recipient.</returns>
     public AttackStats ApplyModifiers(Unit source, Unit recipient, List<AttackModifier> attackModifiers)
     {
         AttackStats modifiedStats = (AttackStats)this.MemberwiseClone();
@@ -80,7 +80,7 @@ public class AttackStats
             }
         }
 
-        // Apply target-based bonuses from each Attack Modifier
+        // Apply source- and target-based bonuses from each Attack Modifier
         if (attackModifiers != null)
         {
             foreach (AttackModifier modifier in attackModifiers)

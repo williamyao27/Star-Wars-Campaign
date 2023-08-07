@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -10,18 +11,28 @@ public class ActiveAbility
     public ActiveAbilityData Data { get; set; }
     public int Cooldown { get; set; } = 0;
 
+    // Get the nested attack data of the first attack Action in this Ability's list of Actions
+    public AttackData NestedAttackData
+    {
+        get
+        {
+            foreach (Action action in Data.actions)
+            {
+                if (action.Type == ActionType.Attack)
+                {
+                    return action.attackData;
+                }
+            }
+            throw new InvalidOperationException("This ability is not an attack.");
+        }
+    }
+
     public ActiveAbility(ActiveAbilityData data)
     {
         Data = data;
         
         // Start cooldown if needed, otherwise set to 0
         Cooldown = Data.startOnCooldown ? Data.maxCooldown : 0;
-
-        // If this Ability is an Attack, initialize Offense to 1 (as the default is 0 if not specified)
-        if (Data.attackData.stats != null)
-        {
-            Data.attackData.stats.offense = 1f;
-        }
     }
 
     /// <summary>
@@ -33,13 +44,10 @@ public class ActiveAbility
         // Begin cooldown
         Cooldown = Data.maxCooldown;
 
-        // Track results of each Action
-        List<ActionResult> results = new List<ActionResult>();
-
         // Execute actions using this Ability instance, the unit user, and the results of previous Actions as context
         foreach (Action action in Data.actions)
         {
-            results.Add(action.Execute(user, this, results));
+            action.Execute(user);
         }
     }
     
@@ -51,18 +59,5 @@ public class ActiveAbility
     {
         Cooldown += amount;
         Cooldown = Mathf.Clamp(Cooldown, 0, Data.maxCooldown);
-    }
-}
-
-/// <summary>
-/// This class represents an instance of a unit's Passive Ability.
-/// </summary>
-public class PassiveAbility
-{
-    public PassiveAbilityData Data { get; set; }
-
-    public PassiveAbility(PassiveAbilityData data)
-    {
-        Data = data;
     }
 }

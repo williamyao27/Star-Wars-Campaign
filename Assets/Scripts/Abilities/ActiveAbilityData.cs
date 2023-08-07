@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// 
+/// This struct stores all information related to an Active Ability.
 /// </summary>
 [Serializable]
 public struct ActiveAbilityData
@@ -16,21 +16,7 @@ public struct ActiveAbilityData
     public int maxCooldown;
     public bool startOnCooldown;
     public InputType? requiredInput;  // Each Ability requires only one step of input from the player at most
-    public AttackData attackData;  // Instead of storing this with the attack-related Actions, we store it at the Ability-level so that it is easier to identify for target tile identification purposes, and because each Ability is associated with at most one attack.
     public Action[] actions;
-}
-
-/// <summary>
-/// 
-/// </summary>
-[Serializable]
-public struct PassiveAbilityData
-{
-    public string name;
-    public string description;
-    public string picture;
-
-    public List<UnitModifier> modifiers;
 }
 
 public enum InputType

@@ -19,10 +19,11 @@
     "specialDefense": 15,
     "speed": 74,
     "evasion": 10,
-    "resistance": 10,
+    "resistance": 5,
     "potency": 100
   },
 
+  
   "activeAbilities": [
     {
       "name": "Imperial Marksmanship",
@@ -31,30 +32,31 @@
       "maxCooldown": 0,
       "startOnCooldown": false,
       "requiredInput": "TargetEnemyTile",
-      "attackData": {
-        "pattern": [
-          [1]
-        ],
-        "stats": {
-          "damage": 34,
-          "damageType": "Physical",
-          "accuracy": 85,
-          "armorPenetration": 0,
-          "critChance": 8,
-          "critDamage": 1.5
-        },
-        "range": 2,
-        "lineOfFire": "Contact",
-        "lineOfFireModifiers": [],
-        "precision": "Strict",
-        "targetableTerrains": ["Ground", "Aerial"]
-      },
       "actions": [
         {
-          "type": "Attack"
+          "type": "Attack",
+          "attackData": {
+            "pattern": [
+              [1]
+            ],
+            "stats": {
+              "damage": 34,
+              "damageType": "Physical",
+              "accuracy": 85,
+              "armorPenetration": 0,
+              "critChance": 8,
+              "critDamage": 1.5
+            },
+            "range": 2,
+            "lineOfFire": "Contact",
+            "lineOfFireModifiers": [],
+            "precision": "Strict",
+            "targetableTerrains": ["Ground", "Aerial"]
+          }
         }
       ]
     },
+
     {
       "name": "Stormtrooper Bravado",
       "description": "Stormtrooper gains Taunt for 3 turns and all Empire allies gain Defense Buff for 3 turns.",
@@ -64,20 +66,20 @@
       "actions": [
         {
           "type": "AddStatusEffects",
-          "candidates": "Self",
+          "recipientGroup": "Self",
           "effects": [
             {
               "name": "Taunt",
               "duration": 3,
               "chance": 100,
-              "resistible": true
+              "resistible": false
             }
           ]
         },
         {
           "type": "AddStatusEffects",
-          "candidates": "Allies",
-          "candidateQuery": {
+          "recipientGroup": "Allies",
+          "recipientQuery": {
             "tags": ["Empire"]
           },
           "effects": [
@@ -85,13 +87,14 @@
               "name": "Defense Buff",
               "duration": 3,
               "chance": 100,
-              "resistible": true
+              "resistible": false
             }
           ]
         }
       ]
     }
   ],
+
 
   "passiveAbilities": [
     {
@@ -107,6 +110,22 @@
           "forEveryQuery": {
             "tags": ["Empire"]
           }
+        }
+      ],
+      "triggers": [
+        {
+          "onEvent": "Damage",
+          "recipientGroup": "Self",
+          "actions": [
+            {
+              "type": "RegenerateTurnMeter",
+              "recipientGroup": "OtherAllies",
+              "recipientQuery": {
+                "tags": ["Empire"]
+              },
+              "amount": 5
+            }
+          ]
         }
       ]
     }

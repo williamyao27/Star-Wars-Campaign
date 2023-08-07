@@ -159,7 +159,7 @@ public class GameManager : Singleton<GameManager>
             switch (ability.Data.requiredInput)
             {
                 case InputType.TargetEnemyTile:
-                    GridManager.instance.SetTargetableTiles(currentTurn, ability.Data.attackData);
+                    GridManager.instance.SetTargetableTiles(currentTurn, ability.NestedAttackData);
                     break;
                     
                 default:
@@ -300,21 +300,6 @@ public class GameManager : Singleton<GameManager>
             Unit target = targetWeight.Item1;
             float weight = targetWeight.Item2;
             target.ReceiveAttack(source, attackData, weight);
-        }
-    }
-
-    /// <summary>
-    /// Perform the given attack against all receiving units. Each target receives 100% damage weight. Use this method for attacks that use queries instead of the target tile to determine targets.
-    /// </summary>
-    /// <param name="source">The attacking unit.</param>
-    /// <param name="targets">List of units receiving the attack.</param>
-    /// <param name="attackData">All data related to the attack.</param>
-    public void Attack(Unit source, List<Unit> targets, AttackData attackData)
-    {
-        // Evaluate attack against each target separately
-        foreach (Unit target in targets)
-        {
-            target.ReceiveAttack(source, attackData, 1f);
         }
     }
 

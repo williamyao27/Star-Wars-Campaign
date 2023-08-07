@@ -22,6 +22,7 @@
     "potency": 90
   },
 
+
   "activeAbilities": [
     {
       "name": "Zap!",
@@ -30,53 +31,60 @@
       "maxCooldown": 0,
       "startOnCooldown": false,
       "requiredInput": "TargetEnemyTile",
-      "attackData": {
-        "pattern": [
-          [1]
-        ],
-        "stats": {
-          "damage": 20,
-          "damageType": "Physical",
-          "accuracy": 90,
-          "armorPenetration": 0,
-          "critChance": 12,
-          "critDamage": 1.5
-        },
-        "range": 1,
-        "lineOfFire": "Contact",
-        "lineOfFireModifiers": [],
-        "precision": "Strict",
-        "targetableTerrains": ["Ground"],
-        "modifiers": [
-          {
-            "attackBonus": {
-              "critChance": 100
-            },
-            "targetQuery": {
-              "tags": ["Droid"]
-            }
-          }
-        ]
-      },
       "actions": [
         {
-          "type": "Attack"
-        },
-        {
-          "type": "AddStatusEffects",
-          "candidatesFromResult": "criticallyHit",
-          "resultIndex": 0,
-          "effects": [
+          "type": "Attack",
+          "attackData": {
+            "pattern": [
+              [1]
+            ],
+            "stats": {
+              "damage": 20,
+              "damageType": "Physical",
+              "accuracy": 90,
+              "armorPenetration": 0,
+              "critChance": 12,
+              "critDamage": 1.5
+            },
+            "range": 1,
+            "lineOfFire": "Contact",
+            "lineOfFireModifiers": [],
+            "precision": "Strict",
+            "targetableTerrains": ["Ground"],
+            "modifiers": [
+              {
+                "attackBonus": {
+                  "critChance": 20
+                },
+                "targetQuery": {
+                  "tags": ["Droid"]
+                }
+              }
+            ]
+          },
+          "triggers": [
             {
-              "name": "Stun",
-              "duration": 1,
-              "chance": 100,
-              "resistible": true
+              "onEvent": "CriticalHit",
+              "actions": [
+                {
+                  "type": "AddStatusEffects",
+                  "recipientFromContext": "recipient",
+                  "effects": [
+                    {
+                      "name": "Stun",
+                      "duration": 1,
+                      "chance": 100,
+                      "resistible": true
+                    }
+                  ]
+                }
+              ]
             }
           ]
         }
       ]
     },
+
     {
       "name": "Thank the Maker!",
       "description": "All Droid allies regenerate 50 Health and 20% TM.",
@@ -86,16 +94,16 @@
       "actions": [
         {
           "type": "RegenerateHealth",
-          "candidates": "Allies",
-          "candidateQuery": {
+          "recipientGroup": "Allies",
+          "recipientQuery": {
             "tags": ["Droid"]
           },
           "amount": 50
         },
         {
           "type": "RegenerateTurnMeter",
-          "candidates": "Allies",
-          "candidateQuery": {
+          "recipientGroup": "Allies",
+          "recipientQuery": {
             "tags": ["Droid"]
           },
           "amount": 20
@@ -103,6 +111,7 @@
       ]
     }
   ],
+
 
   "passiveAbilities": [
     {

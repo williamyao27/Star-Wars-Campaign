@@ -160,7 +160,7 @@ public class Tile : MonoBehaviour
         if (GameManager.instance.CurrentRequiredInput == InputType.TargetEnemyTile && isTargetable)
         {
             crosshair.SetActive(true);
-            GridManager.instance.VisualizeAttackPattern(GameManager.instance.CurrentSelectedAbility.Data.attackData, TeamNumber, Row, Col);
+            GridManager.instance.VisualizeAttackPattern(GameManager.instance.CurrentSelectedAbility.NestedAttackData, TeamNumber, Row, Col);
         }
     }
 
