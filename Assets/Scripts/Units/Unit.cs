@@ -257,11 +257,13 @@ public class Unit : MonoBehaviour
 
         StatusEffect effect = new StatusEffect(effectApplier.name, effectApplier.duration);  // Instantiate Status Effect
 
-        if (effect.Data.type == StatusEffectType.Buff)  // Buff
+        // Buff
+        if (effect.Data.type == StatusEffectType.Buff)
         {
             EventManager.instance.Buff(source, this, effectApplier);
         }
-        else  // Debuff
+        // Debuff
+        else
         {
             // Resistance check
             int chanceToInflict = source.CurrentStats.potency - CurrentStats.resistance;
@@ -276,7 +278,7 @@ public class Unit : MonoBehaviour
             }
         }
 
-        // If the effect is not stackable, search for it in the unit's existing Status Effects before adding it. Notice that even if a non-stackable effect cannot be applied due it already existing, it still triggers Status Effect-related broadcasts.
+        // If the Status Effect is not stackable, search for it in the unit's existing Status Effects before adding it. Notice that even if a non-stackable Status Effect cannot be applied due it already existing, it still triggers Status Effect-related events.
         if (!effect.Data.stackable)
         {
             foreach (StatusEffect existingEffect in StatusEffects)
@@ -289,7 +291,7 @@ public class Unit : MonoBehaviour
                     {
                         return;
                     }
-                    // Otherwise, remove the Status Effect for overwriting; break early as, by precondition, there can only be one instance
+                    // Otherwise, remove the Status Effect so that it can be overwritten
                     else
                     {
                         StatusEffects.Remove(existingEffect);
