@@ -38,6 +38,7 @@
             "pattern": [
               [1]
             ],
+            "patternAnchor": [0, 0],
             "stats": {
               "damage": 17,
               "damageType": "Physical",

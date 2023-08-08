@@ -38,6 +38,7 @@
             "pattern": [
               [1]
             ],
+            "patternAnchor": [0, 0],
             "stats": {
               "damage": 40,
               "damageType": "Physical",
@@ -86,8 +87,9 @@
           "type": "Attack",
           "attackData": {
             "pattern": [
-              [1]
+              [1, 1, 1, 1, 1]
             ],
+            "patternAnchor": [2, 0],
             "stats": {
               "damage": 29,
               "damageType": "Physical",
@@ -96,9 +98,9 @@
               "critChance": 8,
               "critDamage": 1.5
             },
-            "range": 1,
+            "range": 2,
             "lineOfFire": "Contact",
-            "lineOfFireModifiers": ["Fixed"],
+            "lineOfFireModifiers": [],
             "precision": "Strict",
             "targetableTerrains": ["Ground", "Aerial"]
           },
@@ -109,6 +111,17 @@
                 {
                   "type": "ClearAllBuffs",
                   "recipientFromContext": "recipient"
+                },
+                {
+                  "type": "AddStatusEffects",
+                  "recipientFromContext": "recipient",
+                  "effectAppliers": [
+                    {
+                      "name": "Buff Block",
+                      "duration": 2,
+                      "chance": 50
+                    }
+                  ]
                 }
               ]
             }

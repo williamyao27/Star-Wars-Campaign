@@ -1,0 +1,14 @@
+{
+  "name": "Buff Block",
+  "description": ".",
+  "picture": "",
+  "type": "Debuff",
+  "stateModifier": {
+    "isBuffBlocked": true
+  },
+  "expiry": "Duration",
+  "stackable": false,
+  "clearable": true,
+  "copyable": true,
+  "anonymous": false
+}

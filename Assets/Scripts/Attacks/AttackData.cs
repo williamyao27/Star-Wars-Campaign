@@ -10,6 +10,7 @@ using UnityEngine;
 public struct AttackData
 {
     public float[,] pattern;
+    public int[] patternAnchor;
     public AttackStats stats;
     public DamageType damageType;   
     public int range;
