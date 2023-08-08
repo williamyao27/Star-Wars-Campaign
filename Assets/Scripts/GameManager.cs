@@ -19,8 +19,7 @@ public class GameManager : Singleton<GameManager>
     }
     public List<Unit> Team0 { get; set; } = new List<Unit>();
     public List<Unit> Team1 { get; set; } = new List<Unit>();
-    private List<Unit> turnQueue = new List<Unit>();
-    private Unit currentTurnUnit;
+    private Unit currentTurn;
 
     // Input
     public ActiveAbility CurrentSelectedAbility {get; set; }
@@ -79,48 +78,40 @@ public class GameManager : Singleton<GameManager>
     private void RunTurnRoutine()
     {
         // If no turns are ongoing...
-        if (currentTurnUnit == null)
+        if (currentTurn == null)
         {
-            // And if there are units who are enqueued to take a turn, randomly choose one to begin their turn
-            if (turnQueue.Count > 0)
+            // Generate list of units ready to take their turn
+            List<Unit> turnCandidates = new List<Unit>();
+            foreach (Unit unit in AllUnits)
             {
-                int randomIndex = UnityEngine.Random.Range(0, turnQueue.Count);
-                
-                currentTurnUnit = turnQueue[randomIndex];
-                RemoveTurnReadyUnit(currentTurnUnit);
-                
-                if (currentTurnUnit.BeginTurn())  // Begin the current unit's turn
+                if (unit.ReadyForTurn)
                 {
-                    // Immediately skip it (e.g. Stun)
+                    turnCandidates.Add(unit);
+                }
+            }
+
+            // If there are ready units, randomly choose one to begin their turn
+            if (turnCandidates.Count > 0)
+            {
+                int randomIndex = UnityEngine.Random.Range(0, turnCandidates.Count);
+                currentTurn = turnCandidates[randomIndex];
+
+                // Begin the current unit's turn and immediately skip if needed
+                if (currentTurn.BeginTurn())
+                {
                     EndCurrentTurn();
                 }
+
+                // Otherwise, display Abilities to player
                 else
                 {
-                    // Otherwise, display Abilities to player
-                    AbilityPaletteManager.instance.ShowAbilities(currentTurnUnit.ActiveAbilities);
+                    AbilityPaletteManager.instance.ShowAbilities(currentTurn.ActiveAbilities);
                 }
             }
             else
             {
-                List<Unit> unitsToEnqueue = new List<Unit>();
-                foreach (Unit unit in AllUnits)
-                {
-                    if (unit.ReadyForTurn)
-                    {
-                        AddTurnReadyUnit(unit);
-                    }
-                }
-
-                // If there are units who are ready to take a turn, enqueue them
-                if (unitsToEnqueue.Count > 0)
-                {
-                    turnQueue = unitsToEnqueue;
-                }
-                else
-                {
-                    // Otherwise, wait for units to generate Turn Meter until ready
-                    GenerateTurnMeterUntilTurnReady();
-                }
+                // Otherwise, if no units are ready, wait for units to generate Turn Meter until ready
+                GenerateTurnMeterUntilTurnReady();
             }
         }
     }
@@ -135,38 +126,14 @@ public class GameManager : Singleton<GameManager>
             unit.GenerateTurnMeterFromSpeed();
         }
     }
-
-    /// <summary>
-    /// Adds a new unit to the list of units ready to take their turn.
-    /// </summary>
-    /// <param name="unit">The unit that is ready.</param>
-    private void AddTurnReadyUnit(Unit unit)
-    {
-        if (!turnQueue.Contains(unit))
-        {
-            turnQueue.Add(unit);
-        }
-    }
-    
-    /// <summary>
-    /// Removes the given unit from the list of units ready to take their turn.
-    /// </summary>
-    /// <param name="unit">The unit to remove.</param>
-    private void RemoveTurnReadyUnit(Unit unit)
-    {
-        if (turnQueue.Contains(unit))
-        {
-            turnQueue.Remove(unit);
-        }
-    }
     
     /// <summary>
     /// Ends the current turn and resets any game state variables and input prompts that depended on the turn.
     /// </summary>
     private void EndCurrentTurn()
     {
-        currentTurnUnit.EndTurn();
-        currentTurnUnit = null;
+        currentTurn.EndTurn();
+        currentTurn = null;
         CloseSelectedAbility();
         AbilityPaletteManager.instance.HideAbilities();
     }
@@ -181,18 +148,18 @@ public class GameManager : Singleton<GameManager>
     /// <param name="ability">The Ability to use.</param>
     public void SelectAbility(ActiveAbility ability)
     {
-        // If further input is needed, simply store a reference to the given Ability as the currently selected one
+        // If further input is needed, simply refer to the given Ability as the currently selected one
         if (ability.Data.requiredInput != null)
         {
-            CloseSelectedAbility();
-            CurrentSelectedAbility = ability;  // Store a reference to this Ability so it can be recalled when further input is made
+            CloseSelectedAbility();  // Close the input prompts for whatever Ability was previously selected
+            CurrentSelectedAbility = ability;  // Store this Ability so it can be recalled when further input is made
             CurrentRequiredInput = ability.Data.requiredInput;  // Track the input type required
 
             // Prepare the necessary input prompts
             switch (ability.Data.requiredInput)
             {
                 case InputType.TargetEnemyTile:
-                    GridManager.instance.SetTargetableTiles(currentTurnUnit, ability.Data.attackData);
+                    GridManager.instance.SetTargetableTiles(currentTurn, ability.NestedAttackData);
                     break;
                     
                 default:
@@ -202,7 +169,7 @@ public class GameManager : Singleton<GameManager>
         // Otherwise, directly use the Ability
         else
         {
-            UseAbility(currentTurnUnit, ability, true);
+            UseAbility(currentTurn, ability, true);
         }
     }
 
@@ -219,7 +186,7 @@ public class GameManager : Singleton<GameManager>
         targetTileRow = row;
         targetTileCol = col;
 
-        UseAbility(currentTurnUnit, CurrentSelectedAbility, true);
+        UseAbility(currentTurn, CurrentSelectedAbility, true);
     }
 
     /// <summary>
@@ -238,12 +205,12 @@ public class GameManager : Singleton<GameManager>
     /// <summary>
     /// 
     /// </summary>
-    public void UseAbility(Unit user, ActiveAbility ability, bool endTurn)
+    private void UseAbility(Unit user, ActiveAbility ability, bool endTurn)
     {
         ability.Execute(user);
 
-        // If the user is the unit whose turn it currently is, and this is flagged as a turn-ending Ability (i.e. the one move allotted to a unit per turn), end the turn.
-        if (user == currentTurnUnit && endTurn)
+        // If this is flagged as a turn-ending Ability (i.e. the one move allotted to a unit per turn), end the turn.
+        if (endTurn)
         {
             EndCurrentTurn();
         }
@@ -310,10 +277,6 @@ public class GameManager : Singleton<GameManager>
         foreach (Unit recipient in recipients)
         {
             recipient.AddTurnMeter(amount * -1f, false);
-            if (!recipient.ReadyForTurn)
-            {
-                RemoveTurnReadyUnit(recipient);
-            }
         }
     }
 
@@ -340,21 +303,6 @@ public class GameManager : Singleton<GameManager>
         }
     }
 
-    /// <summary>
-    /// Perform the given attack against all receiving units. Each target receives 100% damage weight. Use this method for attacks that use queries instead of the target tile to determine targets.
-    /// </summary>
-    /// <param name="source">The attacking unit.</param>
-    /// <param name="targets">List of units receiving the attack.</param>
-    /// <param name="attackData">All data related to the attack.</param>
-    public void Attack(Unit source, List<Unit> targets, AttackData attackData)
-    {
-        // Evaluate attack against each target separately
-        foreach (Unit target in targets)
-        {
-            target.ReceiveAttack(source, attackData, 1f);
-        }
-    }
-
     #endregion
 
     #region Status Effects
@@ -372,6 +320,24 @@ public class GameManager : Singleton<GameManager>
             foreach (StatusEffectApplier effectApplier in effects)
             {
                 recipient.ReceiveStatusEffect(source, effectApplier);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Removes the given Status Effects from all recipient units by name.
+    /// </summary>
+    /// <param name="source">The unit removing the Status Effects.</param>
+    /// <param name="recipients">The list of receiving units.</param>
+    /// <param name="effects">The list of Status Effects, by name, to remove from each recipient.</param>
+    /// <param name="natural">Whether the removal should be considered natural (e.g. Foresight cleared on next Evasion).</param>
+    public void RemoveStatusEffectsByName(Unit source, List<Unit> recipients, List<string> effects, bool natural)
+    {
+        foreach (Unit recipient in recipients)
+        {
+            foreach (string effectName in effects)
+            {
+                recipient.RemoveStatusEffect(source, effectName, natural);
             }
         }
     }

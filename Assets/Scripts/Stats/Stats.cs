@@ -4,13 +4,12 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// This class stores all stats for the unit that may be altered during a battle.
+/// This class stores all mutable stats for a unit.
 /// </summary>
 [Serializable]
 public class Stats
 {
     // Core stats
-    public List<Tag> tags = new List<Tag>();
     public float maxHealth;
     public float maxArmor;
     public float physicalDefense;
@@ -27,81 +26,80 @@ public class Stats
     public int critAvoidance;
 
     /// <summary>
-    /// Produce a deep copy of this stats instance.
+    /// Add the given Stats to self.
     /// </summary>
-    /// <returns>A deep copy.</returns>
-    private Stats DeepCopy()
+    /// <param name="stats">The Stats object to add.</param>
+    /// <param name="multiplier">The amount by which to multiply the incoming Stats.</param>
+    public void AddStats(Stats stats, int multiplier)
     {
-        Stats copiedStats = new Stats();
+        // Add the modifier
+        maxHealth += stats.maxHealth * multiplier;
+        maxArmor += stats.maxArmor * multiplier;
+        physicalDefense += stats.physicalDefense * multiplier;
+        specialDefense += stats.specialDefense * multiplier;
+        speed += stats.speed * multiplier;
+        evasion += stats.evasion * multiplier;
+        resistance += stats.resistance * multiplier;
+        potency += stats.potency * multiplier;
+        healthSteal += stats.healthSteal * multiplier;
+        healthRegen += stats.healthRegen * multiplier;
+        counterChance += stats.counterChance * multiplier;
+        critAvoidance += stats.critAvoidance * multiplier;
 
-        // Copy value types
-        copiedStats.maxHealth = maxHealth;
-        copiedStats.maxArmor = maxArmor;
-        copiedStats.physicalDefense = physicalDefense;
-        copiedStats.specialDefense = specialDefense;
-        copiedStats.speed = speed;
-        copiedStats.evasion = evasion;
-        copiedStats.resistance = resistance;
-        copiedStats.potency = potency;
-        copiedStats.healthSteal = healthSteal;
-        copiedStats.healthRegen = healthRegen;
-        copiedStats.counterChance = counterChance;
-        copiedStats.critAvoidance = critAvoidance;
-
-        // Deep copy list of tags
-        copiedStats.tags = new List<Tag>(tags.Count);
-        foreach (Tag tag in tags)
-        {
-            copiedStats.tags.Add(tag);
-        }
-
-        return copiedStats;
+        // Floor the values
+        maxHealth = Mathf.Max(maxHealth, 1);
+        maxArmor = Mathf.Max(maxArmor, 0);
+        physicalDefense = Mathf.Max(physicalDefense, 0);
+        specialDefense = Mathf.Max(specialDefense, 0);
+        speed = Mathf.Max(speed, 0);
+        evasion = Mathf.Max(evasion, 0);
+        resistance = Mathf.Max(resistance, 0);
+        potency = Mathf.Max(potency, 0);
+        healthSteal = Mathf.Max(healthSteal, 0);
+        healthRegen = Mathf.Max(healthRegen, 0);
+        counterChance = Mathf.Max(counterChance, 0);
+        critAvoidance = Mathf.Max(critAvoidance, 0);
     }
-
+    
     /// <summary>
-    /// Apply the list of Status Effects to this set of stats via addition.
+    /// Apply the Status Effects and Modifiers of a unit to these Stats via addition.
     /// </summary>
-    /// <param name="statusEffects">The list of Status Effects to apply.</param>
-    /// <returns>The current stats based on modifications from the Status Effects.</returns>
-    public Stats ApplyModifiers(List<StatusEffect> statusEffects)
+    /// <param name="unit">The unit whose Status Effects and Modifiers to apply.</param>
+    /// <returns>The new Stats based on modifications from the Status Effects.</returns>
+    public Stats ApplyModifiers(Unit unit)
     {
-        Stats modifiedStats = DeepCopy();
+        Stats modifiedStats = (Stats)this.MemberwiseClone();
 
-        foreach (StatusEffect effect in statusEffects)
+        // Apply modifiers from each Status Effect
+        foreach (StatusEffect effect in unit.StatusEffects)
         {
-            // If the effect includes stats modifiers, apply them to the copied base stats
-            if (effect.Data.statsModifier != null)
+            if (effect.Data.modifiers != null)
             {
-                // Add the modifier
-                modifiedStats.maxHealth += effect.Data.statsModifier.maxHealth;
-                modifiedStats.maxArmor += effect.Data.statsModifier.maxArmor;
-                modifiedStats.physicalDefense += effect.Data.statsModifier.physicalDefense;
-                modifiedStats.specialDefense += effect.Data.statsModifier.specialDefense;
-                modifiedStats.speed += effect.Data.statsModifier.speed;
-                modifiedStats.evasion += effect.Data.statsModifier.evasion;
-                modifiedStats.resistance += effect.Data.statsModifier.resistance;
-                modifiedStats.potency += effect.Data.statsModifier.potency;
-                modifiedStats.healthSteal += effect.Data.statsModifier.healthSteal;
-                modifiedStats.healthRegen += effect.Data.statsModifier.healthRegen;
-                modifiedStats.counterChance += effect.Data.statsModifier.counterChance;
-                modifiedStats.critAvoidance += effect.Data.statsModifier.critAvoidance;
-
-                // Floor the values
-                modifiedStats.maxHealth = Mathf.Max(modifiedStats.maxHealth, 1);
-                modifiedStats.maxArmor = Mathf.Max(modifiedStats.maxArmor, 0);
-                modifiedStats.physicalDefense = Mathf.Max(modifiedStats.physicalDefense, 0);
-                modifiedStats.specialDefense = Mathf.Max(modifiedStats.specialDefense, 0);
-                modifiedStats.speed = Mathf.Max(modifiedStats.speed, 0);
-                modifiedStats.evasion = Mathf.Max(modifiedStats.evasion, 0);
-                modifiedStats.resistance = Mathf.Max(modifiedStats.resistance, 0);
-                modifiedStats.potency = Mathf.Max(modifiedStats.potency, 0);
-                modifiedStats.healthSteal = Mathf.Max(modifiedStats.healthSteal, 0);
-                modifiedStats.healthRegen = Mathf.Max(modifiedStats.healthRegen, 0);
-                modifiedStats.counterChance = Mathf.Max(modifiedStats.counterChance, 0);
-                modifiedStats.critAvoidance = Mathf.Max(modifiedStats.critAvoidance, 0);
+                foreach (UnitModifier modifier in effect.Data.modifiers)
+                {
+                    if (modifier.statsBonus != null)
+                    {
+                        modifier.ApplyStatsBonus(modifiedStats, unit);
+                    }
+                }
             }
         }
 
+        // Apply modifiers from each Passive
+        foreach (PassiveAbility passive in unit.PassiveAbilities)
+        {
+            if (passive.Data.modifiers != null)
+            {
+                foreach (UnitModifier modifier in passive.Data.modifiers)
+                {
+                    if (modifier.statsBonus != null)
+                    {
+                        modifier.ApplyStatsBonus(modifiedStats, unit);
+                    }
+                }
+            }
+        }
+        
         return modifiedStats;
     }
 }

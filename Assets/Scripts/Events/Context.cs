@@ -4,9 +4,9 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// This class stores a comprehensive set of information related to the result of the execution of an Action.
+/// This class stores a comprehensive set of information related to the result of an Event.
 /// </summary>
-public class ActionResult
+public class Context
 {
     private Dictionary<string, object> dict = new Dictionary<string, object>();
 

@@ -3,9 +3,13 @@
   "description": "-15 Evasion.",
   "picture": "",
   "type": "Debuff",
-  "statsModifier": {
-    "evasion": -15
-  },
+  "modifiers": [
+    {
+      "statsBonus": {
+        "evasion": -15
+      }
+    }
+  ],
   "expiry": "Duration",
   "stackable": false,
   "clearable": true,

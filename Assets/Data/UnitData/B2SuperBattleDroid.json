@@ -1,89 +1,161 @@
 {
   "name": "B2 Super Battle Droid",
-  "description": "",
+  "description": "Reactive Separatist tank that dispels enemy buffs and cripples their ability to evade attacks.",
   "picture": "",
   "source": "",
   "type": "Infantry",
   "terrain": "Ground",
   "role": "Tank",
+  "tags": [
+    "Droid",
+    "Separatist"
+  ],
   "cover": false,
   "stats": {
-    "tags": [
-      "Droid",
-      "Separatist"
-    ],
     "maxHealth": 200,
     "maxArmor": 200,
     "physicalDefense": 10,
     "specialDefense": 10,
-    "speed": 53,
+    "speed": 50,
     "evasion": 5,
     "resistance": 10,
-    "potency": 105
+    "potency": 100
   },
+
 
   "activeAbilities": [
     {
       "name": "Heavy Arms",
-      "description": "Deals Physical damage to target enemy and inflicts Evasion Debuff for 2 turns.",
+      "description": "Deals Physical Damage to target enemy and inflicts Evasion Debuff for 2 turns.",
       "picture": "",
       "maxCooldown": 0,
       "startOnCooldown": false,
       "requiredInput": "TargetEnemyTile",
-      "attackData": {
-        "pattern": [
-          [1]
-        ],
-        "damage": 40,
-        "damageType": "Physical",
-        "accuracy": 100,
-        "armorPenetration": 0,
-        "critChance": 8,
-        "critDamage": 1.5,
-        "range": 2,
-        "lineOfFire": "Contact",
-        "lineOfFireModifiers": [],
-        "precision": "Strict",
-        "targetableTerrains": [
-          "Ground",
-          "Aerial"
-        ]
-      },
       "actions": [
         {
-          "type": "Attack"
-        },
-        {
-          "type": "AddStatusEffects",
-          "candidatesFromResult": "damaged",
-          "resultIndex": 0,
-          "effects": [
+          "type": "Attack",
+          "attackData": {
+            "pattern": [
+              [1]
+            ],
+            "stats": {
+              "damage": 40,
+              "damageType": "Physical",
+              "accuracy": 90,
+              "armorPenetration": 0,
+              "critChance": 8,
+              "critDamage": 1.5
+            },
+            "range": 2,
+            "lineOfFire": "Contact",
+            "lineOfFireModifiers": [],
+            "precision": "Strict",
+            "targetableTerrains": ["Ground", "Aerial"]
+          },
+          "triggers": [
             {
-              "name": "Evasion Debuff",
-              "duration": 2,
-              "chance": 100,
-              "resistible": true
+              "onEvent": "Damage",
+              "actions": [
+                {
+                  "type": "AddStatusEffects",
+                  "recipientFromContext": "recipient",
+                  "effects": [
+                    {
+                      "name": "Evasion Debuff",
+                      "duration": 2,
+                      "chance": 100
+                    }
+                  ]
+                }
+              ]
             }
           ]
         }
       ]
     },
+
     {
-      "name": "Mow Down!",
-      "description": "",
+      "name": "Mow Down",
+      "description": "Deals Physical Damage to target enemies. Each target is cleared of all Buffs and has a 50% chance to be inflicted with Buff Block for 2 turns.",
       "picture": "",
       "maxCooldown": 3,
       "startOnCooldown": false,
+      "requiredInput": "TargetEnemyTile",
       "actions": [
+        {
+          "type": "Attack",
+          "attackData": {
+            "pattern": [
+              [1]
+            ],
+            "stats": {
+              "damage": 29,
+              "damageType": "Physical",
+              "accuracy": 80,
+              "armorPenetration": 0,
+              "critChance": 8,
+              "critDamage": 1.5
+            },
+            "range": 1,
+            "lineOfFire": "Contact",
+            "lineOfFireModifiers": ["Fixed"],
+            "precision": "Strict",
+            "targetableTerrains": ["Ground", "Aerial"]
+          },
+          "triggers": [
+            {
+              "onEvent": "Damage",
+              "actions": [
+                {
+                  "type": "ClearAllBuffs",
+                  "recipientFromContext": "recipient"
+                }
+              ]
+            }
+          ]
+        }
       ]
     }
   ],
 
+
   "passiveAbilities": [
     {
       "name": "Reactive Protocol",
-      "description": "",
-      "picture": ""
+      "description": "Whenever an opponent Evades an attack from a Separatist ally or damages a Separatist ally, Super Battle Droid has a 20% chance to regenerate 100% TM.",
+      "picture": "",
+      "triggers": [
+        {
+          "onEvent": "Evasion",
+          "sourceGroup": "Allies",
+          "sourceQuery": {
+            "tags": ["Separatist"]
+          },
+          "actions": [
+            {
+              "type": "RegenerateTurnMeter",
+              "chance": 20,
+              "recipientGroup": "Self",
+              "amount": 100
+            }
+          ]
+        },
+        {
+          "onEvent": "Damage",
+          "recipientGroup": "OtherAllies",
+          "recipientQuery": {
+            "tags": ["Separatist"]
+          },
+          "actions": [
+            {
+              "type": "RegenerateTurnMeter",
+              "chance": 20,
+              "recipientGroup": "Self",
+              "amount": 100
+            }
+          ]
+        }
+      ]
     }
   ]
 }

@@ -3,9 +3,13 @@
   "description": "+50% Offense.",
   "picture": "",
   "type": "Buff",
-  "attackModifier": {
-    "offense": 0.5
-  },
+  "modifiers": [
+    {
+      "attackBonus": {
+        "offense": 0.5
+      }
+    }
+  ],
   "expiry": "Duration",
   "stackable": false,
   "clearable": true,

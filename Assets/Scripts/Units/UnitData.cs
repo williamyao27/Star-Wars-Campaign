@@ -16,6 +16,7 @@ public struct UnitData
     public Type type;
     public Terrain terrain;
     public Role role;
+    public List<Tag> tags;
     public bool cover;
     public Stats stats;
     public List<ActiveAbilityData> activeAbilities;

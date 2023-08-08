@@ -6,100 +6,104 @@
   "type": "Infantry",
   "terrain": "Ground",
   "role": "Healer",
+  "tags": [
+    "Organic",
+    "ForceSensitive"
+  ],
   "cover": false,
   "stats": {
-    "tags": [
-      "Organic",
-      "ForceSensitive"
-    ],
     "maxHealth": 150,
     "maxArmor": 0,
     "physicalDefense": 10,
     "specialDefense": 15,
     "speed": 130,
-    "evasion": 20,
-    "resistance": 15,
+    "evasion": 15,
+    "resistance": 5,
     "potency": 90
   },
+
 
   "activeAbilities": [
     {
       "name": "Zap!",
-      "description": "Deals Physical damage to target enemy and inflicts Stun for 1 turn on a Critical Hit. This attack has +20 Crit Chance against Droids.",
+      "description": "Deals Physical Damage to target enemy and inflicts Stun for 1 turn on a Critical Hit. This attack has +20 Crit Chance against Droids.",
       "picture": "",
       "maxCooldown": 0,
       "startOnCooldown": false,
       "requiredInput": "TargetEnemyTile",
-      "attackData": {
-        "pattern": [
-          [1]
-        ],
-        "damage": 20,
-        "damageType": "Physical",
-        "accuracy": 90,
-        "armorPenetration": 0,
-        "critChance": 12,
-        "critDamage": 1.5,
-        "range": 1,
-        "lineOfFire": "Contact",
-        "lineOfFireModifiers": [],
-        "precision": "Strict",
-        "targetableTerrains": [
-          "Ground"
-        ],
-        "modifiers": [
-          {"critChance": 20,
-            "unitQuery": {
-              "tags": [
-                "Droid"
-              ]
-            }
-          }
-        ]
-      },
       "actions": [
         {
-          "type": "Attack"
-        },
-        {
-          "type": "AddStatusEffects",
-          "candidatesFromResult": "criticallyHit",
-          "resultIndex": 0,
-          "effects": [
+          "type": "Attack",
+          "attackData": {
+            "pattern": [
+              [1]
+            ],
+            "stats": {
+              "damage": 17,
+              "damageType": "Physical",
+              "accuracy": 90,
+              "armorPenetration": 0,
+              "critChance": 12,
+              "critDamage": 1.5
+            },
+            "range": 1,
+            "lineOfFire": "Contact",
+            "lineOfFireModifiers": [],
+            "precision": "Strict",
+            "targetableTerrains": ["Ground"],
+            "modifiers": [
+              {
+                "attackBonus": {
+                  "critChance": 20
+                },
+                "targetQuery": {
+                  "tags": ["Droid"]
+                }
+              }
+            ]
+          },
+          "triggers": [
             {
-              "name": "Stun",
-              "duration": 1,
-              "chance": 100,
-              "resistible": true
+              "onEvent": "CriticalHit",
+              "actions": [
+                {
+                  "type": "AddStatusEffects",
+                  "recipientFromContext": "recipient",
+                  "effectAppliers": [
+                    {
+                      "name": "Stun",
+                      "duration": 1,
+                      "chance": 100
+                    }
+                  ]
+                }
+              ]
             }
           ]
         }
       ]
     },
+
     {
       "name": "Thank the Maker!",
-      "description": "All Droid allies regenerate 50 Health and 20% Turn Meter",
+      "description": "All Droid allies regenerate 50 Health and 20% TM.",
       "picture": "",
       "maxCooldown": 3,
       "startOnCooldown": false,
       "actions": [
         {
           "type": "RegenerateHealth",
-          "candidates": "Allies",
-          "unitQuery": {
-            "tags": [
-              "Droid"
-            ]
+          "recipientGroup": "Allies",
+          "recipientQuery": {
+            "tags": ["Droid"]
           },
           "amount": 50
         },
         {
           "type": "RegenerateTurnMeter",
-          "candidates": "Allies",
-          "unitQuery": {
-            "tags": [
-              "Droid"
-            ]
+          "recipientGroup": "Allies",
+          "recipientQuery": {
+            "tags": ["Droid"]
           },
           "amount": 20
         }
@@ -107,11 +111,31 @@
     }
   ],
 
+
   "passiveAbilities": [
     {
       "name": "Podracer Reflexes",
-      "description": "",
-      "picture": ""
+      "description": "At the start of each of his turns, Anakin has a 50% chance to be granted Foresight for 1 turn.",
+      "picture": "",
+      "triggers": [
+        {
+          "onEvent": "TurnBegin",
+          "sourceGroup": "Self",
+          "actions": [
+            {
+              "type": "AddStatusEffects",
+              "recipientGroup": "Self",
+              "effectAppliers": [
+                {
+                  "name": "Foresight",
+                  "duration": 1,
+                  "chance": 50
+                }
+              ]
+            }
+          ]
+        }
+      ]
     }
   ]
 }

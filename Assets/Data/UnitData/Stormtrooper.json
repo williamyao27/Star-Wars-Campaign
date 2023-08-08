@@ -6,88 +6,86 @@
   "type": "Infantry",
   "terrain": "Ground",
   "role": "Tank",
+  "tags": [
+    "Organic",
+    "Empire",
+    "Trooper"
+  ],
   "cover": false,
   "stats": {
-    "tags": [
-      "Organic",
-      "Empire"
-    ],
-    "maxHealth": 250,
+    "maxHealth": 200,
     "maxArmor": 100,
     "physicalDefense": 15,
     "specialDefense": 15,
-    "speed": 74,
+    "speed": 68,
     "evasion": 10,
-    "resistance": 10,
+    "resistance": 5,
     "potency": 100
   },
 
+  
   "activeAbilities": [
     {
       "name": "Imperial Marksmanship",
-      "description": "Attack the target tile.",
+      "description": "Deals Physical Damage to target enemy.",
       "picture": "",
       "maxCooldown": 0,
       "startOnCooldown": false,
       "requiredInput": "TargetEnemyTile",
-      "attackData": {
-        "pattern": [
-          [1]
-        ],
-        "damage": 38,
-        "damageType": "Physical",
-        "accuracy": 85,
-        "armorPenetration": 0,
-        "critChance": 8,
-        "critDamage": 1.5,
-        "range": 2,
-        "lineOfFire": "Contact",
-        "lineOfFireModifiers": [],
-        "precision": "Strict",
-        "targetableTerrains": [
-          "Ground",
-          "Aerial"
-        ]
-      },
       "actions": [
         {
-          "type": "Attack"
+          "type": "Attack",
+          "attackData": {
+            "pattern": [
+              [1]
+            ],
+            "stats": {
+              "damage": 34,
+              "damageType": "Physical",
+              "accuracy": 85,
+              "armorPenetration": 0,
+              "critChance": 8,
+              "critDamage": 1.5
+            },
+            "range": 2,
+            "lineOfFire": "Contact",
+            "lineOfFireModifiers": [],
+            "precision": "Strict",
+            "targetableTerrains": ["Ground", "Aerial"]
+          }
         }
       ]
     },
+
     {
       "name": "Stormtrooper Bravado",
-      "description": "",
+      "description": "Stormtrooper gains Taunt for 3 turns and all Empire allies gain Defense Buff for 3 turns.",
       "picture": "",
       "maxCooldown": 4,
       "startOnCooldown": false,
       "actions": [
         {
           "type": "AddStatusEffects",
-          "candidates": "Self",
-          "effects": [
+          "recipientGroup": "Self",
+          "effectAppliers": [
             {
               "name": "Taunt",
               "duration": 3,
-              "chance": 100,
-              "resistible": true
+              "chance": 100
             }
           ]
         },
         {
           "type": "AddStatusEffects",
-          "candidates": "Allies",
-          "unitQuery": {
-            "tags": [
-              "Empire"
-            ]
+          "recipientGroup": "Allies",
+          "recipientQuery": {
+            "tags": ["Empire"]
           },
-          "effects": [
+          "effectAppliers": [
             {
               "name": "Defense Buff",
               "duration": 3,
-              "chance": 100,
-              "resistible": true
+              "chance": 100
             }
           ]
         }
@@ -95,11 +93,43 @@
     }
   ],
 
+
   "passiveAbilities": [
     {
       "name": "Wall of Stormtroopers",
-      "description": "",
-      "picture": ""
+      "description": "Stormtrooper has +2 Physical Defense and +2 Resistance for every other Empire ally. Whenever Stormtrooper is damaged while it has Taunt, all other Empire allies regenerate 10% TM.",
+      "picture": "",
+      "modifiers": [
+        {
+          "statsBonus": {
+            "physicalDefense": 2,
+            "resistance": 2
+          },
+          "forEvery": "OtherAllies",
+          "forEveryQuery": {
+            "tags": ["Empire"]
+          }
+        }
+      ],
+      "triggers": [
+        {
+          "onEvent": "Damage",
+          "recipientGroup": "Self",
+          "recipientQuery": {
+            "effects": ["Taunt"]
+          },
+          "actions": [
+            {
+              "type": "RegenerateTurnMeter",
+              "recipientGroup": "OtherAllies",
+              "recipientQuery": {
+                "tags": ["Empire"]
+              },
+              "amount": 10
+            }
+          ]
+        }
+      ]
     }
   ]
 }

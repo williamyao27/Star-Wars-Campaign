@@ -22,12 +22,12 @@ public class Unit : MonoBehaviour
     private List<StatusEffect> statusEffectsBeginTurn;
     private List<ActiveAbility> cooldownAbilitiesBeginTurn;
 
-    // Get current stats from base data plus all modifiers
+    // Get current stats from base data plus all Status Effects and modifiers on this unit
     public Stats CurrentStats
     {
         get
         {
-            return Data.stats.ApplyModifiers(StatusEffects);
+            return Data.stats.ApplyModifiers(this);
         }
     }
     
@@ -86,7 +86,7 @@ public class Unit : MonoBehaviour
         // Passive Abilities
         foreach (PassiveAbilityData abilityData in Data.passiveAbilities)
         {
-            PassiveAbilities.Add(new PassiveAbility(abilityData));
+            PassiveAbilities.Add(new PassiveAbility(abilityData, this));
         }
 
         // Connect unit to its tile
@@ -138,6 +138,7 @@ public class Unit : MonoBehaviour
 
     #region Turn
 
+    // Evaluate whether this unit has at least 100% Turn Meter and is therefore ready to take a turn.
     public bool ReadyForTurn
     {
         get
@@ -165,6 +166,9 @@ public class Unit : MonoBehaviour
             }
         }
 
+        // Broadcast
+        EventManager.instance.TurnBegin(this);
+
         return CurrentState.skipTurn;
     }
 
@@ -176,6 +180,9 @@ public class Unit : MonoBehaviour
         ResetTurnMeter();
         DecrementStatusEffects();
         DecrementCooldowns();
+
+        // Broadcast
+        EventManager.instance.TurnEnd(this);
     }
 
     #endregion
@@ -183,23 +190,22 @@ public class Unit : MonoBehaviour
     #region Turn Meter
 
     /// <summary>
-    /// Updates the unit's Turn Meter by the given amount and clamps between 0 and 1.
+    /// Updates the unit's Turn Meter by the given amount. TM may exceed 100%.
     /// </summary>
     /// <param name="amount">The amount by which to increase the unit's TM. Can be negative (i.e. TM loss).</param>
     /// <param name="natural">Whether this is natural Turn Meter from the turn routine.</param>
     public void AddTurnMeter(float amount, bool natural)
     {
         turnMeter += amount;
-        turnMeter = Mathf.Clamp(turnMeter, 0f, 100f);
         display.UpdateTurnMeterBar(turnMeter);  // Visual
     }
     
     /// <summary>
-    /// Removes 100% Turn Meter from this unit to soft-reset it after taking a turn. Overflow TM may remain as residual.
+    /// Removes 100% Turn Meter from this unit to soft-reset it after taking a turn. Overflow TM may remain as a residual.
     /// </summary>
     private void ResetTurnMeter()
     {
-        AddTurnMeter(-1000f, true);
+        AddTurnMeter(-100f, true);
         display.UpdateTurnMeterBar(turnMeter);  // Visual
     }
     
@@ -208,7 +214,7 @@ public class Unit : MonoBehaviour
     /// </summary>
     public void GenerateTurnMeterFromSpeed()
     {
-        float amount = CurrentStats.speed * 0.01f;
+        float amount = Mathf.Min(CurrentStats.speed * 0.01f, 100f - turnMeter);  // If TM is less than 1 "frame" away from 100%, give partial frame
         AddTurnMeter(amount, true);
     }
     
@@ -241,12 +247,43 @@ public class Unit : MonoBehaviour
     #endregion
 
     #region Status Effects
+    public List<StatusEffect> Buffs
+    {
+        get
+        {
+            List<StatusEffect> buffs = new List<StatusEffect>();
+            foreach (StatusEffect effect in StatusEffects)
+            {
+                if (effect.Data.type == StatusEffectType.Buff)
+                {
+                    buffs.Add(effect);
+                }
+            }
+            return buffs;
+        }
+    }
+
+    public List<StatusEffect> Debuffs
+    {
+        get
+        {
+            List<StatusEffect> debuffs = new List<StatusEffect>();
+            foreach (StatusEffect effect in StatusEffects)
+            {
+                if (effect.Data.type == StatusEffectType.Debuff)
+                {
+                    debuffs.Add(effect);
+                }
+            }
+            return debuffs;
+        }
+    }
 
     /// <summary>
     /// Checks whether the given unit should receive the given Status Effect, and adds it if so.
     /// </summary>
+    /// <param name="source">The unit applying the Status Effect.</param>
     /// <param name="effectApplier">Details about the given Status Effect to apply.</param>
-    /// <param name="sourceUnit">The unit applying the Status Effect.</param>
     public void ReceiveStatusEffect(Unit source, StatusEffectApplier effectApplier)
     {   
         // Do nothing if the effect fails to apply entirely
@@ -258,48 +295,48 @@ public class Unit : MonoBehaviour
 
         StatusEffect effect = new StatusEffect(effectApplier.name, effectApplier.duration);  // Instantiate Status Effect
 
-        if (effect.Data.type == StatusEffectType.Buff)  // Buff
-        {
-            EventManager.instance.Buff(source, this, effectApplier);
-        }
-        else  // Debuff
+        if (effect.Data.type == StatusEffectType.Debuff)
         {
             // Resistance check
             int chanceToInflict = source.CurrentStats.potency - CurrentStats.resistance;
-            if (UnityEngine.Random.Range(0, 100) < chanceToInflict || !effectApplier.resistible)  // Effect is added
+            if (!effectApplier.irresistible && !(UnityEngine.Random.Range(0, 100) < chanceToInflict))  // Effect is Resisted
             {
-                EventManager.instance.Debuff(source, this, effectApplier);
-            }
-            else  // Effect is Resisted
-            {
-                EventManager.instance.Resist(source, this, effectApplier);
                 return;
             }
         }
 
-        // If the effect is not stackable, search for it in the unit's existing Status Effects before adding it. Notice that even if a non-stackable effect cannot be applied due it already existing, it still triggers Status Effect-related broadcasts.
+        // If the Status Effect is not stackable, search for it in the unit's existing Status Effects before adding it. Notice that even if a non-stackable Status Effect cannot be applied due it already existing, it still triggers Status Effect-related events.
         if (!effect.Data.stackable)
         {
-            foreach (StatusEffect existingEffect in StatusEffects)
+            StatusEffect existingEffect = FindStatusEffect(effect.Data.name);
+
+            // The unit already has this effect
+            if (existingEffect != null)
             {
-                // The unit already has this Status Effect
-                if (existingEffect.Data.name == effect.Data.name)
+                // If the existing Status Effect has a longer duration, do nothing
+                if (existingEffect.Duration > effect.Duration)
                 {
-                    // If the existing Status Effect has a longer duration, do nothing
-                    if (existingEffect.Duration > effect.Duration)
-                    {
-                        return;
-                    }
-                    // Otherwise, remove the Status Effect for overwriting; break early as, by precondition, there can only be one instance
-                    else
-                    {
-                        StatusEffects.Remove(existingEffect);
-                        break;
-                    }
+                    return;
+                }
+                // Otherwise, remove the Status Effect so that it can be overwritten
+                else
+                {
+                    RemoveStatusEffect(this, existingEffect, true);
                 }
             }
         }
 
+        // Broadcast
+        if (effect.Data.type == StatusEffectType.Buff)
+        {
+            EventManager.instance.Buff(source, this, effectApplier);
+        }
+        else
+        {
+            EventManager.instance.Debuff(source, this, effectApplier);
+        }
+
+        effect.OnApply(this);  // Execute application effects
         StatusEffects.Add(effect);
     }
 
@@ -313,9 +350,67 @@ public class Unit : MonoBehaviour
             if (effect.DecrementDuration())
             {
                 // Remove Status Effect if it has expired
-                StatusEffects.Remove(effect);
+                RemoveStatusEffect(this, effect, true);
             }
         }
+    }
+
+    /// <summary>
+    /// Removes the given Status Effect instance from this unit.
+    /// </summary>
+    /// <param name="source">The unit removing the Status Effect.</param>
+    /// <param name="effect">The Status Effect instance to remove.</param>
+    /// <param name="natural">Whether this is a natural removal, i.e. the effect expired or was cleared intrinsically.</param>
+    public void RemoveStatusEffect(Unit source, StatusEffect effect, bool natural)
+    {
+        effect.OnRemove();  // Execute removal effects
+        StatusEffects.Remove(effect);
+
+        // Broadcast if not a natural Status Effect removal (e.g. expired)
+        if (!natural)
+        {
+            if (effect.Data.type == StatusEffectType.Buff)
+            {
+                EventManager.instance.BuffClear(source, this, effect.Data.name);
+            }
+            else
+            {
+                EventManager.instance.DebuffClear(source, this, effect.Data.name);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Removes the Status Effect with the given name on this unit.
+    /// </summary>
+    /// <param name="source">The unit removing the Status Effect.</param>
+    /// <param name="effectName">The name of the Status Effect.</param>
+    /// <param name="natural">Whether this is a natural removal, i.e. the effect expired or was cleared intrinsically.</param>
+    public void RemoveStatusEffect(Unit source, string effectName, bool natural)
+    {
+        StatusEffect effectToRemove = FindStatusEffect(effectName);
+        if (effectToRemove != null)
+        {
+            RemoveStatusEffect(source, effectToRemove, natural);
+        }
+    }
+
+    /// <summary>
+    /// Finds the Status Effect with the given name on this unit.
+    /// </summary>
+    /// <param name="effectName">The name of the Status Effect.</param>
+    /// <returns>The Status Effect object.</returns>
+    private StatusEffect FindStatusEffect(string effectName)
+    {
+        foreach (StatusEffect effect in StatusEffects)
+        {
+            if (effect.Data.name == effectName)
+            {
+                return effect;
+            }
+        }
+        
+        return null;
     }
 
     #endregion
@@ -329,7 +424,7 @@ public class Unit : MonoBehaviour
     {
         foreach (ActiveAbility ability in cooldownAbilitiesBeginTurn)
         {
-            ability.ChangeCooldown(-1);
+            ability.AddCooldown(-1);
         }
     }
 
@@ -351,25 +446,25 @@ public class Unit : MonoBehaviour
             return;
         }
 
-        // Get current attack data (adding modifiers based on the source and the target)
-        AttackData currentAttackData = attackData.ApplyModifiers(source, this);
+        // Get current attack stats (adding modifiers based on the attacker and the target)
+        AttackStats currentAttackStats = attackData.stats.ApplyModifiers(source, this, attackData.modifiers);
 
         // Evasion check
-        int chanceToHit = currentAttackData.accuracy - CurrentStats.evasion;
+        int chanceToHit = currentAttackStats.accuracy - CurrentStats.evasion;
         if (UnityEngine.Random.Range(0, 100) < chanceToHit)  // Attack hits
         {
-            float rawDamage = currentAttackData.damage * currentAttackData.offense * weight;
+            float rawDamage = currentAttackStats.damage * (currentAttackStats.offense + 1f) * weight;  // Notice Offense is zero-anchored; i.e. no modifiers means coefficient of 1
 
             // Critical Hit check
-            int chanceToCrit = currentAttackData.critChance - CurrentStats.critAvoidance;
+            int chanceToCrit = currentAttackStats.critChance - CurrentStats.critAvoidance;
             if (UnityEngine.Random.Range(0, 100) < chanceToCrit)
             {
                 // Attack is a Critical Hit
-                rawDamage *= currentAttackData.critDamage;
+                rawDamage *= currentAttackStats.critDamage;
                 EventManager.instance.CriticalHit(source, this);
             }
 
-            float damageDealt = ReceiveDamage(rawDamage, currentAttackData.damageType, currentAttackData.armorPenetration);
+            float damageDealt = ReceiveDamage(rawDamage, attackData.damageType, currentAttackStats.armorPenetration);
             EventManager.instance.Damage(source, this, damageDealt);
         }
         else  // Attack is Evaded
@@ -422,12 +517,34 @@ public class Unit : MonoBehaviour
     {
         foreach (Tag tag in tags)
         {
-            if (!CurrentStats.tags.Contains(tag))
+            if (!Data.tags.Contains(tag))
             {
                 return false;
             }
         }
+        return true;
+    }
 
+    public bool HasEffects(List<string> effects)
+    {
+        foreach (string effectName in effects)
+        {
+            bool effectFound = false;
+
+            foreach (StatusEffect effect in StatusEffects)
+            {
+                if (effect.Data.name == effectName)
+                {
+                    effectFound = true;
+                    break;
+                }
+            }
+
+            if (!effectFound)
+            {
+                return false;
+            }
+        }
         return true;
     }
 

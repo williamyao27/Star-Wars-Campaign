@@ -1,0 +1,31 @@
+{
+  "name": "Foresight",
+  "description": "+100 Dodge. Cleared after the next time this unit Evades an attack.",
+  "picture": "",
+  "type": "Buff",
+  "modifiers": [
+    {
+      "statsBonus": {
+        "evasion": 100
+      }
+    }
+  ],
+  "triggers": [
+    {
+      "onEvent": "Evasion",
+      "recipientGroup": "Self",
+      "actions": [
+        {
+          "type": "ConsumeStatusEffect",
+          "recipientGroup": "Self",
+          "effectToConsume": "Foresight"
+        }
+      ]
+    }
+  ],
+  "expiry": "Duration",
+  "stackable": false,
+  "clearable": true,
+  "copyable": true,
+  "anonymous": false
+}

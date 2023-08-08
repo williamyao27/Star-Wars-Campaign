@@ -8,7 +8,8 @@ using System.Collections.Generic;
 [Serializable]
 public class UnitQuery
 {
-    private List<Tag> tags = new List<Tag>();
+    public List<Tag> tags = new List<Tag>();
+    public List<string> effects = new List<string>();
 
     /// <summary>
     /// Evaluates whether the given unit fulfills all the conditions.
@@ -17,13 +18,7 @@ public class UnitQuery
     /// <returns>Whether the unit fulfills all the conditions.</returns>
     public bool EvaluateQuery(Unit unit)
     {
-        // By tags
-        if (!unit.HasTags(tags))
-        {
-            return false;
-        }
-
-        return true;
+        return unit.HasTags(tags) && unit.HasEffects(effects);
     }
 
     /// <summary>
