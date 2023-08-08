@@ -21,11 +21,13 @@ public class Action
     public AttackData attackData { get; set; }
     
     // Status Effect adding
-    public List<StatusEffectApplier> effectsToAdd = new List<StatusEffectApplier>();
+    public List<StatusEffectApplier> effectAppliers = new List<StatusEffectApplier>();
     
     // Status Effect clearing
     public List<string> effectsToRemove = new List<string>();
-    public bool natural;
+    
+    // Status Effect consuming; use for effects like Foresight
+    public string effectToConsume;
 
     // Regeneration
     public float amount;
@@ -78,11 +80,19 @@ public class Action
                     break;
 
                 case ActionType.AddStatusEffects:
-                    GameManager.instance.AddStatusEffects(user, recipients, effectsToAdd);
+                    GameManager.instance.AddStatusEffects(user, recipients, effectAppliers);
                     break;
 
-                case ActionType.RemoveStatusEffects:
-                    GameManager.instance.RemoveStatusEffects(user, recipients, effectsToRemove, natural);
+                case ActionType.ClearAllBuffs:
+                    //GameManager.instance.ClearAllBuffs(user, recipients);
+                    break;
+
+                case ActionType.ClearAllDebuffs:
+                    //GameManager.instance.ClearAllDebuffs(user, recipients);
+                    break;
+
+                case ActionType.ConsumeStatusEffect:
+                    GameManager.instance.RemoveStatusEffectsByName(user, recipients, new List<string>{effectToConsume}, true);
                     break;
 
                 case ActionType.RegenerateHealth:
@@ -111,7 +121,9 @@ public enum ActionType
 {
     Attack,
     AddStatusEffects,
-    RemoveStatusEffects,
+    ClearAllBuffs,
+    ClearAllDebuffs,
+    ConsumeStatusEffect,
     RegenerateHealth,
     RegenerateTurnMeter
 }

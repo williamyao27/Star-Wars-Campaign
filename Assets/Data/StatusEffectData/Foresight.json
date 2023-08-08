@@ -16,10 +16,9 @@
       "recipientGroup": "Self",
       "actions": [
         {
-          "type": "RemoveStatusEffects",
+          "type": "ConsumeStatusEffect",
           "recipientGroup": "Self",
-          "effectsToRemove": ["Foresight"],
-          "natural": true
+          "effectToConsume": "Foresight"
         }
       ]
     }

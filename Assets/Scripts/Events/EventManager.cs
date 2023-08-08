@@ -19,6 +19,9 @@ public class EventManager : Singleton<EventManager>
     public event BattleEvent OnEvasion;
     public event BattleEvent OnBuff;
     public event BattleEvent OnDebuff;
+    public event BattleEvent OnResist;
+    public event BattleEvent OnBuffClear;
+    public event BattleEvent OnDebuffClear;
 
     /// <summary>
     /// Create a default Context object that stores the source of an Event. This applies to some Event types.
@@ -100,7 +103,10 @@ public class EventManager : Singleton<EventManager>
 
     public void Resist(Unit source, Unit recipient, StatusEffectApplier effectApplier)
     {
+        Context ctx = InitializeContext(source, recipient);
+        ctx.Set("effect", effectApplier.name);
         Debug.Log($"{recipient.Data.name} Resisted {effectApplier.name} from {source.Data.name}.");
+        OnResist?.Invoke(ctx);
     }
     
     public void BuffClear(Unit source, Unit recipient, string effectName)
@@ -108,7 +114,7 @@ public class EventManager : Singleton<EventManager>
         Context ctx = InitializeContext(source, recipient);
         ctx.Set("effect", effectName);
         Debug.Log($"{recipient.Data.name} was cleared of {effectName} by {source.Data.name}.");
-        OnBuff?.Invoke(ctx);
+        OnBuffClear?.Invoke(ctx);
     }
 
     public void DebuffClear(Unit source, Unit recipient, string effectName)
@@ -116,7 +122,7 @@ public class EventManager : Singleton<EventManager>
         Context ctx = InitializeContext(source, recipient);
         ctx.Set("effect", effectName);
         Debug.Log($"{recipient.Data.name} was cleared of {effectName} by {source.Data.name}.");
-        OnDebuff?.Invoke(ctx);
+        OnDebuffClear?.Invoke(ctx);
     }
 
 }

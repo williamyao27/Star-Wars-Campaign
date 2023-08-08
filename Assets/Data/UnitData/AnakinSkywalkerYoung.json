@@ -39,7 +39,7 @@
               [1]
             ],
             "stats": {
-              "damage": 20,
+              "damage": 17,
               "damageType": "Physical",
               "accuracy": 90,
               "armorPenetration": 0,
@@ -69,12 +69,11 @@
                 {
                   "type": "AddStatusEffects",
                   "recipientFromContext": "recipient",
-                  "effectsToAdd": [
+                  "effectAppliers": [
                     {
                       "name": "Stun",
                       "duration": 1,
-                      "chance": 100,
-                      "resistible": true
+                      "chance": 100
                     }
                   ]
                 }
@@ -126,12 +125,11 @@
             {
               "type": "AddStatusEffects",
               "recipientGroup": "Self",
-              "effectsToAdd": [
+              "effectAppliers": [
                 {
                   "name": "Foresight",
                   "duration": 1,
-                  "chance": 50,
-                  "resistible": false
+                  "chance": 50
                 }
               ]
             }

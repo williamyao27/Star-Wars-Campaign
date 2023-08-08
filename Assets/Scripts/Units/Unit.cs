@@ -247,6 +247,37 @@ public class Unit : MonoBehaviour
     #endregion
 
     #region Status Effects
+    public List<StatusEffect> Buffs
+    {
+        get
+        {
+            List<StatusEffect> buffs = new List<StatusEffect>();
+            foreach (StatusEffect effect in StatusEffects)
+            {
+                if (effect.Data.type == StatusEffectType.Buff)
+                {
+                    buffs.Add(effect);
+                }
+            }
+            return buffs;
+        }
+    }
+
+    public List<StatusEffect> Debuffs
+    {
+        get
+        {
+            List<StatusEffect> debuffs = new List<StatusEffect>();
+            foreach (StatusEffect effect in StatusEffects)
+            {
+                if (effect.Data.type == StatusEffectType.Debuff)
+                {
+                    debuffs.Add(effect);
+                }
+            }
+            return debuffs;
+        }
+    }
 
     /// <summary>
     /// Checks whether the given unit should receive the given Status Effect, and adds it if so.
@@ -268,7 +299,7 @@ public class Unit : MonoBehaviour
         {
             // Resistance check
             int chanceToInflict = source.CurrentStats.potency - CurrentStats.resistance;
-            if (effectApplier.resistible && !(UnityEngine.Random.Range(0, 100) < chanceToInflict))  // Effect is Resisted
+            if (!effectApplier.irresistible && !(UnityEngine.Random.Range(0, 100) < chanceToInflict))  // Effect is Resisted
             {
                 return;
             }

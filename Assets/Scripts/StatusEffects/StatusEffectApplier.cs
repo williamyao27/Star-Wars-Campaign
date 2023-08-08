@@ -12,5 +12,5 @@ public struct StatusEffectApplier
     public string name;
     public int duration;
     public int chance;
-    public bool resistible;
+    public bool irresistible;
 }

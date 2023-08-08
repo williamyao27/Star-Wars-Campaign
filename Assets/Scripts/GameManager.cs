@@ -34,7 +34,7 @@ public class GameManager : Singleton<GameManager>
         AddUnit("Stormtrooper", 0, 0, 0);
         AddUnit("Stormtrooper", 0, 0, 1);
         AddUnit("Anakin Skywalker (Young)", 1, 0, 0);
-        //AddUnit("B2 Super Battle Droid", 1, 0, 1);
+        AddUnit("B2 Super Battle Droid", 1, 0, 1);
         #endregion
         
         StartBattle();
@@ -324,7 +324,14 @@ public class GameManager : Singleton<GameManager>
         }
     }
 
-    public void RemoveStatusEffects(Unit source, List<Unit> recipients, List<string> effects, bool natural)
+    /// <summary>
+    /// Removes the given Status Effects from all recipient units by name.
+    /// </summary>
+    /// <param name="source">The unit removing the Status Effects.</param>
+    /// <param name="recipients">The list of receiving units.</param>
+    /// <param name="effects">The list of Status Effects, by name, to remove from each recipient.</param>
+    /// <param name="natural">Whether the removal should be considered natural (e.g. Foresight cleared on next Evasion).</param>
+    public void RemoveStatusEffectsByName(Unit source, List<Unit> recipients, List<string> effects, bool natural)
     {
         foreach (Unit recipient in recipients)
         {

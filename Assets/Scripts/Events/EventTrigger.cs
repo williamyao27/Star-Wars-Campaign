@@ -184,5 +184,8 @@ public enum EventType
     CriticalHit,
     Evasion,
     Buff,
-    Debuff
+    Debuff,
+    Resist,
+    BuffClear,
+    DebuffClear
 }

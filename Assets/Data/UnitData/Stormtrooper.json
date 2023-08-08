@@ -13,11 +13,11 @@
   ],
   "cover": false,
   "stats": {
-    "maxHealth": 250,
+    "maxHealth": 200,
     "maxArmor": 100,
     "physicalDefense": 15,
     "specialDefense": 15,
-    "speed": 74,
+    "speed": 68,
     "evasion": 10,
     "resistance": 5,
     "potency": 100
@@ -67,12 +67,11 @@
         {
           "type": "AddStatusEffects",
           "recipientGroup": "Self",
-          "effectsToAdd": [
+          "effectAppliers": [
             {
               "name": "Taunt",
               "duration": 3,
-              "chance": 100,
-              "resistible": false
+              "chance": 100
             }
           ]
         },
@@ -82,12 +81,11 @@
           "recipientQuery": {
             "tags": ["Empire"]
           },
-          "effectsToAdd": [
+          "effectAppliers": [
             {
               "name": "Defense Buff",
               "duration": 3,
-              "chance": 100,
-              "resistible": false
+              "chance": 100
             }
           ]
         }
