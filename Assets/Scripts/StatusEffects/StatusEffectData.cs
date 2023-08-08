@@ -15,8 +15,7 @@ public struct StatusEffectData
     public StatusEffectType type;
     public List<UnitModifier> modifiers;
     public State stateModifier;
-    // List of on-infliction effects
-    // List of passives associated
+    public List<PassiveEventTrigger> triggers;
     public StatusEffectExpiry expiry;
     public bool stackable;
     public bool clearable;

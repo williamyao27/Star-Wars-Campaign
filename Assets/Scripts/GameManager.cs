@@ -34,7 +34,7 @@ public class GameManager : Singleton<GameManager>
         AddUnit("Stormtrooper", 0, 0, 0);
         AddUnit("Stormtrooper", 0, 0, 1);
         AddUnit("Anakin Skywalker (Young)", 1, 0, 0);
-        AddUnit("B2 Super Battle Droid", 1, 0, 1);
+        //AddUnit("B2 Super Battle Droid", 1, 0, 1);
         #endregion
         
         StartBattle();
@@ -320,6 +320,17 @@ public class GameManager : Singleton<GameManager>
             foreach (StatusEffectApplier effectApplier in effects)
             {
                 recipient.ReceiveStatusEffect(source, effectApplier);
+            }
+        }
+    }
+
+    public void RemoveStatusEffects(Unit source, List<Unit> recipients, List<string> effects, bool natural)
+    {
+        foreach (Unit recipient in recipients)
+        {
+            foreach (string effectName in effects)
+            {
+                recipient.RemoveStatusEffect(source, effectName, natural);
             }
         }
     }

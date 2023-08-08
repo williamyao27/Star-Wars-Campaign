@@ -166,6 +166,9 @@ public class Unit : MonoBehaviour
             }
         }
 
+        // Broadcast
+        EventManager.instance.TurnBegin(this);
+
         return CurrentState.skipTurn;
     }
 
@@ -177,6 +180,9 @@ public class Unit : MonoBehaviour
         ResetTurnMeter();
         DecrementStatusEffects();
         DecrementCooldowns();
+
+        // Broadcast
+        EventManager.instance.TurnEnd(this);
     }
 
     #endregion
@@ -245,7 +251,7 @@ public class Unit : MonoBehaviour
     /// <summary>
     /// Checks whether the given unit should receive the given Status Effect, and adds it if so.
     /// </summary>
-    /// <param name="sourceUnit">The unit applying the Status Effect.</param>
+    /// <param name="source">The unit applying the Status Effect.</param>
     /// <param name="effectApplier">Details about the given Status Effect to apply.</param>
     public void ReceiveStatusEffect(Unit source, StatusEffectApplier effectApplier)
     {   
@@ -271,22 +277,20 @@ public class Unit : MonoBehaviour
         // If the Status Effect is not stackable, search for it in the unit's existing Status Effects before adding it. Notice that even if a non-stackable Status Effect cannot be applied due it already existing, it still triggers Status Effect-related events.
         if (!effect.Data.stackable)
         {
-            foreach (StatusEffect existingEffect in StatusEffects)
+            StatusEffect existingEffect = FindStatusEffect(effect.Data.name);
+
+            // The unit already has this effect
+            if (existingEffect != null)
             {
-                // The unit already has this Status Effect
-                if (existingEffect.Data.name == effect.Data.name)
+                // If the existing Status Effect has a longer duration, do nothing
+                if (existingEffect.Duration > effect.Duration)
                 {
-                    // If the existing Status Effect has a longer duration, do nothing
-                    if (existingEffect.Duration > effect.Duration)
-                    {
-                        return;
-                    }
-                    // Otherwise, remove the Status Effect so that it can be overwritten
-                    else
-                    {
-                        StatusEffects.Remove(existingEffect);
-                        break;
-                    }
+                    return;
+                }
+                // Otherwise, remove the Status Effect so that it can be overwritten
+                else
+                {
+                    RemoveStatusEffect(this, existingEffect, true);
                 }
             }
         }
@@ -301,6 +305,7 @@ public class Unit : MonoBehaviour
             EventManager.instance.Debuff(source, this, effectApplier);
         }
 
+        effect.OnApply(this);  // Execute application effects
         StatusEffects.Add(effect);
     }
 
@@ -314,9 +319,67 @@ public class Unit : MonoBehaviour
             if (effect.DecrementDuration())
             {
                 // Remove Status Effect if it has expired
-                StatusEffects.Remove(effect);
+                RemoveStatusEffect(this, effect, true);
             }
         }
+    }
+
+    /// <summary>
+    /// Removes the given Status Effect instance from this unit.
+    /// </summary>
+    /// <param name="source">The unit removing the Status Effect.</param>
+    /// <param name="effect">The Status Effect instance to remove.</param>
+    /// <param name="natural">Whether this is a natural removal, i.e. the effect expired or was cleared intrinsically.</param>
+    public void RemoveStatusEffect(Unit source, StatusEffect effect, bool natural)
+    {
+        effect.OnRemove();  // Execute removal effects
+        StatusEffects.Remove(effect);
+
+        // Broadcast if not a natural Status Effect removal (e.g. expired)
+        if (!natural)
+        {
+            if (effect.Data.type == StatusEffectType.Buff)
+            {
+                EventManager.instance.BuffClear(source, this, effect.Data.name);
+            }
+            else
+            {
+                EventManager.instance.DebuffClear(source, this, effect.Data.name);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Removes the Status Effect with the given name on this unit.
+    /// </summary>
+    /// <param name="source">The unit removing the Status Effect.</param>
+    /// <param name="effectName">The name of the Status Effect.</param>
+    /// <param name="natural">Whether this is a natural removal, i.e. the effect expired or was cleared intrinsically.</param>
+    public void RemoveStatusEffect(Unit source, string effectName, bool natural)
+    {
+        StatusEffect effectToRemove = FindStatusEffect(effectName);
+        if (effectToRemove != null)
+        {
+            RemoveStatusEffect(source, effectToRemove, natural);
+        }
+    }
+
+    /// <summary>
+    /// Finds the Status Effect with the given name on this unit.
+    /// </summary>
+    /// <param name="effectName">The name of the Status Effect.</param>
+    /// <returns>The Status Effect object.</returns>
+    private StatusEffect FindStatusEffect(string effectName)
+    {
+        foreach (StatusEffect effect in StatusEffects)
+        {
+            if (effect.Data.name == effectName)
+            {
+                return effect;
+            }
+        }
+        
+        return null;
     }
 
     #endregion
@@ -428,7 +491,29 @@ public class Unit : MonoBehaviour
                 return false;
             }
         }
+        return true;
+    }
 
+    public bool HasEffects(List<string> effects)
+    {
+        foreach (string effectName in effects)
+        {
+            bool effectFound = false;
+
+            foreach (StatusEffect effect in StatusEffects)
+            {
+                if (effect.Data.name == effectName)
+                {
+                    effectFound = true;
+                    break;
+                }
+            }
+
+            if (!effectFound)
+            {
+                return false;
+            }
+        }
         return true;
     }
 

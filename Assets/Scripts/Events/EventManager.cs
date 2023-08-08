@@ -9,14 +9,28 @@ using UnityEngine;
 public class EventManager : Singleton<EventManager>
 {
     // Delegates
-    public delegate void DamageEvent(Context ctx);
-    public delegate void CriticalHitEvent(Context ctx);
-    public delegate void EvasionEvent(Context ctx);
+    public delegate void BattleEvent(Context ctx);
 
     // Events
-    public event DamageEvent OnDamage;
-    public event CriticalHitEvent OnCriticalHit;
-    public event EvasionEvent OnEvasion;
+    public event BattleEvent OnTurnBegin;
+    public event BattleEvent OnTurnEnd;
+    public event BattleEvent OnDamage;
+    public event BattleEvent OnCriticalHit;
+    public event BattleEvent OnEvasion;
+    public event BattleEvent OnBuff;
+    public event BattleEvent OnDebuff;
+
+    /// <summary>
+    /// Create a default Context object that stores the source of an Event. This applies to some Event types.
+    /// </summary>
+    /// <param name="source">The unit that caused the Event.</param>
+    /// <returns>The initialized Context object.</returns>
+    public Context InitializeContext(Unit source)
+    {
+        Context ctx = new Context();
+        ctx.Set("source", source);
+        return ctx;
+    }
 
     /// <summary>
     /// Create a default Context object that stores the source and recipient of an Event. This applies to the vast majority, but not all, of Event types.
@@ -30,6 +44,20 @@ public class EventManager : Singleton<EventManager>
         ctx.Set("source", source);
         ctx.Set("recipient", recipient);
         return ctx;
+    }
+
+    public void TurnBegin(Unit source)
+    {
+        Context ctx = InitializeContext(source);
+        Debug.Log($"{source.Data.name} started their turn.");
+        OnTurnBegin?.Invoke(ctx);
+    }
+    
+    public void TurnEnd(Unit source)
+    {
+        Context ctx = InitializeContext(source);
+        Debug.Log($"{source.Data.name} ended their turn.");
+        OnTurnEnd?.Invoke(ctx);
     }
 
     public void Damage(Unit source, Unit recipient, float amount)
@@ -56,18 +84,39 @@ public class EventManager : Singleton<EventManager>
 
     public void Buff(Unit source, Unit recipient, StatusEffectApplier effectApplier)
     {
+        Context ctx = InitializeContext(source, recipient);
+        ctx.Set("effect", effectApplier.name);
         Debug.Log($"{recipient.Data.name} was granted {effectApplier.name} for {effectApplier.duration} turns by {source.Data.name}.");
+        OnBuff?.Invoke(ctx);
     }
 
     public void Debuff(Unit source, Unit recipient, StatusEffectApplier effectApplier)
     {
+        Context ctx = InitializeContext(source, recipient);
+        ctx.Set("effect", effectApplier.name);
         Debug.Log($"{recipient.Data.name} was inflicted with {effectApplier.name} for {effectApplier.duration} turns by {source.Data.name}.");
+        OnDebuff?.Invoke(ctx);
     }
 
     public void Resist(Unit source, Unit recipient, StatusEffectApplier effectApplier)
     {
-        // CurrentResult.Append("resisted", recipient);
-
         Debug.Log($"{recipient.Data.name} Resisted {effectApplier.name} from {source.Data.name}.");
     }
+    
+    public void BuffClear(Unit source, Unit recipient, string effectName)
+    {
+        Context ctx = InitializeContext(source, recipient);
+        ctx.Set("effect", effectName);
+        Debug.Log($"{recipient.Data.name} was cleared of {effectName} by {source.Data.name}.");
+        OnBuff?.Invoke(ctx);
+    }
+
+    public void DebuffClear(Unit source, Unit recipient, string effectName)
+    {
+        Context ctx = InitializeContext(source, recipient);
+        ctx.Set("effect", effectName);
+        Debug.Log($"{recipient.Data.name} was cleared of {effectName} by {source.Data.name}.");
+        OnDebuff?.Invoke(ctx);
+    }
+
 }

@@ -67,7 +67,7 @@
         {
           "type": "AddStatusEffects",
           "recipientGroup": "Self",
-          "effects": [
+          "effectsToAdd": [
             {
               "name": "Taunt",
               "duration": 3,
@@ -82,7 +82,7 @@
           "recipientQuery": {
             "tags": ["Empire"]
           },
-          "effects": [
+          "effectsToAdd": [
             {
               "name": "Defense Buff",
               "duration": 3,
@@ -99,12 +99,13 @@
   "passiveAbilities": [
     {
       "name": "Wall of Stormtroopers",
-      "description": "Stormtrooper has +3 Physical Defense for every other Empire ally. Whenever Stormtrooper is attacked, all other Empire allies regenerate 5% TM.",
+      "description": "Stormtrooper has +2 Physical Defense and +2 Resistance for every other Empire ally. Whenever Stormtrooper is damaged while it has Taunt, all other Empire allies regenerate 10% TM.",
       "picture": "",
       "modifiers": [
         {
           "statsBonus": {
-            "physicalDefense": 3
+            "physicalDefense": 2,
+            "resistance": 2
           },
           "forEvery": "OtherAllies",
           "forEveryQuery": {
@@ -116,6 +117,9 @@
         {
           "onEvent": "Damage",
           "recipientGroup": "Self",
+          "recipientQuery": {
+            "effects": ["Taunt"]
+          },
           "actions": [
             {
               "type": "RegenerateTurnMeter",
@@ -123,7 +127,7 @@
               "recipientQuery": {
                 "tags": ["Empire"]
               },
-              "amount": 5
+              "amount": 10
             }
           ]
         }

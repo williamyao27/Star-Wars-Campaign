@@ -39,7 +39,7 @@
               [1]
             ],
             "stats": {
-              "damage": 38,
+              "damage": 40,
               "damageType": "Physical",
               "accuracy": 90,
               "armorPenetration": 0,
@@ -110,7 +110,7 @@
                 {
                   "type": "AddStatusEffects",
                   "recipientFromContext": "recipient",
-                  "effects": [
+                  "effectsToAdd": [
                     {
                       "name": "Evasion Debuff",
                       "duration": 2,
@@ -131,7 +131,7 @@
   "passiveAbilities": [
     {
       "name": "Reactive Protocol",
-      "description": "Whenever an opponent gains a Buff, Evades an attack from another Separatist ally, or damages another Separatist ally, Super Battle Droid has a 20% chance to regenerate 100% TM.",
+      "description": "Whenever an opponent Evades an attack from another Separatist ally or damages another Separatist ally, Super Battle Droid has a 20% chance to regenerate 100% TM.",
       "picture": "",
       "triggers": [
         {

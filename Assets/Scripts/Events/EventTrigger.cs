@@ -23,6 +23,14 @@ public class EventTrigger
 
         switch (onEvent)
         {
+            case EventType.TurnBegin:
+                EventManager.instance.OnTurnBegin += Execute;
+                break;
+
+            case EventType.TurnEnd:
+                EventManager.instance.OnTurnEnd += Execute;
+                break;
+
             case EventType.Damage:
                 EventManager.instance.OnDamage += Execute;
                 break;
@@ -33,6 +41,14 @@ public class EventTrigger
 
             case EventType.Evasion:
                 EventManager.instance.OnEvasion += Execute;
+                break;
+
+            case EventType.Buff:
+                EventManager.instance.OnBuff += Execute;
+                break;
+
+            case EventType.Debuff:
+                EventManager.instance.OnDebuff += Execute;
                 break;
 
             default:
@@ -49,6 +65,14 @@ public class EventTrigger
 
         switch (onEvent)
         {
+            case EventType.TurnBegin:
+                EventManager.instance.OnTurnBegin -= Execute;
+                break;
+
+            case EventType.TurnEnd:
+                EventManager.instance.OnTurnEnd -= Execute;
+                break;
+
             case EventType.Damage:
                 EventManager.instance.OnDamage -= Execute;
                 break;
@@ -59,6 +83,14 @@ public class EventTrigger
 
             case EventType.Evasion:
                 EventManager.instance.OnEvasion -= Execute;
+                break;
+
+            case EventType.Buff:
+                EventManager.instance.OnBuff -= Execute;
+                break;
+
+            case EventType.Debuff:
+                EventManager.instance.OnDebuff -= Execute;
                 break;
 
             default:
@@ -107,7 +139,7 @@ public class PassiveEventTrigger : EventTrigger
     }
 
     /// <summary>
-    /// Execute the actions associated with this event trigger if the context source and recipient fulfill all conditions.
+    /// Execute the actions associated with this event trigger if the context source and recipient (if they exist) fulfill all conditions.
     /// </summary>
     /// <param name="ctx">The context associated with the triggering event.</param>
     public override void Execute(Context ctx)
@@ -146,7 +178,11 @@ public class PassiveEventTrigger : EventTrigger
 
 public enum EventType
 {
+    TurnBegin,
+    TurnEnd,
     Damage,
     CriticalHit,
-    Evasion
+    Evasion,
+    Buff,
+    Debuff
 }

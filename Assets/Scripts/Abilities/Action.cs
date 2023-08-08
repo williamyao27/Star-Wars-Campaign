@@ -17,10 +17,18 @@ public class Action
     public string recipientFromContext;
     public UnitQuery recipientQuery;
 
-    // Action type-specific attributes
+    // Attack
     public AttackData attackData { get; set; }
+    
+    // Status Effect adding
+    public List<StatusEffectApplier> effectsToAdd = new List<StatusEffectApplier>();
+    
+    // Status Effect clearing
+    public List<string> effectsToRemove = new List<string>();
+    public bool natural;
+
+    // Regeneration
     public float amount;
-    public List<StatusEffectApplier> effects = new List<StatusEffectApplier>();
 
     /// <summary>
     /// Execute this Action within the context of the unit who is using it and the parent Action.
@@ -70,7 +78,11 @@ public class Action
                     break;
 
                 case ActionType.AddStatusEffects:
-                    GameManager.instance.AddStatusEffects(user, recipients, effects);
+                    GameManager.instance.AddStatusEffects(user, recipients, effectsToAdd);
+                    break;
+
+                case ActionType.RemoveStatusEffects:
+                    GameManager.instance.RemoveStatusEffects(user, recipients, effectsToRemove, natural);
                     break;
 
                 case ActionType.RegenerateHealth:
@@ -99,6 +111,7 @@ public enum ActionType
 {
     Attack,
     AddStatusEffects,
+    RemoveStatusEffects,
     RegenerateHealth,
     RegenerateTurnMeter
 }
