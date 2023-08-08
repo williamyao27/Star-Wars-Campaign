@@ -15,7 +15,7 @@ public class Unit : MonoBehaviour
     public int Col { get; set; }
     private float health;
     private float armor;
-    private float turnMeter;  // In percentage points, i.e. unit takes turn at turnMeter == 100f
+    private float turnMeter = 0f;  // In percentage points, i.e. unit takes turn at turnMeter == 100
     public List<ActiveAbility> ActiveAbilities { get; set; } = new List<ActiveAbility>();
     public List<PassiveAbility> PassiveAbilities { get; set; } = new List<PassiveAbility>();
     public List<StatusEffect> StatusEffects { get; set; } = new List<StatusEffect>();
@@ -31,7 +31,7 @@ public class Unit : MonoBehaviour
         }
     }
     
-    // Get current state from all modifiers
+    // Get current state from all Status Effects on this unit;
     public State CurrentState
     {
         get
@@ -75,7 +75,6 @@ public class Unit : MonoBehaviour
         // Stats
         health = CurrentStats.maxHealth;
         armor = CurrentStats.maxArmor;
-        turnMeter = 0f;
         
         // Active Abilities
         foreach (ActiveAbilityData abilityData in Data.activeAbilities)
@@ -223,6 +222,14 @@ public class Unit : MonoBehaviour
     #region Health
 
     /// <summary>
+    /// 
+    /// </summary>
+    private void Defeated()
+    {
+        GameManager.instance.MoveToDefeated(this);
+    }
+
+    /// <summary>
     /// Add to this unit's current Health.
     /// </summary>
     /// <param name="amount">Amount of Health to add.</param>
@@ -231,6 +238,12 @@ public class Unit : MonoBehaviour
         health += amount;
         health = Mathf.Clamp(health, 0f, CurrentStats.maxHealth);
         display.UpdateHealthArmorBar(health, CurrentStats.maxHealth, armor, CurrentStats.maxArmor);  // Visual
+
+        // Check if the unit's Health is depleted and they should therefore be defeated
+        if (health == 0f)
+        {
+            Defeated();
+        }
     }
 
     /// <summary>
@@ -247,6 +260,7 @@ public class Unit : MonoBehaviour
     #endregion
 
     #region Status Effects
+
     public List<StatusEffect> Buffs
     {
         get
@@ -295,12 +309,24 @@ public class Unit : MonoBehaviour
 
         StatusEffect effect = new StatusEffect(effectApplier.name, effectApplier.duration);  // Instantiate Status Effect
 
-        if (effect.Data.type == StatusEffectType.Debuff)
+        // Buff
+        if (effect.Data.type == StatusEffectType.Buff)
+        {
+            // Buff Block check
+            if (CurrentState.isBuffBlocked)
+            {
+                return;
+            }
+        }
+
+        // Debuff
+        else
         {
             // Resistance check
             int chanceToInflict = source.CurrentStats.potency - CurrentStats.resistance;
             if (!effectApplier.irresistible && !(UnityEngine.Random.Range(0, 100) < chanceToInflict))  // Effect is Resisted
             {
+                EventManager.instance.Resist(source, this, effectApplier);
                 return;
             }
         }
@@ -343,7 +369,7 @@ public class Unit : MonoBehaviour
     /// <summary>
     /// Decrements all Status Effects which were already present on the unit at the beginning of this turn.
     /// </summary>
-    public void DecrementStatusEffects()
+    private void DecrementStatusEffects()
     {
         foreach (StatusEffect effect in statusEffectsBeginTurn)
         {
@@ -361,12 +387,12 @@ public class Unit : MonoBehaviour
     /// <param name="source">The unit removing the Status Effect.</param>
     /// <param name="effect">The Status Effect instance to remove.</param>
     /// <param name="natural">Whether this is a natural removal, i.e. the effect expired or was cleared intrinsically.</param>
-    public void RemoveStatusEffect(Unit source, StatusEffect effect, bool natural)
+    private void RemoveStatusEffect(Unit source, StatusEffect effect, bool natural)
     {
         effect.OnRemove();  // Execute removal effects
         StatusEffects.Remove(effect);
 
-        // Broadcast if not a natural Status Effect removal (e.g. expired)
+        // Broadcast if not a natural Status Effect removal, i.e. it was cleared instead of expired
         if (!natural)
         {
             if (effect.Data.type == StatusEffectType.Buff)
@@ -411,6 +437,30 @@ public class Unit : MonoBehaviour
         }
         
         return null;
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="source"></param> <summary>
+    public void ClearAllBuffs(Unit source)
+    {
+        foreach (StatusEffect buff in Buffs)
+        {
+            RemoveStatusEffect(source, buff, false);
+        }
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="source"></param>
+    public void ClearAllDebuffs(Unit source)
+    {
+        foreach (StatusEffect debuff in Debuffs)
+        {
+            RemoveStatusEffect(source, debuff, false);
+        }
     }
 
     #endregion

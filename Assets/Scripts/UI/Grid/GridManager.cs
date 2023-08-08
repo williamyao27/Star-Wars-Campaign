@@ -176,14 +176,14 @@ public class GridManager : Singleton<GridManager>
     /// </summary>
     /// <param name="attackPattern">Attack pattern as a 2D array of weights.</param>
     /// <param name="teamNumber">The team whose half of the grid the target tile belongs to.</param>
-    /// <param name="patternCenterRow">The row index of the target tile.</param>
-    /// <param name="patternCenterCol">The column index of the target tile.</param>
+    /// <param name="patternAnchorRow">The row index of the target tile.</param>
+    /// <param name="patternAnchorCol">The column index of the target tile.</param>
     /// <param name="processTileAction">The action to perform with each tile and corresponding weight in the pattern.</param>
-    private void ProcessAttackPattern(float[,] attackPattern, int teamNumber, int patternCenterRow, int patternCenterCol, Action<Tile, float> processTileAction)
+    private void ProcessAttackPattern(float[,] attackPattern, int[] patternAnchor, int teamNumber, int patternAnchorRow, int patternAnchorCol, Action<Tile, float> processTileAction)
     {
         // Retrieve pattern dimensions
-        int patternWidth = attackPattern.GetLength(0);
-        int patternHeight = attackPattern.GetLength(1);
+        int patternHeight = attackPattern.GetLength(0);
+        int patternWidth = attackPattern.GetLength(1);
 
         // Traverse attack pattern
         for (int row = 0; row < patternHeight; row++)
@@ -191,13 +191,13 @@ public class GridManager : Singleton<GridManager>
             for (int col = 0; col < patternWidth; col++)
             {
                 // Compute which board tile the current attack pattern tile corresponds to
-                int projectedCol = patternCenterCol + col - patternWidth / 2;
-                int projectedRow = patternCenterRow + row - patternHeight / 2;
+                int projectedCol = patternAnchorCol + col - patternAnchor[0];
+                int projectedRow = patternAnchorRow + row - patternAnchor[1];
 
                 // Get damage weight on the current tile
                 float weight = attackPattern[row, col];
 
-                // If the projected tile coordinates are valid for the board, and the damage weight is non-zero...
+                // If the projected tile coordinates are valid for the board, and the damage weight is non-zero, process the given tile action
                 if (0 <= projectedCol && projectedCol < width && 0 <= projectedRow && projectedRow < height && weight > 0)
                 {
                     Tile projectedTile = grid[teamNumber, projectedRow, projectedCol];
@@ -212,14 +212,14 @@ public class GridManager : Singleton<GridManager>
     /// </summary>
     /// <param name="attackPattern">Attack pattern as a 2D array of weights.</param>
     /// <param name="teamNumber">The team whose half of the grid the target tile belongs to.</param>
-    /// <param name="patternCenterRow">The row index of the target tile.</param>
-    /// <param name="patternCenterCol">The column index of the target tile.</param>
+    /// <param name="patternAnchorRow">The row index of the target tile.</param>
+    /// <param name="patternAnchorCol">The column index of the target tile.</param>
     /// <returns>List of tuples where each tuple is a target unit and its corresponding damage weight.</returns>
-    public List<Tuple<Unit, float>> EvaluateAttackPattern(float[,] attackPattern, int teamNumber, int patternCenterRow, int patternCenterCol)
+    public List<Tuple<Unit, float>> EvaluateAttackPattern(float[,] attackPattern, int[] patternAnchor, int teamNumber, int patternAnchorRow, int patternAnchorCol)
     {
         List<Tuple<Unit, float>> targetWeights = new List<Tuple<Unit, float>>();
 
-        ProcessAttackPattern(attackPattern, teamNumber, patternCenterRow, patternCenterCol, (tile, weight) =>
+        ProcessAttackPattern(attackPattern, patternAnchor, teamNumber, patternAnchorRow, patternAnchorCol, (tile, weight) =>
             {
                 Unit projectedUnit = tile.Unit;
 
@@ -239,11 +239,11 @@ public class GridManager : Singleton<GridManager>
     /// </summary>
     /// <param name="attackPattern">Attack pattern as a 2D array of weights.</param>
     /// <param name="teamNumber">The team whose half of the grid the target tile belongs to.</param>
-    /// <param name="patternCenterRow">The row index of the target tile.</param>
-    /// <param name="patternCenterCol">The column index of the target tile.</param>
-    public void VisualizeAttackPattern(AttackData attackData, int teamNumber, int patternCenterRow, int patternCenterCol)
+    /// <param name="patternAnchorRow">The row index of the target tile.</param>
+    /// <param name="patternAnchorCol">The column index of the target tile.</param>
+    public void VisualizeAttackPattern(AttackData attackData, int teamNumber, int patternAnchorRow, int patternAnchorCol)
     {
-        ProcessAttackPattern(attackData.pattern, teamNumber, patternCenterRow, patternCenterCol, (tile, weight) =>
+        ProcessAttackPattern(attackData.pattern, attackData.patternAnchor, teamNumber, patternAnchorRow, patternAnchorCol, (tile, weight) =>
         {
             tile.SetWeightHighlight(weight);
         });

@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// This class stores the state of a unit that defines what behaviors it may perform. By default, all attributes are false.
+/// This class stores the state of a unit that defines what behaviors it may perform. By default, all attributes are false and they may only be changed by Status Effects.
 /// </summary>
 public class State
 {
     public bool skipTurn;
     public bool isTaunting;
+    public bool isBuffBlocked;
 
     /// <summary>
     /// Apply the list of Status Effects to this state. If a particular attribute is set to true by any Status Effect, it will remain true regardless of all other Status Effects.
@@ -25,6 +26,7 @@ public class State
             {
                 state.skipTurn |= effect.Data.stateModifier.skipTurn;
                 state.isTaunting |= effect.Data.stateModifier.isTaunting;
+                state.isBuffBlocked |= effect.Data.stateModifier.isBuffBlocked;
             }
         }
 

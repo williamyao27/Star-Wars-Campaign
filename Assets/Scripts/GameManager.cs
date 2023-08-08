@@ -18,7 +18,9 @@ public class GameManager : Singleton<GameManager>
         }
     }
     public List<Unit> Team0 { get; set; } = new List<Unit>();
+    public List<Unit> Team0Defeated { get; set; } = new List<Unit>();
     public List<Unit> Team1 { get; set; } = new List<Unit>();
+    public List<Unit> Team1Defeated { get; set; } = new List<Unit>();
     private Unit currentTurn;
 
     // Input
@@ -32,9 +34,11 @@ public class GameManager : Singleton<GameManager>
     {
         #region TENTATIVE - should NOT create team here
         AddUnit("Stormtrooper", 0, 0, 0);
-        AddUnit("Stormtrooper", 0, 0, 1);
+        AddUnit("B2 Super Battle Droid", 0, 0, 1);
+        AddUnit("Stormtrooper", 0, 0, 2);
+        AddUnit("B2 Super Battle Droid", 0, 0, 3);
+        AddUnit("Stormtrooper", 0, 0, 4);
         AddUnit("Anakin Skywalker (Young)", 1, 0, 0);
-        AddUnit("B2 Super Battle Droid", 1, 0, 1);
         #endregion
         
         StartBattle();
@@ -56,6 +60,18 @@ public class GameManager : Singleton<GameManager>
     {
         List<Unit> teamToAdd = (teamNumber == 0) ? Team0 : Team1;
         teamToAdd.Add(UnitFactory.instance.CreateUnit(name, teamNumber, row, col));  // Append to the proper team
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="unit"></param>
+    public void MoveToDefeated(Unit unit)
+    {
+        List<Unit> currentTeam = (unit.TeamNumber == 0) ? Team0 : Team1;
+        List<Unit> defeatedTeam = (unit.TeamNumber == 0) ? Team0Defeated : Team1Defeated;
+        currentTeam.Remove(unit);
+        defeatedTeam.Add(unit);
     }
 
     /// <summary>
@@ -292,7 +308,7 @@ public class GameManager : Singleton<GameManager>
     public void Attack(Unit source, AttackData attackData)
     {
         // Determine list of targets
-        List<Tuple<Unit, float>> targetWeights = GridManager.instance.EvaluateAttackPattern(attackData.pattern, targetTileTeam, targetTileRow, targetTileCol);
+        List<Tuple<Unit, float>> targetWeights = GridManager.instance.EvaluateAttackPattern(attackData.pattern, attackData.patternAnchor, targetTileTeam, targetTileRow, targetTileCol);
 
         // Evaluate attack against each target separately
         foreach (Tuple<Unit, float> targetWeight in targetWeights)
@@ -324,14 +340,30 @@ public class GameManager : Singleton<GameManager>
         }
     }
 
+    public void ClearAllBuffs(Unit source, List<Unit> recipients)
+    {
+        foreach (Unit recipient in recipients)
+        {
+            recipient.ClearAllBuffs(source);
+        }
+    }
+
+    public void ClearAllDebuffs(Unit source, List<Unit> recipients)
+    {
+        foreach (Unit recipient in recipients)
+        {
+            recipient.ClearAllDebuffs(source);
+        }
+    }
+
     /// <summary>
-    /// Removes the given Status Effects from all recipient units by name.
+    /// Clears the given Status Effects from all recipient units by name.
     /// </summary>
     /// <param name="source">The unit removing the Status Effects.</param>
     /// <param name="recipients">The list of receiving units.</param>
-    /// <param name="effects">The list of Status Effects, by name, to remove from each recipient.</param>
-    /// <param name="natural">Whether the removal should be considered natural (e.g. Foresight cleared on next Evasion).</param>
-    public void RemoveStatusEffectsByName(Unit source, List<Unit> recipients, List<string> effects, bool natural)
+    /// <param name="effects">The list of Status Effects, by name, to clear from each recipient.</param>
+    /// <param name="natural">Whether the clearing should be considered natural (e.g. Foresight cleared on next Evasion).</param>
+    public void ClearStatusEffectsByName(Unit source, List<Unit> recipients, List<string> effects, bool natural)
     {
         foreach (Unit recipient in recipients)
         {
