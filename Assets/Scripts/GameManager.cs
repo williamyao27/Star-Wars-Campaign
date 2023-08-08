@@ -18,7 +18,9 @@ public class GameManager : Singleton<GameManager>
         }
     }
     public List<Unit> Team0 { get; set; } = new List<Unit>();
+    public List<Unit> Team0Defeated { get; set; } = new List<Unit>();
     public List<Unit> Team1 { get; set; } = new List<Unit>();
+    public List<Unit> Team1Defeated { get; set; } = new List<Unit>();
     private Unit currentTurn;
 
     // Input
@@ -58,6 +60,18 @@ public class GameManager : Singleton<GameManager>
     {
         List<Unit> teamToAdd = (teamNumber == 0) ? Team0 : Team1;
         teamToAdd.Add(UnitFactory.instance.CreateUnit(name, teamNumber, row, col));  // Append to the proper team
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="unit"></param>
+    public void MoveToDefeated(Unit unit)
+    {
+        List<Unit> currentTeam = (unit.TeamNumber == 0) ? Team0 : Team1;
+        List<Unit> defeatedTeam = (unit.TeamNumber == 0) ? Team0Defeated : Team1Defeated;
+        currentTeam.Remove(unit);
+        defeatedTeam.Add(unit);
     }
 
     /// <summary>

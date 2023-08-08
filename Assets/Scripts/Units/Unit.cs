@@ -15,8 +15,7 @@ public class Unit : MonoBehaviour
     public int Col { get; set; }
     private float health;
     private float armor;
-    private float turnMeter = 0f;  // In percentage points, i.e. unit takes turn at turnMeter == 100f
-    private bool isDead = false;
+    private float turnMeter = 0f;  // In percentage points, i.e. unit takes turn at turnMeter == 100
     public List<ActiveAbility> ActiveAbilities { get; set; } = new List<ActiveAbility>();
     public List<PassiveAbility> PassiveAbilities { get; set; } = new List<PassiveAbility>();
     public List<StatusEffect> StatusEffects { get; set; } = new List<StatusEffect>();
@@ -223,6 +222,14 @@ public class Unit : MonoBehaviour
     #region Health
 
     /// <summary>
+    /// 
+    /// </summary>
+    private void Defeated()
+    {
+        GameManager.instance.MoveToDefeated(this);
+    }
+
+    /// <summary>
     /// Add to this unit's current Health.
     /// </summary>
     /// <param name="amount">Amount of Health to add.</param>
@@ -231,6 +238,12 @@ public class Unit : MonoBehaviour
         health += amount;
         health = Mathf.Clamp(health, 0f, CurrentStats.maxHealth);
         display.UpdateHealthArmorBar(health, CurrentStats.maxHealth, armor, CurrentStats.maxArmor);  // Visual
+
+        // Check if the unit's Health is depleted and they should therefore be defeated
+        if (health == 0f)
+        {
+            Defeated();
+        }
     }
 
     /// <summary>
@@ -247,6 +260,7 @@ public class Unit : MonoBehaviour
     #endregion
 
     #region Status Effects
+
     public List<StatusEffect> Buffs
     {
         get
@@ -312,6 +326,7 @@ public class Unit : MonoBehaviour
             int chanceToInflict = source.CurrentStats.potency - CurrentStats.resistance;
             if (!effectApplier.irresistible && !(UnityEngine.Random.Range(0, 100) < chanceToInflict))  // Effect is Resisted
             {
+                EventManager.instance.Resist(source, this, effectApplier);
                 return;
             }
         }
