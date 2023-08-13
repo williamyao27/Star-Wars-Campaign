@@ -1,7 +1,6 @@
 {
   "name": "Anakin Skywalker (Young)",
   "description": "",
-  "picture": "",
   "source": "",
   "type": "Infantry",
   "terrain": "Ground",
@@ -12,7 +11,7 @@
   ],
   "cover": false,
   "stats": {
-    "maxHealth": 150,
+    "maxHealth": 50,
     "maxArmor": 0,
     "physicalDefense": 10,
     "specialDefense": 15,
@@ -27,7 +26,6 @@
     {
       "name": "Zap!",
       "description": "Deals Physical Damage to target enemy and inflicts Stun for 1 turn on a Critical Hit. This attack has +20 Crit Chance against Droids.",
-      "picture": "",
       "maxCooldown": 0,
       "startOnCooldown": false,
       "requiredInput": "TargetEnemyTile",
@@ -44,7 +42,7 @@
               "damageType": "Physical",
               "accuracy": 90,
               "armorPenetration": 0,
-              "critChance": 12,
+              "critChance": 18,
               "critDamage": 1.5
             },
             "range": 1,
@@ -65,7 +63,7 @@
           },
           "triggers": [
             {
-              "onEvent": "CriticalHit",
+              "onEvents": ["CriticalHit"],
               "actions": [
                 {
                   "type": "AddStatusEffects",
@@ -88,7 +86,6 @@
     {
       "name": "Thank the Maker!",
       "description": "All Droid allies regenerate 50 Health and 20% TM.",
-      "picture": "",
       "maxCooldown": 3,
       "startOnCooldown": false,
       "actions": [
@@ -117,10 +114,9 @@
     {
       "name": "Podracer Reflexes",
       "description": "At the start of each of his turns, Anakin has a 50% chance to be granted Foresight for 1 turn.",
-      "picture": "",
       "triggers": [
         {
-          "onEvent": "TurnBegin",
+          "onEvents": ["TurnBegin"],
           "sourceGroup": "Self",
           "actions": [
             {
@@ -130,7 +126,7 @@
                 {
                   "name": "Foresight",
                   "duration": 1,
-                  "chance": 50
+                  "chance": 0
                 }
               ]
             }

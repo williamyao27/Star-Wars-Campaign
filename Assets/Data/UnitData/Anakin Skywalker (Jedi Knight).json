@@ -1,0 +1,182 @@
+{
+  "name": "Anakin Skywalker (Jedi Knight)",
+  "description": "",
+  "source": "",
+  "type": "Infantry",
+  "terrain": "Ground",
+  "role": "Attacker",
+  "tags": [
+    "Organic",
+    "ForceSensitive",
+    "Republic",
+    "Jedi",
+    "501st"
+  ],
+  "cover": false,
+  "stats": {
+    "maxHealth": 200,
+    "maxArmor": 0,
+    "physicalDefense": 20,
+    "specialDefense": 15,
+    "speed": 90,
+    "evasion": 10,
+    "resistance": 10,
+    "potency": 110
+  },
+
+
+  "activeAbilities": [
+    {
+      "name": "Furious Slash",
+      "description": "Deals Physical Damage to target enemy with a 50% chance to inflict Heal Block and a 50% chance to inflict Buff Block, both for 2 turns.",
+      "maxCooldown": 0,
+      "startOnCooldown": false,
+      "requiredInput": "TargetEnemyTile",
+      "actions": [
+        {
+          "type": "Attack",
+          "attackData": {
+            "pattern": [
+              [1]
+            ],
+            "patternAnchor": [0, 0],
+            "stats": {
+              "damage": 38,
+              "damageType": "Physical",
+              "accuracy": 100,
+              "armorPenetration": 0.75,
+              "critChance": 18,
+              "critDamage": 1.5
+            },
+            "range": 1,
+            "lineOfFire": "Contact",
+            "lineOfFireModifiers": [],
+            "precision": "Strict",
+            "targetableTerrains": ["Ground"]
+          },
+          "triggers": [
+            {
+              "onEvents": ["Damage"],
+              "actions": [
+                {
+                  "type": "AddStatusEffects",
+                  "recipientFromContext": "recipient",
+                  "effectAppliers": [
+                    {
+                      "name": "Buff Block",
+                      "duration": 2,
+                      "chance": 50
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "name": "Retribution",
+      "description": "Deals Special Damage to target enemies.",
+      "maxCooldown": 4,
+      "startOnCooldown": false,
+      "requiredInput": "TargetEnemyTile",
+      "actions": [
+        {
+          "type": "Attack",
+          "attackData": {
+            "pattern": [
+              [1],
+              [0.75],
+              [0.5]
+            ],
+            "patternAnchor": [0, 0],
+            "stats": {
+              "damage": 55,
+              "damageType": "Special",
+              "accuracy": 100,
+              "armorPenetration": 0.5,
+              "critChance": 15,
+              "critDamage": 1.5
+            },
+            "range": 2,
+            "lineOfFire": "Contact",
+            "lineOfFireModifiers": [],
+            "precision": "Area",
+            "targetableTerrains": ["Ground", "Aerial"]
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Reckless Assault",
+      "description": "Deals Physical Damage to target enemy.",
+      "maxCooldown": 4,
+      "startOnCooldown": false,
+      "requiredInput": "TargetEnemyTile",
+      "actions": [
+        {
+          "type": "Attack",
+          "attackData": {
+            "pattern": [
+              [1]
+            ],
+            "patternAnchor": [0, 0],
+            "stats": {
+              "damage": 114,
+              "damageType": "Physical",
+              "accuracy": 90,
+              "armorPenetration": 0.75,
+              "critChance": 28,
+              "critDamage": 1.5
+            },
+            "range": 1,
+            "lineOfFire": "Contact",
+            "lineOfFireModifiers": [],
+            "precision": "Strict",
+            "targetableTerrains": ["Ground"]
+          }
+        }
+      ]
+    }
+  ],
+
+
+  "passiveAbilities": [
+    {
+      "name": "The Chosen One",
+      "description": "Whenever another ally is brought below half-health or defeated, Anakin regenerates 100% TM, has all cooldowns reset, and gains Offense Buff, Speed Buff, and Retaliation for 2 turns.",
+      "triggers": [
+        {
+          "onEvents": ["HalfHealth", "Defeat"],
+          "recipientGroup": "OtherAllies",
+          "actions": [
+            {
+              "type": "RegenerateTurnMeter",
+              "recipientGroup": "Self",
+              "amount": 100
+            },
+            {
+              "type": "AddStatusEffects",
+              "recipientGroup": "Self",
+              "effectAppliers": [
+                {
+                  "name": "Offense Buff",
+                  "duration": 2,
+                  "chance": 100
+                },
+                {
+                  "name": "Speed Buff",
+                  "duration": 2,
+                  "chance": 100
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

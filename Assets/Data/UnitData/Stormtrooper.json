@@ -1,7 +1,6 @@
 {
   "name": "Stormtrooper",
   "description": "",
-  "picture": "",
   "source": "",
   "type": "Infantry",
   "terrain": "Ground",
@@ -28,7 +27,6 @@
     {
       "name": "Imperial Marksmanship",
       "description": "Deals Physical Damage to target enemy.",
-      "picture": "",
       "maxCooldown": 0,
       "startOnCooldown": false,
       "requiredInput": "TargetEnemyTile",
@@ -41,11 +39,11 @@
             ],
             "patternAnchor": [0, 0],
             "stats": {
-              "damage": 34,
+              "damage": 36,
               "damageType": "Physical",
               "accuracy": 85,
               "armorPenetration": 0,
-              "critChance": 8,
+              "critChance": 15,
               "critDamage": 1.5
             },
             "range": 2,
@@ -61,7 +59,6 @@
     {
       "name": "Stormtrooper Bravado",
       "description": "Stormtrooper gains Taunt for 3 turns and all Empire allies gain Defense Buff for 3 turns.",
-      "picture": "",
       "maxCooldown": 4,
       "startOnCooldown": false,
       "actions": [
@@ -98,8 +95,7 @@
   "passiveAbilities": [
     {
       "name": "Wall of Stormtroopers",
-      "description": "Stormtrooper has +2 Physical Defense and +2 Resistance for every other Empire ally. Whenever Stormtrooper is damaged while it has Taunt, all other Empire allies regenerate 10% TM.",
-      "picture": "",
+      "description": "Stormtrooper has +2 Physical Defense and +2 Resistance for every other Empire ally. Whenever Stormtrooper is damaged while he has Taunt, all other Empire allies regenerate 10% TM.",
       "modifiers": [
         {
           "statsBonus": {
@@ -114,7 +110,7 @@
       ],
       "triggers": [
         {
-          "onEvent": "Damage",
+          "onEvents": ["Damage"],
           "recipientGroup": "Self",
           "recipientQuery": {
             "effects": ["Taunt"]

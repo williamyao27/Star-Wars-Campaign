@@ -1,0 +1,31 @@
+{
+  "name": "Neimoidian Guard",
+  "description": "",
+  "source": "",
+  "type": "Infantry",
+  "terrain": "Ground",
+  "role": "Tank",
+  "tags": [
+    "Organic",
+    "Separatist"
+  ],
+  "cover": false,
+  "stats": {
+    "maxHealth": 250,
+    "maxArmor": 250,
+    "physicalDefense": 15,
+    "specialDefense": 15,
+    "speed": 54,
+    "evasion": 5,
+    "resistance": 5,
+    "potency": 95
+  },
+
+
+  "activeAbilities": [
+  ],
+
+
+  "passiveAbilities": [
+  ]
+}

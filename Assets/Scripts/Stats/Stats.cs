@@ -103,5 +103,3 @@ public class Stats
         return modifiedStats;
     }
 }
-
-// Note that the Tag enum is stored in a separate file.

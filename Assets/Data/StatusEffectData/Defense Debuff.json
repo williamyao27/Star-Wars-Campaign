@@ -1,8 +1,7 @@
 {
   "name": "Defense Debuff",
   "description": "-15 Physical and Special Defense.",
-  "picture": "",
-  "type": "Debuff",
+    "type": "Debuff",
   "modifiers": [
     {
       "statsBonus": {

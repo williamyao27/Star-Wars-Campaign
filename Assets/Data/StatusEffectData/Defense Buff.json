@@ -1,7 +1,7 @@
 {
   "name": "Defense Buff",
   "description": "+15 Physical and Special Defense.",
-  "picture": "",
+  "": "",
   "type": "Buff",
   "modifiers": [
     {

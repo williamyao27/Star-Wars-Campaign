@@ -1,7 +1,6 @@
 {
   "name": "Stun",
   "description": ".",
-  "picture": "",
   "type": "Debuff",
   "statsModifier": {
     "evasion": -100

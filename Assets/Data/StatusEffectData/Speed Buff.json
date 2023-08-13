@@ -1,11 +1,11 @@
 {
-  "name": "Evasion Debuff",
-  "description": "-15 Evasion.",
-  "type": "Debuff",
+  "name": "Speed Buff",
+  "description": "+25 Speed.",
+  "type": "Buff",
   "modifiers": [
     {
-      "statsBonus": {
-        "evasion": -15
+      "attackBonus": {
+        "speed": 25
       }
     }
   ],

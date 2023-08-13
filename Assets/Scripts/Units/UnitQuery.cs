@@ -8,7 +8,7 @@ using System.Collections.Generic;
 [Serializable]
 public class UnitQuery
 {
-    public List<Tag> tags = new List<Tag>();
+    public List<string> tags = new List<string>();
     public List<string> effects = new List<string>();
 
     /// <summary>
