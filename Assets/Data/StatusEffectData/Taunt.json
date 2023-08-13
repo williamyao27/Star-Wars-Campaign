@@ -1,7 +1,6 @@
 {
   "name": "Taunt",
   "description": ".",
-  "picture": "",
   "type": "Buff",
   "stateModifier": {
     "isTaunting": true

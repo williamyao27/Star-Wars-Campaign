@@ -168,6 +168,7 @@ public class Unit : MonoBehaviour
         // Broadcast
         EventManager.instance.TurnBegin(this);
 
+        // Return whether to immediately skip this turn (e.g. unit is Stunned)
         return CurrentState.skipTurn;
     }
 
@@ -221,11 +222,22 @@ public class Unit : MonoBehaviour
 
     #region Health
 
-    /// <summary>
-    /// 
-    /// </summary>
-    private void Defeated()
+    // Evaluate whether this unit is above half-health.
+    public bool IsAboveHalfHealth
     {
+        get
+        {
+            return health >= CurrentStats.maxHealth * 0.5f;
+        }
+    }
+
+    /// <summary>
+    /// Defeat this unit.
+    /// </summary>
+    private void Defeated(Unit source)
+    {
+        turnMeter = 0f;  // TODO: Remove
+        EventManager.instance.Defeat(source, this);
         GameManager.instance.MoveToDefeated(this);
     }
 
@@ -233,16 +245,24 @@ public class Unit : MonoBehaviour
     /// Add to this unit's current Health.
     /// </summary>
     /// <param name="amount">Amount of Health to add.</param>
-    public void AddHealth(float amount)
+    public void AddHealth(Unit source, float amount)
     {
+        bool wasAboveHalfHealth = IsAboveHalfHealth;
+
         health += amount;
         health = Mathf.Clamp(health, 0f, CurrentStats.maxHealth);
         display.UpdateHealthArmorBar(health, CurrentStats.maxHealth, armor, CurrentStats.maxArmor);  // Visual
 
+        // Braodcast if this unit was brought below half-health by the change
+        if (!IsAboveHalfHealth && wasAboveHalfHealth)
+        {
+            EventManager.instance.HalfHealth(source, this);
+        }
+
         // Check if the unit's Health is depleted and they should therefore be defeated
         if (health == 0f)
         {
-            Defeated();
+            Defeated(source);
         }
     }
 
@@ -255,6 +275,73 @@ public class Unit : MonoBehaviour
         armor += amount;
         armor = Mathf.Clamp(armor, 0f, CurrentStats.maxArmor);
         display.UpdateHealthArmorBar(health, CurrentStats.maxHealth, armor, CurrentStats.maxArmor);  // Visual
+    }
+
+    #endregion
+
+    #region Attacks & Damage
+
+    /// <summary>
+    /// Performs the given attack against this unit and records the result.
+    /// </summary>
+    /// <param name="source">The unit performing the attack.</param>
+    /// <param name="attackData">The given attack.</param>
+    /// <param name="weight">The weight by which to multiply the attack's damage.</param>
+    public void ReceiveAttack(Unit source, AttackData attackData, float weight)
+    {
+        // Terrain check; if the attack cannot strike the unit's terrain, ignore it completely
+        if (!IsTargetableTerrain(attackData))
+        {
+            return;
+        }
+
+        // Get current attack stats
+        AttackStats currentAttackStats = attackData.stats.ApplyModifiers(source, this, attackData.modifiers);
+
+        // Evasion check
+        int chanceToHit = currentAttackStats.accuracy - CurrentStats.evasion;
+        if (UnityEngine.Random.Range(0, 100) < chanceToHit)  // Attack hits
+        {
+            float rawDamage = currentAttackStats.damage * (currentAttackStats.offense + 1f) * weight;  // Notice Offense is zero-anchored; i.e. no modifiers means coefficient of 1
+
+            // Critical Hit check
+            int chanceToCrit = currentAttackStats.critChance - CurrentStats.critAvoidance;
+            if (UnityEngine.Random.Range(0, 100) < chanceToCrit)
+            {
+                // Attack is a Critical Hit
+                rawDamage *= currentAttackStats.critDamage;
+                EventManager.instance.CriticalHit(source, this);
+            }
+
+            ReceiveDamage(source, rawDamage, attackData.damageType, currentAttackStats.armorPenetration);
+        }
+        else  // Attack is Evaded
+        {
+            EventManager.instance.Evasion(source, this);
+        }
+    }
+
+    /// <summary>
+    /// Deals the given amount of damage to this unit.
+    /// </summary>
+    /// <param name="rawAmount">The raw amount of Damage from the attack (post-Critical Hit and Offense modifiers on the attacker, but pre-Defense reduction from the target).</param>
+    /// <param name="type">The attack's Damage Type.</param>
+    /// <param name="armorPenetration">The attack's Armor Penetration.</param>
+    /// <returns>The total amount of Damage dealt (bounded above by how much remaining Health and Armor the unit had.</returns>
+    private void ReceiveDamage(Unit source, float rawAmount, DamageType type, float armorPenetration)
+    {
+        // Compute reduction from Defense
+        float selectedDefense = (type == DamageType.Physical) ? CurrentStats.physicalDefense : CurrentStats.specialDefense;
+        float amount = rawAmount * (1f - selectedDefense / 100f);  // Represents total post-Defense damage without considering the remaining values of those stats for this unit
+        
+        // Determine what proportion of damage should go to Armor and Health
+        float amountToArmor = Mathf.Min(amount * (1f - armorPenetration), armor);
+        float amountToHealth = Mathf.Min(health, amount - amountToArmor);
+        AddHealth(source, amountToHealth * -1f);
+        AddArmor(amountToArmor * -1f);
+
+        // Broadcast
+        EventManager.instance.Damage(source, this, amountToHealth + amountToArmor);
     }
 
     #endregion
@@ -480,72 +567,6 @@ public class Unit : MonoBehaviour
 
     #endregion
 
-    #region Attacks & Damage
-
-    /// <summary>
-    /// Performs the given attack against this unit and records the result.
-    /// </summary>
-    /// <param name="source">The unit performing the attack.</param>
-    /// <param name="attackData">The given attack.</param>
-    /// <param name="weight">The weight by which to multiply the attack's damage.</param>
-    public void ReceiveAttack(Unit source, AttackData attackData, float weight)
-    {
-        // Terrain check; if the attack cannot strike the unit's terrain, ignore it completely
-        if (!IsTargetableTerrain(attackData))
-        {
-            return;
-        }
-
-        // Get current attack stats (adding modifiers based on the attacker and the target)
-        AttackStats currentAttackStats = attackData.stats.ApplyModifiers(source, this, attackData.modifiers);
-
-        // Evasion check
-        int chanceToHit = currentAttackStats.accuracy - CurrentStats.evasion;
-        if (UnityEngine.Random.Range(0, 100) < chanceToHit)  // Attack hits
-        {
-            float rawDamage = currentAttackStats.damage * (currentAttackStats.offense + 1f) * weight;  // Notice Offense is zero-anchored; i.e. no modifiers means coefficient of 1
-
-            // Critical Hit check
-            int chanceToCrit = currentAttackStats.critChance - CurrentStats.critAvoidance;
-            if (UnityEngine.Random.Range(0, 100) < chanceToCrit)
-            {
-                // Attack is a Critical Hit
-                rawDamage *= currentAttackStats.critDamage;
-                EventManager.instance.CriticalHit(source, this);
-            }
-
-            float damageDealt = ReceiveDamage(rawDamage, attackData.damageType, currentAttackStats.armorPenetration);
-            EventManager.instance.Damage(source, this, damageDealt);
-        }
-        else  // Attack is Evaded
-        {
-            EventManager.instance.Evasion(source, this);
-        }
-    }
-
-    /// <summary>
-    /// Deals the given amount of damage to this unit.
-    /// </summary>
-    /// <param name="rawAmount">The raw amount of Damage from the attack (post-Critical Hit and Offense modifiers on the attacker, but pre-Defense reduction from the target).</param>
-    /// <param name="type">The attack's Damage Type.</param>
-    /// <param name="armorPenetration">The attack's Armor Penetration.</param>
-    /// <returns>The total amount of Damage dealt (bounded above by how much remaining Health and Armor the unit had.</returns>
-    private float ReceiveDamage(float rawAmount, DamageType type, float armorPenetration)
-    {
-        // Compute reduction from Defense
-        float selectedDefense = (type == DamageType.Physical) ? CurrentStats.physicalDefense : CurrentStats.specialDefense;
-        float amount = rawAmount * (1f - selectedDefense / 100f);  // Represents total post-Defense damage without considering the remaining values of those stats for this unit
-        
-        // Determine what proportion of damage should go to Armor and Health
-        float amountToArmor = Mathf.Min(amount * (1f - armorPenetration), armor);
-        float amountToHealth = Mathf.Min(health, amount - amountToArmor);
-        AddHealth(amountToHealth * -1f);
-        AddArmor(amountToArmor * -1f);
-        return amountToHealth + amountToArmor;
-    }
-
-    #endregion
-
     #region Queries
 
     /// <summary>
@@ -563,9 +584,9 @@ public class Unit : MonoBehaviour
     /// </summary>
     /// <param name="tags">A list of the tags the unit must have.</param>
     /// <returns>Whether the unit has all of the given tags.</returns>
-    public bool HasTags(List<Tag> tags)
+    public bool HasTags(List<string> tags)
     {
-        foreach (Tag tag in tags)
+        foreach (string tag in tags)
         {
             if (!Data.tags.Contains(tag))
             {
@@ -575,6 +596,11 @@ public class Unit : MonoBehaviour
         return true;
     }
 
+    /// <summary>
+    /// Queries whether this unit has all of the given Status Effects.
+    /// </summary>
+    /// <param name="effects">A list of the status effects, by name the unit must have.</param>
+    /// <returns>Whether the unit has all of the given effects.</returns>
     public bool HasEffects(List<string> effects)
     {
         foreach (string effectName in effects)
@@ -596,6 +622,16 @@ public class Unit : MonoBehaviour
             }
         }
         return true;
+    }
+
+    /// <summary>
+    /// Queries whether this unit is in given region of health.
+    /// </summary>
+    /// <param name="above">Whether the health region is above half (if not, then it must be below half).</param>
+    /// <returns>Whether the unit is in the given region of health.</returns>
+    public bool InHealthRegion(bool above)
+    {
+        return (above && IsAboveHalfHealth) || (!above && !IsAboveHalfHealth);
     }
 
     #endregion

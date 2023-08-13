@@ -1,7 +1,6 @@
 {
   "name": "Buff Block",
   "description": ".",
-  "picture": "",
   "type": "Debuff",
   "stateModifier": {
     "isBuffBlocked": true

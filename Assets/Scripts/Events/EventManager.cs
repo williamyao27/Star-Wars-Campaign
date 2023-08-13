@@ -22,6 +22,8 @@ public class EventManager : Singleton<EventManager>
     public event BattleEvent OnResist;
     public event BattleEvent OnBuffClear;
     public event BattleEvent OnDebuffClear;
+    public event BattleEvent OnHalfHealth;
+    public event BattleEvent OnDefeat;
 
     /// <summary>
     /// Create a default Context object that stores the source of an Event. This applies to some Event types.
@@ -71,18 +73,18 @@ public class EventManager : Singleton<EventManager>
         OnDamage?.Invoke(ctx);
     }
 
-    public void CriticalHit(Unit source, Unit recipient)
-    {
-        Context ctx = InitializeContext(source, recipient);
-        Debug.Log($"{recipient.Data.name} received a Critical Hit from {source.Data.name}.");
-        OnCriticalHit?.Invoke(ctx);
-    }
-
     public void Evasion(Unit source, Unit recipient)
     {
         Context ctx = InitializeContext(source, recipient);
         Debug.Log($"{recipient.Data.name} Evaded an attack from {source.Data.name}.");
         OnEvasion?.Invoke(ctx);
+    }
+
+    public void CriticalHit(Unit source, Unit recipient)
+    {
+        Context ctx = InitializeContext(source, recipient);
+        Debug.Log($"{recipient.Data.name} received a Critical Hit from {source.Data.name}.");
+        OnCriticalHit?.Invoke(ctx);
     }
 
     public void Buff(Unit source, Unit recipient, StatusEffectApplier effectApplier)
@@ -125,4 +127,17 @@ public class EventManager : Singleton<EventManager>
         OnDebuffClear?.Invoke(ctx);
     }
 
+    public void HalfHealth(Unit source, Unit recipient)
+    {
+        Context ctx = InitializeContext(source, recipient);
+        Debug.Log($"{recipient.Data.name} was brought below half-health by {source.Data.name}.");
+        OnHalfHealth?.Invoke(ctx);
+    }
+
+    public void Defeat(Unit source, Unit recipient)
+    {
+        Context ctx = InitializeContext(source, recipient);
+        Debug.Log($"{recipient.Data.name} was defeated by {source.Data.name}.");
+        OnDefeat?.Invoke(ctx);
+    }
 }

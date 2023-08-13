@@ -1,7 +1,6 @@
 {
   "name": "Offense Buff",
-  "description": "+50% Offense.",
-  "picture": "",
+  "description": "+50% Offense on all attacks.",
   "type": "Buff",
   "modifiers": [
     {

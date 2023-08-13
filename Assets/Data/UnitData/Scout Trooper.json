@@ -1,0 +1,103 @@
+{
+  "name": "Scout Trooper",
+  "description": "",
+  "source": "",
+  "type": "Infantry",
+  "terrain": "Ground",
+  "role": "Support",
+  "tags": [
+    "Organic",
+    "Empire",
+    "Trooper"
+  ],
+  "cover": false,
+  "stats": {
+    "maxHealth": 150,
+    "maxArmor": 50,
+    "physicalDefense": 15,
+    "specialDefense": 15,
+    "speed": 101,
+    "evasion": 15,
+    "resistance": 10,
+    "potency": 95
+  },
+
+  
+  "activeAbilities": [
+    {
+      "name": "Blaster Pistol",
+      "description": "Deals Physical Damage to target enemy. If the target had Expose, inflict Expose for 1 turn.",
+      "maxCooldown": 0,
+      "startOnCooldown": false,
+      "requiredInput": "TargetEnemyTile",
+      "actions": [
+        {
+          "type": "Attack",
+          "attackData": {
+            "pattern": [
+              [1]
+            ],
+            "patternAnchor": [0, 0],
+            "stats": {
+              "damage": 27,
+              "damageType": "Physical",
+              "accuracy": 100,
+              "armorPenetration": 0,
+              "critChance": 15,
+              "critDamage": 1.5
+            },
+            "range": 2,
+            "lineOfFire": "Contact",
+            "lineOfFireModifiers": [],
+            "precision": "Strict",
+            "targetableTerrains": ["Ground", "Aerial"]
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Strategic Assessment",
+      "description": "All allies regenerate 20% TM and Empire allies gain Accuracy Buff for 2 turns.",
+      "maxCooldown": 4,
+      "startOnCooldown": false,
+      "actions": [
+        {
+          "type": "RegenerateTurnMeter",
+          "recipientGroup": "Allies",
+          "amount": 20
+        },
+        {
+          "type": "AddStatusEffects",
+          "recipientGroup": "Allies",
+          "recipientQuery": {
+            "tags": ["Empire"]
+          },
+          "effectAppliers": [
+            {
+              "name": "Accuracy Buff",
+              "duration": 2,
+              "chance": 100
+            }
+          ]
+        }
+      ]
+    }
+  ],
+
+
+  "passiveAbilities": [
+    {
+      "name": "Picket Duty",
+      "description": "At the beginning of each of Scout Trooper's turns, a random enemy has a 50% chance to be inflicted with Expose for 2 turns.",
+      "triggers": [
+        {
+          "onEvents": ["TurnBegin"],
+          "sourceGroup": "Self",
+          "actions": [
+          ]
+        }
+      ]
+    }
+  ]
+}

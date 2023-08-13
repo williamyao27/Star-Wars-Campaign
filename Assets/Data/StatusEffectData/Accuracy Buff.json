@@ -1,11 +1,11 @@
 {
-  "name": "Evasion Debuff",
-  "description": "-15 Evasion.",
-  "type": "Debuff",
+  "name": "Accuracy Buff",
+  "description": "+15 Accuracy on all attacks.",
+  "type": "Buff",
   "modifiers": [
     {
-      "statsBonus": {
-        "evasion": -15
+      "attackBonus": {
+        "accuracy": 15
       }
     }
   ],

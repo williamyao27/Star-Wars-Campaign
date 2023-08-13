@@ -11,12 +11,11 @@ public struct UnitData
 {
     public string name;
     public string description;
-    public string picture;
     public string source;
     public Type type;
     public Terrain terrain;
     public Role role;
-    public List<Tag> tags;
+    public List<string> tags;
     public bool cover;
     public Stats stats;
     public List<ActiveAbilityData> activeAbilities;

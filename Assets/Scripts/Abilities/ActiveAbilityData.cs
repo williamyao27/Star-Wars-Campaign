@@ -11,7 +11,6 @@ public struct ActiveAbilityData
 {
     public string name;
     public string description;
-    public string picture;
 
     public int maxCooldown;
     public bool startOnCooldown;

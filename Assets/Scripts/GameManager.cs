@@ -33,12 +33,11 @@ public class GameManager : Singleton<GameManager>
     private void Start()
     {
         #region TENTATIVE - should NOT create team here
-        AddUnit("Stormtrooper", 0, 0, 0);
-        AddUnit("B2 Super Battle Droid", 0, 0, 1);
-        AddUnit("Stormtrooper", 0, 0, 2);
-        AddUnit("B2 Super Battle Droid", 0, 0, 3);
-        AddUnit("Stormtrooper", 0, 0, 4);
-        AddUnit("Anakin Skywalker (Young)", 1, 0, 0);
+        AddUnit("Anakin Skywalker (Jedi Knight)", 0, 0, 0);
+        AddUnit("Stormtrooper", 0, 0, 1);
+        AddUnit("B2 Super Battle Droid", 1, 0, 0);
+        AddUnit("B2 Super Battle Droid", 1, 0, 1);
+        AddUnit("B2 Super Battle Droid", 1, 0, 2);
         #endregion
         
         StartBattle();
@@ -63,9 +62,9 @@ public class GameManager : Singleton<GameManager>
     }
 
     /// <summary>
-    /// 
+    /// Moves a given newly defeated unit into the proper unit lists so that it is properly considered a defeated unit.
     /// </summary>
-    /// <param name="unit"></param>
+    /// <param name="unit">The defeated unit.</param>
     public void MoveToDefeated(Unit unit)
     {
         List<Unit> currentTeam = (unit.TeamNumber == 0) ? Team0 : Team1;
@@ -246,7 +245,7 @@ public class GameManager : Singleton<GameManager>
     {
         foreach (Unit recipient in recipients)
         {
-            recipient.AddHealth(amount);
+            recipient.AddHealth(source, amount);
         }
     }
 
@@ -260,7 +259,7 @@ public class GameManager : Singleton<GameManager>
     {
         foreach (Unit recipient in recipients)
         {
-            recipient.AddHealth(amount * -1f);
+            recipient.AddHealth(source, amount * -1f);
         }
     }
 

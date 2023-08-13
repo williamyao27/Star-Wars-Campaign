@@ -9,7 +9,7 @@ using UnityEngine;
 [Serializable]
 public class EventTrigger
 {
-    public EventType onEvent;
+    public List<EventType> onEvents;
     [SerializeReference] public List<Action> actions;
     protected Unit user;  // The unit from whose perspective the event is evaluated and actions are executed
 
@@ -21,38 +21,61 @@ public class EventTrigger
     {
         this.user = user;
 
-        switch (onEvent)
+        foreach (EventType type in onEvents)
         {
-            case EventType.TurnBegin:
-                EventManager.instance.OnTurnBegin += Execute;
-                break;
+            switch (type)
+            {
+                case EventType.TurnBegin:
+                    EventManager.instance.OnTurnBegin += Execute;
+                    break;
 
-            case EventType.TurnEnd:
-                EventManager.instance.OnTurnEnd += Execute;
-                break;
+                case EventType.TurnEnd:
+                    EventManager.instance.OnTurnEnd += Execute;
+                    break;
 
-            case EventType.Damage:
-                EventManager.instance.OnDamage += Execute;
-                break;
+                case EventType.Damage:
+                    EventManager.instance.OnDamage += Execute;
+                    break;
 
-            case EventType.CriticalHit:
-                EventManager.instance.OnCriticalHit += Execute;
-                break;
+                case EventType.CriticalHit:
+                    EventManager.instance.OnCriticalHit += Execute;
+                    break;
 
-            case EventType.Evasion:
-                EventManager.instance.OnEvasion += Execute;
-                break;
+                case EventType.Evasion:
+                    EventManager.instance.OnEvasion += Execute;
+                    break;
 
-            case EventType.Buff:
-                EventManager.instance.OnBuff += Execute;
-                break;
+                case EventType.Buff:
+                    EventManager.instance.OnBuff += Execute;
+                    break;
 
-            case EventType.Debuff:
-                EventManager.instance.OnDebuff += Execute;
-                break;
+                case EventType.Debuff:
+                    EventManager.instance.OnDebuff += Execute;
+                    break;
 
-            default:
-                break;
+                case EventType.Resist:
+                    EventManager.instance.OnResist += Execute;
+                    break;
+
+                case EventType.BuffClear:
+                    EventManager.instance.OnBuffClear += Execute;
+                    break;
+
+                case EventType.DebuffClear:
+                    EventManager.instance.OnDebuffClear += Execute;
+                    break;
+
+                case EventType.HalfHealth:
+                    EventManager.instance.OnHalfHealth += Execute;
+                    break;
+
+                case EventType.Defeat:
+                    EventManager.instance.OnDefeat += Execute;
+                    break;
+
+                default:
+                    break;
+            }
         }
     }
 
@@ -63,38 +86,61 @@ public class EventTrigger
     {
         user = null;
 
-        switch (onEvent)
+        foreach (EventType type in onEvents)
         {
-            case EventType.TurnBegin:
-                EventManager.instance.OnTurnBegin -= Execute;
-                break;
+            switch (type)
+            {
+                case EventType.TurnBegin:
+                    EventManager.instance.OnTurnBegin -= Execute;
+                    break;
 
-            case EventType.TurnEnd:
-                EventManager.instance.OnTurnEnd -= Execute;
-                break;
+                case EventType.TurnEnd:
+                    EventManager.instance.OnTurnEnd -= Execute;
+                    break;
 
-            case EventType.Damage:
-                EventManager.instance.OnDamage -= Execute;
-                break;
+                case EventType.Damage:
+                    EventManager.instance.OnDamage -= Execute;
+                    break;
 
-            case EventType.CriticalHit:
-                EventManager.instance.OnCriticalHit -= Execute;
-                break;
+                case EventType.Evasion:
+                    EventManager.instance.OnEvasion -= Execute;
+                    break;
 
-            case EventType.Evasion:
-                EventManager.instance.OnEvasion -= Execute;
-                break;
+                case EventType.CriticalHit:
+                    EventManager.instance.OnCriticalHit -= Execute;
+                    break;
 
-            case EventType.Buff:
-                EventManager.instance.OnBuff -= Execute;
-                break;
+                case EventType.Buff:
+                    EventManager.instance.OnBuff -= Execute;
+                    break;
 
-            case EventType.Debuff:
-                EventManager.instance.OnDebuff -= Execute;
-                break;
+                case EventType.Debuff:
+                    EventManager.instance.OnDebuff -= Execute;
+                    break;
 
-            default:
-                break;
+                case EventType.Resist:
+                    EventManager.instance.OnResist -= Execute;
+                    break;
+
+                case EventType.BuffClear:
+                    EventManager.instance.OnBuffClear -= Execute;
+                    break;
+
+                case EventType.DebuffClear:
+                    EventManager.instance.OnDebuffClear -= Execute;
+                    break;
+
+                case EventType.HalfHealth:
+                    EventManager.instance.OnHalfHealth -= Execute;
+                    break;
+
+                case EventType.Defeat:
+                    EventManager.instance.OnDefeat -= Execute;
+                    break;
+
+                default:
+                    break;
+            }
         }
     }
 
@@ -128,7 +174,7 @@ public class PassiveEventTrigger : EventTrigger
     public PassiveEventTrigger Copy()
     {
         PassiveEventTrigger trigger = new PassiveEventTrigger();
-        trigger.onEvent = onEvent;
+        trigger.onEvents = onEvents;
         trigger.actions = new List<Action>(actions);
         trigger.user = user;
         trigger.sourceGroup = sourceGroup;
@@ -181,11 +227,13 @@ public enum EventType
     TurnBegin,
     TurnEnd,
     Damage,
-    CriticalHit,
     Evasion,
+    CriticalHit,
     Buff,
     Debuff,
     Resist,
     BuffClear,
-    DebuffClear
+    DebuffClear,
+    HalfHealth,
+    Defeat
 }

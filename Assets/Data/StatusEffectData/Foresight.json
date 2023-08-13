@@ -1,7 +1,6 @@
 {
   "name": "Foresight",
   "description": "+100 Dodge. Cleared after the next time this unit Evades an attack.",
-  "picture": "",
   "type": "Buff",
   "modifiers": [
     {
@@ -12,7 +11,7 @@
   ],
   "triggers": [
     {
-      "onEvent": "Evasion",
+      "onEvents": ["Evasion"],
       "recipientGroup": "Self",
       "actions": [
         {

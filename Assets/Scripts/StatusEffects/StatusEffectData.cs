@@ -11,7 +11,6 @@ public struct StatusEffectData
 {
     public string name;
     public string description;
-    public string picture;
     public StatusEffectType type;
     public List<UnitModifier> modifiers;
     public State stateModifier;

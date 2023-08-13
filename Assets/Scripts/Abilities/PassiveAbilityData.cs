@@ -11,7 +11,6 @@ public struct PassiveAbilityData
 {
     public string name;
     public string description;
-    public string picture;
 
     public List<UnitModifier> modifiers;
     public List<PassiveEventTrigger> triggers;
